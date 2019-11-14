@@ -65,6 +65,9 @@ class PriceDiscovery:
 			elif max(bid_vol - mark_buy, ask_vol - mark_sell) == 0:  # No quotes available, hence no price
 				break
 			elif i in [-1, df.shape[0]]:
+				close_dict['price'] = np.nan
+				close_dict['imbalance'] = np.nan
+				close_dict['trade_vol'] = np.nan
 				break
 			else:
 				close_dict['price'] = df.index[i]
