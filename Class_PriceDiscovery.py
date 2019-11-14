@@ -64,8 +64,9 @@ class PriceDiscovery:
 				break
 			elif max(bid_vol - mark_buy, ask_vol - mark_sell) == 0:  # No quotes available, hence no price
 				break
+			elif i in [-1, df.shape[0]]:
+				break
 			else:
-
 				close_dict['price'] = df.index[i]
 				close_dict['imbalance'] = OIB
 				close_dict['trade_vol'] = min(bid_vol, ask_vol)
