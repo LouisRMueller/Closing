@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import time
 import os
-
+from collections import deque
 
 class PriceDiscovery:
 	def __init__(self, file_snapshots, file_close_prices):
@@ -45,42 +45,25 @@ class PriceDiscovery:
 			imp_df.loc[0, :] = 0
 			mark_sell = imp_df.loc[0, 'close_vol_ask']
 
-		df = imp_df.drop(0, axis=0).sort_index()
-		i = round(df.shape[0] / 2)
-		close_dict = dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
+		df = imp_df.drop(0, axis=0).sort_index()  # Dataframe with only limit orders
 
-		bid_vol = df.iloc[i:, :]['close_vol_bid'].sum() + mark_buy
-		ask_vol = df.iloc[:i + 1, :]['close_vol_ask'].sum() + mark_sell
-		OIB = bid_vol - ask_vol
-		prev_OIB = OIB.copy()
+		if 0 in df[['close_vol_ask', 'close_vol_bid']].sum().values:
+			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
 
-		if title == 'PARG':
-			print('PARG')
+		else:
+			n_lim = df.shape[0]
+			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim) , deque(df['close_vol_ask'], n_lim)
 
-		while OIB != 0:
-			if abs(OIB) > abs(prev_OIB):  # Normal case: If OIB is actually getting worse
-				break
-			elif np.sign(OIB) != np.sign(prev_OIB):
-				break
-			elif max(bid_vol - mark_buy, ask_vol - mark_sell) == 0:  # No quotes available, hence no price
-				break
-			elif i in [-1, df.shape[0]]:
-				close_dict['price'] = np.nan
-				close_dict['imbalance'] = np.nan
-				close_dict['trade_vol'] = np.nan
-				break
-			else:
-				close_dict['price'] = df.index[i]
-				close_dict['imbalance'] = OIB
-				close_dict['trade_vol'] = min(bid_vol, ask_vol)
-				i = i + 1 if OIB > 0 else i - 1
+			neg_asks = limit_asks.copy() ; neg_asks.appendleft(0)
 
-				prev_OIB = OIB.copy()
-				bid_vol = df.iloc[i:, :]['close_vol_bid'].sum() + mark_buy
-				ask_vol = df.iloc[:i + 1, :]['close_vol_ask'].sum() + mark_sell
-				OIB = bid_vol - ask_vol
+			cum_bids = mark_buy + np.cumsum(limit_bids)
+			cum_asks = mark_sell + sum(limit_asks) - np.cumsum(neg_asks)
 
-		return close_dict
+			total = cum_bids + cum_asks
+			i = np.argmax(abs(total))
+
+			output = dict(price=df.index[i], imbalance=total[i], trade_vol=min(cum_bids[i], cum_asks[i]))
+			return output
 
 	def _calc_preclose_price(self, date, title):
 		"""
@@ -96,29 +79,36 @@ class PriceDiscovery:
 		# output['midquote'] = round((maxbid + minask) / 2, 4)
 		# output['rel_spread'] = round(output['abs_spread'] / output['midquote'] * 10000, 3)
 
-
-
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
 		imp_df.replace({np.nan: 0}, inplace=True)
 
-		cum_bids = np.cumsum(imp_df['cont_vol_bid'].tolist())
-		cum_asks = np.cumsum(np.flip(imp_df['cont_vol_ask'].tolist()))
+		try:
+			imp_df.drop(index=[0], inplace=True)
+		except KeyError:
+			pass
 
-		total = cum_bids + np.flip(cum_asks)
+		n_lim = imp_df.shape[0]
+		limit_bids, limit_asks = deque(imp_df['cont_vol_bid'], n_lim) , deque(imp_df['cont_vol_ask'], n_lim)
+		neg_asks = limit_asks.copy() ; neg_asks.appendleft(0)
+
+		cum_bids = np.cumsum(limit_bids)
+		cum_asks = sum(limit_asks) - np.cumsum(neg_asks)
+
+		total = cum_bids + cum_asks
 
 		i_top_bid = np.argmax(total)
 		i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
 		maxbid, minask = imp_df['cont_vol_bid'].index[i_top_bid], imp_df['cont_vol_ask'].index[i_top_ask]
 
-
 		if i_top_bid > i_top_ask:
 			raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
 
 		else:
+			if (maxbid + minask) == 0:
+				print("Symbol: {}".format(title))
 			output = dict(abs_spread=round(minask - maxbid, 4),
 					    midquote=round((maxbid + minask) / 2, 4),
 					    rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
-
 			return output
 
 	def discovery_analysis(self):
@@ -129,12 +119,13 @@ class PriceDiscovery:
 		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
 
-		# for date in self._dates[:2]:
-		for date in ['2019-03-01']:
+		for date in self._dates[:10]:
+			# for date in ['2019-04-01']:
 			t0 = time.time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
 			for symbol in current_symbols:
+				# for symbol in ['ALLN']:
 				close_uncross = self._calc_uncross(date, symbol)
 				preclose_uncross = self._calc_preclose_price(date, symbol)
 
@@ -152,8 +143,7 @@ class PriceDiscovery:
 					res['actual_close_price'] = self._closeprices.loc[(date, symbol), 'price_org_ccy']
 				except KeyError:
 					res['actual_close_price'] = np.nan
-
-				print("--- {} completed".format(symbol))
+			# print("--- {} completed".format(symbol))
 
 			print(">> {} finished ({} seconds)".format(date, round(time.time() - t0, 2)))
 

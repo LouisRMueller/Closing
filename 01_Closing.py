@@ -14,7 +14,8 @@ file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
 Discovery = PriceDiscovery(file_snapshots, file_prices)
 Discovery.discovery_analysis()
 df = Discovery.results_to_df()
-
+Discovery.export_results('Price_Discovery_v1', 'csv')
+Discovery.export_results('Price_Discovery_v1', 'xlsx')
 
 
 #%%
