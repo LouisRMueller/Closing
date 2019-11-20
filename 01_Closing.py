@@ -7,11 +7,15 @@ from Class_PriceDiscovery import PriceDiscovery
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
 
+
+
+########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
+mode = 'Sensitivity'
+granularity = 'rough'
+########################################################################
 
-mode = 'Discovery'
-granularity = 'fine'
 
 if mode == 'Sensitivity':
 	Sens = SensitivityAnalysis(file_snapshots)
@@ -23,18 +27,18 @@ if mode == 'Sensitivity':
 	Sens.sens_analysis(key='ask_limit', percents=percent)
 	Sens.sens_analysis(key='all_limit', percents=percent)
 	Sens.sens_analysis(key='all_market')
-	Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'csv')
-	Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'xlsx')
+	Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'csv', ['Mode', 'Date', 'Symbol', 'Percent'])
+	# Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'xlsx', ['Mode', 'Date', 'Symbol', 'Percent'])
 	print("<<< Sensitivity Analysis complete >>>")
 
-
+ 
 elif mode == 'Discovery':
 	Discovery = PriceDiscovery(file_snapshots, file_prices)
 	Discovery.get_SB()
 	Discovery.discovery_analysis()
 	df = Discovery.results_to_df()
-	Discovery.export_results('Price_Discovery_v1', 'csv')
-	Discovery.export_results('Price_Discovery_v1', 'xlsx')
+	Discovery.export_results('Price_Discovery_v1', 'csv', ['Date', 'Symbol'])
+	Discovery.export_results('Price_Discovery_v1', 'xlsx', ['Date', 'Symbol'])
 	print("<<< Price Discovery complete >>>")
 
 
