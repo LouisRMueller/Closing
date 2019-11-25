@@ -2,72 +2,37 @@ import pandas as pd
 import numpy as np
 import copy
 import time
-import os
+from collections import deque
+from Class_Research import Research
 
-class SensitivityAnalysis:
-	def __init__(self, file):
-		t0 = time.time()
-		self._snapbook = pd.read_csv(file, header=0)
-		self._symbols = self._snapbook['symbol'].unique()
-		self._dates = self._snapbook['onbook_date'].unique()
-		
-		self._snapbook.set_index(['onbook_date', 'symbol', 'price'], drop=True, inplace=True)
-		self._snapbook.sort_index(inplace=True)
-		
-		self._sensitivity_results = {}  # Collects all the results
-		
-		print(">>> Class initiated ({} seconds)".format(round(time.time() - t0, 2)))
-	
-	def _calc_uncross(self, imp_df):
+
+class SensitivityAnalysis(Research):
+	@staticmethod
+	def _calc_uncross(imp_df):
 		"""
 		Function calculates the theoretical uncross price of a closing order book.
-		:param date:
-		:param title:
 		:return: dict()
 		"""
-		try:
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
-		except KeyError:
-			imp_df.loc[0, :] = 0
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
+		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
 		
-		try:
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
-		except KeyError:
-			imp_df.loc[0, :] = 0
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
+		if 0 in df[['close_vol_ask', 'close_vol_bid']].sum().values:  # Where one side is empty
+			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
+		
+		else:
+			n_lim = df.shape[0]
+			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim), deque(df['close_vol_ask'], n_lim)
 			
-		
-		df = imp_df.drop(0, axis=0).sort_index()
-		i = round(df.shape[0] / 2)
-		close_dict = dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
-		
-		bid_vol = df.iloc[i:, :]['close_vol_bid'].sum() + mark_buy
-		ask_vol = df.iloc[:i + 1, :]['close_vol_ask'].sum() + mark_sell
-		OIB = bid_vol - ask_vol
-		prev_OIB = OIB.copy()
-		
-		while OIB != 0:
+			neg_asks = limit_asks.copy()
+			neg_asks.appendleft(0)
 			
-			if abs(OIB) > abs(prev_OIB):
-				# Normal case: If OIB is actually getting worse
-				break
-			elif np.sign(OIB) != np.sign(prev_OIB):
-				break
-			elif max(bid_vol - mark_buy, ask_vol - mark_sell) == 0:   # No quotes available, hence no price
-				break
-			else:
-				close_dict['price'] = df.index[i]
-				close_dict['imbalance'] = OIB
-				close_dict['trade_vol'] = min(bid_vol, ask_vol)
-				i = i + 1 if OIB > 0 else i - 1
-				
-				prev_OIB = OIB.copy()
-				bid_vol = df.iloc[i:, :]['close_vol_bid'].sum() + mark_buy
-				ask_vol = df.iloc[:i + 1, :]['close_vol_ask'].sum() + mark_sell
-				OIB = bid_vol - ask_vol
-		
-		return close_dict
+			cum_bids = mark_buy + np.cumsum(limit_bids)
+			cum_asks = mark_sell + sum(limit_asks) - np.cumsum(neg_asks)
+			
+			total = cum_bids + cum_asks
+			i = np.argmax(abs(total))
+			
+			output = dict(price=df.index[i], imbalance=total[i], trade_vol=min(cum_bids[i], cum_asks[i]))
+			return output
 	
 	def _remove_liq(self, date, title, percentage=0, market=None, side=None):
 		"""
@@ -97,13 +62,6 @@ class SensitivityAnalysis:
 			except KeyError:
 				return ret_df
 		
-		# elif market == "remove_cont":  # Removes all preceeding market orders that have already been in the book before close
-		# 	imp_df.loc[0, 'close_vol_bid'] = max(0, imp_df.loc[0, 'close_vol_bid'] - imp_df.loc[0, 'cont_vol_bid'])
-		# 	imp_df.loc[0, 'close_vol_ask'] = max(0, imp_df.loc[0, 'close_vol_ask'] - imp_df.loc[0, 'cont_vol_ask'])
-		#
-		# 	ret_df = imp_df.loc[:, ('close_bid_vol', 'close_ask_vol')]
-		# 	return ret_df
-			
 		else:  # Only considering limit orders for adjustments
 			removable_bid = sum(bids[1:]) * percentage
 			removable_ask = sum(asks[1:]) * percentage
@@ -127,30 +85,34 @@ class SensitivityAnalysis:
 				asks[a] = local_vol - min(local_vol, removable_ask)
 				removable_ask -= min(removable_ask, local_vol)
 				a += 1
-				
+		
 		elif side == 'both':
 			pass
 		
 		ret_df = pd.DataFrame([asks, bids], index=imp_df.columns, columns=imp_df.index).T
 		return ret_df
 	
-	def sens_analysis(self, key, percents=[1]):
+	def sens_analysis(self, key, percents=tuple([1])):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
 		:param key: String with mode of calculation ['bid_limit','ask_limit','all_limit','all_market','cont_market']
 		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
-
-		if   key == 'bid_limit': side, mkt = 'bid', None
-		elif key == 'ask_limit':	side, mkt = 'ask', None
-		elif key == 'all_limit':	side, mkt = 'all', None
-		elif key == 'all_market': side, mkt = 'all', 'remove_all'
+		
+		if key == 'bid_limit':
+			side, mkt = 'bid', None
+		elif key == 'ask_limit':
+			side, mkt = 'ask', None
+		elif key == 'all_limit':
+			side, mkt = 'all', None
+		elif key == 'all_market':
+			side, mkt = 'all', 'remove_all'
 		# elif key == "cont_market":
 		# 	side, mkt = 'all', 'remove_cont'
 		else:
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
-			
+		
 		for date in self._dates:
 			t0 = time.time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
@@ -160,7 +122,7 @@ class SensitivityAnalysis:
 				close_uncross = self._calc_uncross(close_out)
 				
 				for p in percents:
-					res = self._sensitivity_results[key, date, symbol, p] = {}
+					res = self._result_dict[key, date, symbol, p] = {}
 					
 					remove_out = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
 					remove_uncross = self._calc_uncross(remove_out)
@@ -172,25 +134,5 @@ class SensitivityAnalysis:
 					res['adj_price'] = remove_uncross['price']
 					res['adj_vol'] = remove_uncross['trade_vol']
 					res['adj_imbalance'] = remove_uncross['imbalance']
-					
-			print(">> {} finished ({} seconds)".format(date, round(time.time() - t0, 2)))
-	
-	def results_to_df(self):
-		"""
-		Export such that it can be used further in later stages.
-		"""
-		df = pd.DataFrame.from_dict(self._sensitivity_results, orient='index')
-		df.index.set_names(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
-		df.sort_index()
-		return df
-	
-	def export_results(self, filename, filetype):
-		if filetype == 'xlsx':
-			df = self.results_to_df()
-			df.round(4).to_excel(os.getcwd() + "\\Data\\{}.xlsx".format(filename))
-		elif filetype == 'csv':
-			df = self.results_to_df()
-			df.round(4).to_excel(os.getcwd() + "\\Data\\{}.xlsx".format(filename))
 			
-	def get_SB(self):
-		return self._snapbook
+			print(">> {} finished ({} seconds)".format(date, round(time.time() - t0, 2)))
