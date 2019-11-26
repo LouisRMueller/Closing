@@ -21,6 +21,11 @@ class Research:
 		
 	@staticmethod
 	def _extract_market_orders(imp_df):
+		"""
+		Removes market orders from an order book snapshot.
+		:param imp_df: Pandas DataFrame
+		:return: Pandas DataFrame without the market orders
+		"""
 		try:
 			mark_buy = imp_df.loc[0, 'close_vol_bid']
 		except KeyError:
@@ -37,12 +42,12 @@ class Research:
 		
 		return df, mark_buy, mark_sell
 	
-	def results_to_df(self, indexnames):
+	def results_to_df(self, indexes):
 		"""
 		Export such that it can be used further in later stages.
 		"""
 		df = pd.DataFrame.from_dict(self._result_dict, orient='index')
-		df.index.set_names(indexnames, inplace=True)
+		df.index.set_names(indexes, inplace=True)
 		return df
 	
 	def export_results(self, filename, filetype, indexes):
@@ -72,16 +77,16 @@ class SensitivityAnalysis(Research):
 			n_lim = df.shape[0]
 			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim), deque(df['close_vol_ask'], n_lim)
 			
-			neg_asks = limit_asks.copy()
-			neg_asks.appendleft(0)
+			neg_bids = limit_bids.copy()
+			neg_bids.appendleft(0)
 			
-			cum_bids = mark_buy + np.cumsum(limit_bids)
-			cum_asks = mark_sell + sum(limit_asks) - np.cumsum(neg_asks)
+			cum_bids = mark_buy + sum(limit_bids) - np.cumsum(neg_bids)
+			cum_asks = mark_sell + np.cumsum(limit_asks)
 			
-			total = cum_bids + cum_asks
-			i = np.argmax(abs(total))
+			OIB = cum_bids - cum_asks
+			i = np.argmin(abs(OIB))
 			
-			output = dict(price=df.index[i], imbalance=total[i], trade_vol=min(cum_bids[i], cum_asks[i]))
+			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]))
 			return output
 	
 	def _remove_liq(self, date, title, percentage=0, market=None, side=None):
@@ -136,8 +141,6 @@ class SensitivityAnalysis(Research):
 				removable_ask -= min(removable_ask, local_vol)
 				a += 1
 		
-		elif side == 'both':
-			pass
 		
 		ret_df = pd.DataFrame([asks, bids], index=imp_df.columns, columns=imp_df.index).T
 		return ret_df
@@ -160,22 +163,23 @@ class SensitivityAnalysis(Research):
 			side, mkt = 'all', 'remove_all'
 		# elif key == "cont_market":
 		# 	side, mkt = 'all', 'remove_cont'
+		
 		else:
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
 		
-		for date in self._dates:
+		for date in self._dates[:5]:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 			
-			for symbol in current_symbols:
+			for symbol in ['ABBN']:
 				close_out = self._remove_liq(date=date, title=symbol, percentage=0)
 				close_uncross = self._calc_uncross(close_out)
 				
 				for p in percents:
 					res = self._result_dict[key, date, symbol, p] = {}
 					
-					remove_out = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
-					remove_uncross = self._calc_uncross(remove_out)
+					remove_df = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
+					remove_uncross = self._calc_uncross(remove_df)
 					
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']
@@ -215,37 +219,26 @@ class PriceDiscovery:
 		"""
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
 		imp_df.replace({np.nan: 0}, inplace=True)
-
-		try:
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
-		except KeyError:
-			imp_df.loc[0, :] = 0
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
-
-		try:
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
-		except KeyError:
-			imp_df.loc[0, :] = 0
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
-
-		df = imp_df.drop(0, axis=0).sort_index()  # Dataframe with only limit orders
-
+		
+		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
+		
 		if 0 in df[['close_vol_ask', 'close_vol_bid']].sum().values:
 			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
 
 		else:
 			n_lim = df.shape[0]
-			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim) , deque(df['close_vol_ask'], n_lim)
-
-			neg_asks = limit_asks.copy() ; neg_asks.appendleft(0)
-
-			cum_bids = mark_buy + np.cumsum(limit_bids)
-			cum_asks = mark_sell + sum(limit_asks) - np.cumsum(neg_asks)
-
-			total = cum_bids + cum_asks
-			i = np.argmax(abs(total))
-
-			output = dict(price=df.index[i], imbalance=total[i], trade_vol=min(cum_bids[i], cum_asks[i]))
+			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim), deque(df['close_vol_ask'], n_lim)
+			
+			neg_bids = limit_bids.copy()
+			neg_bids.appendleft(0)
+			
+			cum_bids = mark_buy + sum(limit_bids) - np.cumsum(neg_bids)
+			cum_asks = mark_sell + np.cumsum(limit_asks)
+			
+			OIB = cum_bids - cum_asks
+			i = np.argmin(abs(OIB))
+			
+			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]))
 			return output
 
 	def _calc_preclose_price(self, date, title):
@@ -303,12 +296,10 @@ class PriceDiscovery:
 		"""
 
 		for date in self._dates[:10]:
-			# for date in ['2019-04-01']:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
-			for symbol in current_symbols:
-				# for symbol in ['ALLN']:
+			for symbol in ['ABBN']:
 				close_uncross = self._calc_uncross(date, symbol)
 				preclose_uncross = self._calc_preclose_price(date, symbol)
 
