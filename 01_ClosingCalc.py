@@ -29,6 +29,7 @@ if mode == 'Sensitivity':
 elif mode == 'Discovery':
 	Discovery = PriceDiscovery(file_snapshots, file_prices)
 	Discovery.discovery_analysis()
+	Discovery.export_results('Test_discovery', 'csv')
 	# Discovery.export_results('Price_Discovery_v1', 'csv', indexes=['Date', 'Symbol'])
 	# Discovery.export_results('Price_Discovery_v1', 'xlsx', indexes=['Date', 'Symbol'])
 	print("<<< Price Discovery complete >>>")

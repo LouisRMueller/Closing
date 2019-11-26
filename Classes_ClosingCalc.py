@@ -42,23 +42,15 @@ class Research:
 		
 		return df, mark_buy, mark_sell
 	
-	def results_to_df(self, indexes):
-		"""
-		Export such that it can be used further in later stages.
-		"""
-		df = pd.DataFrame.from_dict(self._result_dict, orient='index')
-		df.index.set_names(indexes, inplace=True)
-		return df
-	
-	def export_results(self, filename, filetype, indexes):
-		df = self.results_to_df(indexes)
-		if filetype == 'xlsx':
-			df.round(4).to_excel(os.getcwd() + "\\Export\\{}.xlsx".format(filename))
-		elif filetype == 'csv':
-			df.round(4).to_csv(os.getcwd() + "\\Export\\{}.csv".format(filename))
-	
 	def get_SB(self):
 		return self._snapbook
+	
+	def export_results(self, filename, filetype):
+		df = self.results_to_df()
+		if filetype == 'xlsx':
+			df.round(4).to_excel(os.getcwd() + "\\Exports\\{}.xlsx".format(filename))
+		elif filetype == 'csv':
+			df.round(4).to_csv(os.getcwd() + "\\Exports\\{}.csv".format(filename))
 
 
 class SensitivityAnalysis(Research):
@@ -167,11 +159,11 @@ class SensitivityAnalysis(Research):
 		else:
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
 		
-		for date in self._dates[:5]:
+		for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 			
-			for symbol in ['ABBN']:
+			for symbol in current_symbols:
 				close_out = self._remove_liq(date=date, title=symbol, percentage=0)
 				close_uncross = self._calc_uncross(close_out)
 				
@@ -190,19 +182,21 @@ class SensitivityAnalysis(Research):
 					res['adj_imbalance'] = remove_uncross['imbalance']
 			
 			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
+	
+	def results_to_df(self):
+		"""
+		Export such that it can be used further in later stages.
+		"""
+		df = pd.DataFrame.from_dict(self._result_dict, orient='index')
+		df.index.set_names(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
+		return df
+	
 
-
-class PriceDiscovery:
+class PriceDiscovery(Research):
 	def __init__(self, file_snapshots, file_close_prices):
+		super().__init__(file_snapshots)
 		t0 = time()
-		self._snapbook = pd.read_csv(file_snapshots, header=0)
 		self._closeprices = pd.read_csv(file_close_prices, header=0)
-
-		self._symbols = self._snapbook['symbol'].unique()
-		self._dates = self._snapbook['onbook_date'].unique()
-
-		self._snapbook.set_index(['onbook_date', 'symbol', 'price'], drop=True, inplace=True)
-		self._snapbook.sort_index(inplace=True)
 		self._closeprices.set_index(['onbook_date', 'symbol'], drop=True, inplace=True)
 		self._closeprices.sort_index(inplace=True)
 
@@ -295,11 +289,11 @@ class PriceDiscovery:
 		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
 
-		for date in self._dates[:10]:
+		for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
-			for symbol in ['ABBN']:
+			for symbol in current_symbols:
 				close_uncross = self._calc_uncross(date, symbol)
 				preclose_uncross = self._calc_preclose_price(date, symbol)
 
@@ -330,13 +324,3 @@ class PriceDiscovery:
 		df.sort_index()
 		return df
 
-	def export_results(self, filename, filetype):
-		if filetype == 'xlsx':
-			df = self.results_to_df()
-			df.round(4).to_excel(os.getcwd() + "\\Data\\{}.xlsx".format(filename))
-		elif filetype == 'csv':
-			df = self.results_to_df()
-			df.round(4).to_excel(os.getcwd() + "\\Data\\{}.xlsx".format(filename))
-
-	def get_SB(self):
-		return self._snapbook
