@@ -240,7 +240,6 @@ class PriceDiscovery(Research):
 		This helper function calculates the hypothetical last midquote before closing auctions start.
 		This method takes only inputs from the self._remove_liq method.
 		"""
-
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
 		imp_df.replace({np.nan: 0}, inplace=True)
 
