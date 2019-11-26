@@ -14,7 +14,7 @@ granularity = 'rough'
 if mode == 'Sensitivity':
 	Sens = SensitivityAnalysis(file_snapshots)
 	if granularity == 'rough':
-		percent = np.arange(0.05, 0.55, 0.05)
+		percent = np.arange(0.05, 0.85, 0.05)
 	elif granularity == 'fine':
 		percent = np.arange(0.01, 0.51, 0.01)
 		
@@ -33,10 +33,4 @@ elif mode == 'Discovery':
 	Discovery.export_results('Price_Discovery_v1', 'xlsx', indexes=['Date', 'Symbol'])
 	print("<<< Price Discovery complete >>>")
 
-
-
-#%%
-# df = pd.read_csv(os.getcwd() + "\\Export\\Price_Discovery_v1.csv", index_col=['Mode','Date','Symbol','Percent'])
-df = pd.read_csv(os.getcwd() + "\\Export\\Price_Discovery_v1.csv", index_col=['Date','Symbol'])
-#%%
 

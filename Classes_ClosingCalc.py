@@ -164,7 +164,7 @@ class SensitivityAnalysis(Research):
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
 		
 		for date in self._dates:
-			t0 = time.time()
+			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 			
 			for symbol in current_symbols:
@@ -185,12 +185,12 @@ class SensitivityAnalysis(Research):
 					res['adj_vol'] = remove_uncross['trade_vol']
 					res['adj_imbalance'] = remove_uncross['imbalance']
 			
-			print(">> {} finished ({} seconds)".format(date, round(time.time() - t0, 2)))
+			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
 
 
 class PriceDiscovery:
 	def __init__(self, file_snapshots, file_close_prices):
-		t0 = time.time()
+		t0 = time()
 		self._snapbook = pd.read_csv(file_snapshots, header=0)
 		self._closeprices = pd.read_csv(file_close_prices, header=0)
 
@@ -204,7 +204,7 @@ class PriceDiscovery:
 
 		self._price_discovery_results = {}  # Collects all the results
 
-		print(">>> Class initiated ({} seconds)".format(round(time.time() - t0, 2)))
+		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
 	def _calc_uncross(self, date, title):
 		"""
@@ -304,7 +304,7 @@ class PriceDiscovery:
 
 		for date in self._dates[:10]:
 			# for date in ['2019-04-01']:
-			t0 = time.time()
+			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
 			for symbol in current_symbols:
@@ -328,7 +328,7 @@ class PriceDiscovery:
 					res['actual_close_price'] = np.nan
 			# print("--- {} completed".format(symbol))
 
-			print(">> {} finished ({} seconds)".format(date, round(time.time() - t0, 2)))
+			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
 
 	def results_to_df(self):
 		"""

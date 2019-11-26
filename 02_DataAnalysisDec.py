@@ -2,23 +2,27 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from Classes_DataAnalysis import *
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
 datadir = os.getcwd() + "\\Data"
 
-bcs = pd.read_csv(datadir + "\\bluechips.csv", index_col='symbol')
-bcs.sort_index(inplace=True)
+
+########################################################################
+file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
+mode = 'Sensitivity'
+granularity = 'fine'
+########################################################################
+
+if mode == 'Sensitivity':
+	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v1.csv".format(granularity)
+	Analysis = SensAnalysis(file_data, file_bcs)
+	print(Analysis._data.head(50))
 
 
-
-PS = pd.read_csv(os.getcwd() + "\\Exports\\Price_Discovery_v1.csv", index_col=['Date', 'Symbol'])
-PS.xs()
-
-SE = pd.read_csv(os.getcwd() + "\\Exports\\Sensitivity_fine_v1.csv", index_col=['Mode', 'Date', 'Symbol', 'Percent'])
-SE = pd.read_csv(os.getcwd() + "\\Exports\\Sensitivity_rough_v1.csv", index_col=['Mode', 'Date', 'Symbol', 'Percent'])
-
-misprice = PS['actual_close_price'] - PS['pre_midquote']
-
-misprice.groupby('Date').mean().plot()
-plt.show()
+	if granularity == 'rough':
+		pass
+	
+	
+	
