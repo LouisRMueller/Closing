@@ -159,7 +159,7 @@ class SensitivityAnalysis(Research):
 		else:
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
 		
-		for date in self._dates[:5]:
+		for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 			
