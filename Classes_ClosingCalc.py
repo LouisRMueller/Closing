@@ -240,14 +240,6 @@ class PriceDiscovery(Research):
 		This helper function calculates the hypothetical last midquote before closing auctions start.
 		This method takes only inputs from the self._remove_liq method.
 		"""
-		# df = self._snapbook.loc[(date, title), ['cont_vol_bid', 'cont_vol_ask']]
-		# output = {}
-		# maxbid = df.index[~df['cont_vol_bid'].isna()].max()
-		# minask = df.index[(~df['cont_vol_ask'].isna()) & (df.index > 0)].min()
-		#
-		# output['abs_spread'] = round(minask - maxbid, 3)
-		# output['midquote'] = round((maxbid + minask) / 2, 4)
-		# output['rel_spread'] = round(output['abs_spread'] / output['midquote'] * 10000, 3)
 
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
 		imp_df.replace({np.nan: 0}, inplace=True)
