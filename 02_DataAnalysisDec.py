@@ -1,7 +1,3 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import os
 from Classes_DataAnalysis import *
 
 pd.set_option('display.width', 180)
@@ -12,7 +8,7 @@ datadir = os.getcwd() + "\\Data"
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 mode = 'Test'
-granularity = 'fine'
+granularity = 'rough'
 ########################################################################
 
 if mode == 'Sensitivity':
