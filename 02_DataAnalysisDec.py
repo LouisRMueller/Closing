@@ -11,18 +11,22 @@ datadir = os.getcwd() + "\\Data"
 
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-mode = 'Sensitivity'
+mode = 'Test'
 granularity = 'fine'
 ########################################################################
 
 if mode == 'Sensitivity':
 	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v1.csv".format(granularity)
 	Analysis = SensAnalysis(file_data, file_bcs)
-	print(Analysis._data.head(50))
-
+	df = Analysis._raw_data
 
 	if granularity == 'rough':
 		pass
-	
+
+elif mode == 'Discovery':
+	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
+	Discovery = DiscoAnalysis(file_data, file_bcs)
+
+
 	
 	
