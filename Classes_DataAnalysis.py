@@ -4,9 +4,9 @@ import numpy as np
 import os
 from matplotlib import pyplot as plt
 from matplotlib import dates
+from matplotlib import ticker
 import seaborn as sns
 import copy
-import gc
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -18,6 +18,8 @@ dpi = 400
 figsize = (22 / conv, 13 / conv)
 figdir = os.getcwd() + "\\01 Presentation December\\Figures"
 
+pd.set_option('display.width', 180)
+pd.set_option("display.max_columns", 8)
 
 class DataAnalysis:
 	def __init__(self, datapath, bluechippath):
@@ -28,16 +30,12 @@ class DataAnalysis:
 	def _raw_to_bcs(self):
 		self._bcs_data = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(self._bluechips)]
 
-
 class SensAnalysis(DataAnalysis):
 	def __init__(self, datapath, bluechippath):
 		super().__init__(datapath, bluechippath)
 		self._raw_data['Percent'] = self._raw_data['Percent'].round(2)
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
 		self._raw_to_bcs()
-
-	def plot_cont_sens(self):
-		self._raw_data
 
 	def plot_remove_limit_individual(self, stock, mode):
 		limit = 0.35
@@ -137,8 +135,26 @@ class SensAnalysis(DataAnalysis):
 		fig.clf()
 		plt.close(fig)
 
-	def plt_cont_rmv_indiv(self, titles, mode):
-		return self._bcs_data
+	def plt_cont_rmv_indiv(self, mode):
+		raw = copy.deepcopy(self._bcs_data.loc[mode, :])
+		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
+		locdict = dict(bid_limit='lower left', ask_limit='upper left', all_limit='lower left')
+		cl = (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10**4
+		cl = cl.unstack('Symbol').groupby('Percent').mean()
+
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize)
+		ax1.plot(cl.index * 100, cl.values, linewidth=1)
+		ax1.hlines(0, cl.index.min(), cl.index.max()*100, 'k', 'dashed', linewidth=1.0)
+		ax1.xaxis.set_major_formatter(ticker.PercentFormatter())
+		ax1.set_xlabel("Removed liquidity")
+		ax1.set_ylabel("Deviation from actual closing [bps]")
+		ax1.set_title("Sensitivity of SLI titles with respect to {}".format(namedict[mode]))
+		ax1.legend(loc=locdict[mode], labels=cl.columns, ncol=3)
+		fig.tight_layout()
+		plt.savefig(figdir + "\\SensitivityFine\\Sens_Percent_{}".format(mode))
+		plt.show()
+		plt.close()
+
 
 class DiscoAnalysis(DataAnalysis):
 	def __init__(self, datapath, bluechippath):
@@ -188,5 +204,6 @@ class DiscoAnalysis(DataAnalysis):
 file_data = os.getcwd() + "\\Exports\\Sensitivity_fine_v1.csv"
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 Sens = SensAnalysis(file_data, file_bcs)
-df = Sens.plt_cont_rmv_indiv(None, None)
-
+df = Sens.plt_cont_rmv_indiv('bid_limit')
+df = Sens.plt_cont_rmv_indiv('ask_limit')
+df
