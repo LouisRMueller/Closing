@@ -143,9 +143,10 @@ class SensAnalysis(DataAnalysis):
 		raw = raw[raw['close_vol'] > 1000]
 		# raw = copy.deepcopy(self._bcs_data.loc[mode, :])
 		numstocks = {'available': self._avg_vol.index[self._avg_vol > 0],
-		             # 'top 75': self._avg_vol.index[:75],
-		             # 'SLI': self._bluechips,
-		             'top 20': self._avg_vol.index[:20]}
+		             'top 75': self._avg_vol.index[:75],
+		             'SLI': self._bluechips,
+		             'top 20': self._avg_vol.index[:20],
+		             'top 10': self._avg_vol.index[:10]}
 		figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
 		               ask_limit=dict(name='ask limit orders', loc='upper left'),
 		               all_limit=dict(name='bid/ask limit orders', loc='upper left'))
