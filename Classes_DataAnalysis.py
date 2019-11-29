@@ -221,10 +221,10 @@ class DiscoAnalysis(DataAnalysis):
 		
 		print(tmp_vol.tail(10))
 
+	def plt_dev_pd(self):
 
-file_data = os.getcwd() + "\\Exports\\Sensitivity_fine_v1.csv"
+
+file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-Sens = SensAnalysis(file_data, file_bcs)
-Sens.plt_cont_rmv_indiv('bid_limit')
-Sens.plt_cont_rmv_indiv('ask_limit')
-Sens.plt_cont_rmv_indiv('all_limit')
+Disc = DiscoAnalysis(file_data, file_bcs)
+

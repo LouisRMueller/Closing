@@ -25,7 +25,7 @@ if mode == 'Sensitivity':
 	Sens.sens_analysis(key='all_limit', percents=percent)
 	Sens.sens_analysis(key='all_market')
 	Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'csv')
-	print("<<< Sensitivity Analysis complete >>>")
+	print("<<< Sensitivity Sens complete >>>")
 
  
 elif mode == 'Discovery':

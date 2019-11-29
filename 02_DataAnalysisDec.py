@@ -13,11 +13,14 @@ granularity = 'rough'
 
 if mode == 'Sensitivity':
 	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v1.csv".format(granularity)
-	Analysis = SensAnalysis(file_data, file_bcs)
-	df = Analysis._raw_data
+	Sens = SensAnalysis(file_data, file_bcs)
 
 	if granularity == 'rough':
 		pass
+	elif granularity == 'fine':
+		Sens.plt_cont_rmv_indiv('bid_limit')
+		Sens.plt_cont_rmv_indiv('ask_limit')
+		Sens.plt_cont_rmv_indiv('all_limit')
 
 elif mode == 'Discovery':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
