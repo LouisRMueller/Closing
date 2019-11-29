@@ -22,9 +22,10 @@ if mode == 'Sensitivity':
 		Sens.plt_cont_rmv_indiv('ask_limit')
 		Sens.plt_cont_rmv_indiv('all_limit')
 
-elif mode == 'Discovery':
+elif mode == 'Disc':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-	Discovery = DiscoAnalysis(file_data, file_bcs)
+	Disc = DiscoAnalysis(file_data, file_bcs)
+	Disc.plt_dev_pd()
 
 
 	
