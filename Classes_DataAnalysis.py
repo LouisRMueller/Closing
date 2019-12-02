@@ -176,29 +176,72 @@ class SensAnalysis(DataAnalysis):
 			plt.close()
 	
 	def plt_cont_rmv_agg(self):
-		raw = copy.deepcopy(self._bcs_data.drop(index=['all_market']))
+		raw = copy.deepcopy(self._bcs_data.loc[['bid_limit','ask_limit','all_limit'], :])
+
+		turn_df = pd.DataFrame({'turnover': raw['close_vol'] * raw['close_price'],
+						    'adj_turnover': raw['adj_vol'] * raw['adj_price']})
 		
-		# modes = raw.index.get_level_values(level='Mode').unique()
-		dev = (raw.loc[:, 'adj_price'] - raw.loc[:, 'close_price']) / raw.loc[:, 'close_price'] * 1000
-		df = pd.DataFrame({'Deviation': dev, 'Volume': raw.loc[:, 'adj_vol']}).reset_index()
+		df = pd.DataFrame({'Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10**4,
+					    'Volume': raw['adj_vol'],
+					    'Volume Delta': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol'],
+					    'Turnover': turn_df['adj_turnover'] - turn_df['turnover'],
+					    'Turnover Delta': (turn_df['adj_turnover'] - turn_df['turnover']) / turn_df['turnover']
+					    }).reset_index()
 		
+		df.loc[df['Mode'] == 'all_limit', 'Percent'] = 2 * df.loc[df['Mode'] == 'all_limit', 'Percent'].values
 		df.replace({'bid_limit': 'bid limit', 'ask_limit': 'ask limit', 'all_limit': 'all limit'},
 		           inplace=True)
-		
+
 		print(df.head())
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		xmin, xmax = 0, df['Percent'].max()
-		sns.lineplot(data=df, x='Percent', y='Deviation', hue='Mode', ax=ax1, ci=95, palette='Set2')
-		ax1.hlines(0, xmin, xmax, 'k', 'dashed')
+		xmin, xmax = 0, 0.5
+		sns.lineplot(data=df, x='Percent', y='Deviation', hue='Mode', ax=ax1, ci=99, palette='Set2')
+		ax1.grid(which='both')
 		ax1.set_xlim([xmin, xmax])
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.set_ylabel("Deviation in bps")
 		ax1.set_xlabel("Removed percentage of limit orders")
-		ax1.set_title("Average deviation of closing price depending on removed liquidity on SLI (95\% CI)")
+		ax1.set_title("Average deviation of closing price depending on removed liquidity on SLI (99\% CI)")
 		plt.tight_layout()
 		plt.savefig(figdir + "\\SensitivityFine\\Avg_closeprice_SLI.png")
 		plt.show()
 		plt.close()
+
+
+
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Percent', y='Volume Delta', hue='Mode', ax=ax1, ci=99, palette='Set2')
+		# ax1.hlines(0, xmin, xmax, 'k', 'dashed')
+		ax1.set_xlim([xmin, xmax])
+		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		ax1.grid(which='both')
+		ax1.set_ylabel("Deviation in \%")
+		ax1.set_xlabel("Removed percentage of limit orders")
+		ax1.set_title("Average deviation of volume depending on removed liquidity on SLI (99\% CI)")
+		plt.tight_layout()
+		plt.savefig(figdir + "\\SensitivityFine\\Avg_volume_dev_SLI.png")
+		plt.show()
+		plt.close()
+
+
+
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Percent', y='Turnover Delta', hue='Mode', ax=ax1, ci=99, palette='Set2')
+		# ax1.hlines(0, xmin, xmax, 'k', 'dashed')
+		ax1.set_xlim([xmin, xmax])
+		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		ax1.grid(which='both')
+		ax1.set_ylabel("Deviation in \%")
+		ax1.set_xlabel("Removed percentage of limit orders")
+		ax1.set_title("Average deviation of turnover depending on removed liquidity on SLI (99\% CI)")
+		plt.tight_layout()
+		plt.savefig(figdir + "\\SensitivityFine\\Avg_turnover_dev_SLI.png")
+		plt.show()
+		plt.close()
+
+
 		
 		return df
 
