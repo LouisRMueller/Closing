@@ -110,8 +110,9 @@ class SensitivityAnalysis(Research):
 				return ret_df
 		
 		else:  # Only considering limit orders for adjustments
-			removable_bid = sum(bids[1:]) * percentage
-			removable_ask = sum(asks[1:]) * percentage
+			corr = 2 if side == 'all' else 1
+			removable_bid = sum(bids[1:]) * percentage / corr
+			removable_ask = sum(asks[1:]) * percentage / corr
 			imp_df.drop(columns=['cont_vol_bid', 'cont_vol_ask'], inplace=True)
 		
 		# Below is the algorithm

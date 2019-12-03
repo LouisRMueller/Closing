@@ -42,96 +42,92 @@ class SensAnalysis(DataAnalysis):
 		self._raw_vol_classify()
 
 	def plt_remove_limit_individual(self, stock, mode):
-		limit = 0.35
-		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
-		locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
+		pass
+	# 	limit = 0.35
+	# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
+	# 	locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
+	#
+	# 	tmp = self._bcs_data.loc[mode, :].xs(stock, level='Symbol')
+	# 	tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
+	# 	tmp = tmp.unstack(level='Percent', fill_value=np.nan)
+	# 	tmp = tmp.iloc[:, tmp.columns <= limit]
+	#
+	# 	tmp.plot(figsize=figsize, linewidth=1)
+	# 	plt.hlines(0, 0, len(tmp.index), 'k', lw=1, linewidth=1)
+	# 	plt.xlabel("")
+	# 	plt.ylabel("Deviation from closing price in bps")
+	# 	plt.title("{}: Gradual removal of {}".format(stock, namedict[mode]))
+	#
+	# 	plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
+	# 			 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
+	#
+	# 	plt.tight_layout()
+	# 	plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
+	# 	plt.close()
 
-		tmp = self._bcs_data.loc[mode, :].xs(stock, level='Symbol')
-		tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
-		tmp = tmp.unstack(level='Percent', fill_value=np.nan)
-		tmp = tmp.iloc[:, tmp.columns <= limit]
-
-		tmp.plot(figsize=figsize, linewidth=1)
-		plt.hlines(0, 0, len(tmp.index), 'k', lw=1, linewidth=1)
-		plt.xlabel("")
-		plt.ylabel("Deviation from closing price in bps")
-		plt.title("{}: Gradual removal of {}".format(stock, namedict[mode]))
-
-		plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
-				 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
-
-		plt.tight_layout()
-		plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
-		plt.close()
-
-	def plt_rmv_limit_aggregated(self, mode):
+	def plt_rmv_limit_aggregated(self):
 		"""Only works with rough percentages"""
-		limit = 0.4
-		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
-		aggdict = dict(mean='Average', median='Median')
-		locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
-		tmp = copy.deepcopy(self._bcs_data.loc[mode, :])
-
-		df = pd.DataFrame({'Deviation':(tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000})
-		df.reset_index(inplace=True)
-		df = df[df['Percent'] <= limit]
-		df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + " \%"
-
-		fig, ax1 = plt.subplots(1,1, figsize=figsize, dpi=dpi)
-		sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1,
-				   palette='gist_earth', lw=1, ci=95, n_boot=200)
-		ax1.grid(which='major', axis='y')
-		ax1.set_xlabel("")
-		ax1.set_ylabel("Deviation from closing price in bps")
-		ax1.set_title("Average impact of gradual removal of {} across SLI (95\% CI)".format(namedict[mode]))
-
-		loca = dates.MonthLocator()
-		form = dates.ConciseDateFormatter(loca)
-		ax1.xaxis.set_major_locator(loca)
-		ax1.xaxis.set_major_formatter(form)
-
-		fig.tight_layout()
-		# plt.savefig(figdir + "\\SensitivityRough\\agg_remove_{}_{}".format(mode, aggreg))
-		fig.show()
-		plt.close()
-
-		return tmp
-
-	def plt_rmv_limit_quant(self, mode):
 		limit = 0.35
+		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
+		locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
+
+		for mode in iter(namedict.keys()):
+			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
+			df = pd.DataFrame({'Deviation':(raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10000})
+			df.reset_index(inplace=True)
+			df = df[df['Percent'] <= limit]
+			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + " \%"
+
+			fig, ax1 = plt.subplots(1,1, figsize=figsize, dpi=dpi)
+			sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1,
+					   palette='gist_earth', lw=1, ci=95, n_boot=500)
+			ax1.grid(which='major', axis='y')
+			ax1.set_xlabel("")
+			ax1.set_ylabel("Deviation from closing price in bps")
+			ax1.set_title("Average impact of gradual removal of {} across SLI (Bootstrapped 95\% CI)".format(namedict[mode]))
+			loca = dates.MonthLocator()
+			form = dates.ConciseDateFormatter(loca)
+			ax1.xaxis.set_major_locator(loca)
+			ax1.xaxis.set_major_formatter(form)
+
+			fig.tight_layout()
+			plt.savefig(figdir + "\\SensitivityRough\\agg_remove_{}".format(mode))
+			fig.show()
+			plt.close()
+
+		return raw
+
+	def plt_rmv_limit_quant(self):
+		limit = 0.45
 		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders",
 					 all_limit="bid/ask limit orders")
-		raw = copy.deepcopy(self._bcs_data.loc[mode, :])
 
-		quants = raw.groupby(['Date', 'Symbol']).first()
-		quants = quants.groupby('Date')['close_price'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
-		quants.rename('quantile', inplace=True)
-		tmp = raw[['close_price', 'adj_price']].join(quants, on=['Date', 'Symbol'], how='left')
+		for mode in iter(namedict.keys()):
+			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
+			quants = raw.groupby(['Date', 'Symbol']).first()
+			quants = quants.groupby('Date')['close_price'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
+			quants.rename('quantile', inplace=True)
+			quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
+			tmp = raw[['close_price', 'adj_price']].join(quants, on=['Date', 'Symbol'], how='left')
+			df = pd.DataFrame({'Deviation': (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10**4,
+						    'Quantile': tmp['quantile']}).reset_index()
+			df = df[df['Percent'] <= limit]
+			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
+			print(df.head())
 
-		tmp = tmp.groupby(['quantile', 'Date', 'Percent']).mean()
-		tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
-		tmp = tmp.unstack(level='Percent', fill_value=np.nan)
-		tmp = tmp.loc[:, [round(x * 0.1, 1) for x in range(1, 5)]]
+			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			sns.boxplot(data=df, x='Percent', y='Deviation', palette='Set3',
+					  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
+			ax1.set_xlabel('')
+			ax1.set_title("Quantile distribution of closing price deviations when removing {}".format(namedict[mode]))
+			ax1.set_ylabel("Deviation in bps")
+			ax1.set_xlabel("Amount of liquidity removed")
+			ax1.grid(which='major', axis='y')
+			fig.tight_layout()
+			plt.savefig(figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
+			fig.show()
+			plt.close()
 
-		fig, axes = plt.subplots(3, 1, figsize=figsize, sharex=True)
-		for ax, qt in zip(axes, range(1, 4)):
-			plot_df = tmp.xs(qt, level='quantile')
-			xmin, xmax = plot_df.index[0], plot_df.index[-1]
-
-			ax.plot(plot_df, linewidth=0.8)
-			ax.set_xlim((xmin, xmax))
-			ax.set_title("Quantile " + str(qt) + ": Deviation [bps] of closing price by removing " + namedict[mode])
-			ax.hlines(0, xmin, xmax, 'k', lw=1, linewidth=1.2)
-		loca = dates.MonthLocator()
-		format = dates.ConciseDateFormatter(loca)
-		axes[-1].xaxis.set_major_locator(loca)
-		axes[-1].xaxis.set_major_formatter(format)
-		axes[-1].legend(labels=[str(int(x * 100)) + '\%' for x in plot_df.columns], loc='upper center',
-					 bbox_to_anchor=[0.5, -0.3], ncol=len(plot_df.columns))
-		plt.tight_layout()
-		plt.savefig(figdir + "\\SensitivityRough\\quantile_remove_{}.png".format(mode), dpi=dpi)
-		fig.clf()
-		plt.close(fig)
 
 	def plt_cont_rmv_indiv(self, mode):
 		raw = copy.deepcopy(self._raw_data.loc[mode, :])
@@ -164,6 +160,7 @@ class SensAnalysis(DataAnalysis):
 			ax1.set_title("Sensitivity of {} titles with respect to {} (N = {})"
 					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
 			handles, labels = ax1.get_legend_handles_labels()
+			ax1.grid(which='major', axis='both')
 			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title="log10(volume)")
 			fig.tight_layout()
@@ -283,7 +280,6 @@ class DiscoAnalysis(DataAnalysis):
 
 		quants = raw.groupby('Date')['close_vol'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
 		quants.rename('quantile', inplace=True)
-		# quants = quants.astype(int)
 		quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
 		df = pd.DataFrame(dict(dev=(raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10000,
 						   vol=raw['close_vol']))
@@ -317,7 +313,7 @@ class DiscoAnalysis(DataAnalysis):
 
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1, ci='sd')
+		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1, ci=95)
 		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.xaxis.set_major_locator(loca)
 		ax1.xaxis.set_major_formatter(form)
@@ -325,12 +321,14 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_xlim((xmin, xmax))
 		ax1.set_xlabel("")
 		ax1.set_ylabel("Deviation [bps]")
-		ax1.set_title("Average daily deviation of closing price from last midpoint over SLI")
+		ax1.set_title("Average daily deviation of closing price from last midpoint over SLI (Bootstrapped 95\% CI)")
 		plt.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_aggregated")
 		plt.show()
 		fig.clf()
 		plt.close(fig)
+
+		return df
 
 	def plt_disco_distr_xsect(self, limit=15):
 		# stocks = ['NESN','NOVN','ROG','UBSG','CSGN']
@@ -365,7 +363,7 @@ file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 
 file_data = os.getcwd() + "\\Exports\\Sensitivity_rough_v1.csv"
 Sens = SensAnalysis(file_data, file_bcs)
-t = Sens.plt_rmv_limit_aggregated('bid_limit')
+t = Sens.plt_rmv_limit_quant()
 
 # file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
 # Disco = DiscoAnalysis(file_data, file_bcs)

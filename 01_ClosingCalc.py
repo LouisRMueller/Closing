@@ -6,8 +6,8 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
-mode = 'Disc'
-granularity = 'fine'
+mode = 'Sensitivity'
+granularity = 'rough'
 ########################################################################
 
 
@@ -28,7 +28,7 @@ if mode == 'Sensitivity':
 	print("<<< Sensitivity Sens complete >>>")
 
  
-elif mode == 'Disc':
+elif mode == 'Discovery':
 	Discovery = PriceDiscovery(file_snapshots, file_prices)
 	Discovery.discovery_analysis()
 	Discovery.export_results('Price_Discovery_v1', 'csv')
