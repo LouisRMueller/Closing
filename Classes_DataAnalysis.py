@@ -195,7 +195,8 @@ class SensAnalysis(DataAnalysis):
 		print(df.head())
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 		xmin, xmax = 0, 0.5
-		sns.lineplot(data=df, x='Percent', y='Deviation', hue='Mode', ax=ax1, ci=99, palette='Set2')
+		sns.lineplot(data=df, x='Percent', y='Deviation', hue='Mode',
+				   ax=ax1, ci=99, palette='Set2', err_style='bars')
 		ax1.grid(which='both')
 		ax1.set_xlim([xmin, xmax])
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
@@ -210,8 +211,8 @@ class SensAnalysis(DataAnalysis):
 
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		sns.lineplot(data=df, x='Percent', y='Volume Delta', hue='Mode', ax=ax1, ci=99, palette='Set2')
-		# ax1.hlines(0, xmin, xmax, 'k', 'dashed')
+		sns.lineplot(data=df, x='Percent', y='Volume Delta', hue='Mode',
+				   ax=ax1, ci=99, palette='Set2', err_style='bars')
 		ax1.set_xlim([xmin, xmax])
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
@@ -227,8 +228,8 @@ class SensAnalysis(DataAnalysis):
 
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		sns.lineplot(data=df, x='Percent', y='Turnover Delta', hue='Mode', ax=ax1, ci=99, palette='Set2')
-		# ax1.hlines(0, xmin, xmax, 'k', 'dashed')
+		sns.lineplot(data=df, x='Percent', y='Turnover Delta', hue='Mode',
+				   ax=ax1, ci=99, palette='Set2', err_style='bars')
 		ax1.set_xlim([xmin, xmax])
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
@@ -322,7 +323,7 @@ class DiscoAnalysis(DataAnalysis):
 		plt.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_terciles.png")
 		# plt.show()
-		plt.close()
+		plt.close(fig)
 		
 		# df = df[df['Symbol'].isin(['Nesn','NOVN','ROG','UBSG','CSGN'])]
 		
@@ -341,12 +342,29 @@ class DiscoAnalysis(DataAnalysis):
 		# plt.show()
 		plt.close(fig)
 
+		print(df.head(10))
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.catplot(x='Date', y='dev', data=df, ax=ax1, palette='Set1')
+		# ax1.hlines(0, xmin, xmax, 'k', 'dashed', lw=1)
+		# ax1.xaxis.set_major_locator(loca)
+		# ax1.xaxis.set_major_formatter(form)
+		# ax1.set_ylim((-50, 50))
+		# ax1.set_xlim((xmin, xmax))
+		# ax1.set_xlabel("")
+		# ax1.set_ylabel("Deviation [bps]")
+		# ax1.set_title("Average daily deviation of closing price from last midpoint over SLI (95\% CI)")
+		# plt.tight_layout()
+		# plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_distribution")
+		plt.show()
+		plt.close(fig)
+
 
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-file_data = os.getcwd() + "\\Exports\\Sensitivity_fine_v1.csv"
-Sens = SensAnalysis(file_data, file_bcs)
-t = Sens.plt_cont_rmv_agg()
-#
-# file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-# Disco = DiscoAnalysis(file_data, file_bcs)
-# Disco.plt_deviation_discovery()
+
+# file_data = os.getcwd() + "\\Exports\\Sensitivity_fine_v1.csv"
+# Sens = SensAnalysis(file_data, file_bcs)
+# t = Sens.plt_cont_rmv_agg()
+
+file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
+Disco = DiscoAnalysis(file_data, file_bcs)
+Disco.plt_deviation_discovery()
