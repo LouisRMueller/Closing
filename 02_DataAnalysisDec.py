@@ -8,7 +8,8 @@ datadir = os.getcwd() + "\\Data"
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 mode = 'Sensitivity'
-	granularity = 'rough'
+mode = 'Discovery'
+granularity = 'fine'
 ########################################################################
 
 if mode == 'Sensitivity':
@@ -33,17 +34,17 @@ if mode == 'Sensitivity':
 		Sens.plt_cont_rmv_indiv('ask_limit')
 		Sens.plt_cont_rmv_indiv('all_limit')
 
+		Sens.plt_cont_rmv_agg()
 
 
 
-
-elif mode == 'Disc':
+elif mode == 'Discovery':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
 	Disc = DiscoAnalysis(file_data, file_bcs)
 
-	Disc.plot_closings_per_stock()
+	# Disc.plt_closing_volume()
 	Disc.plt_deviation_discovery()
 
-
+print('--- FINISHED ---')
 	
 	
