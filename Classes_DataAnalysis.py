@@ -44,33 +44,32 @@ class SensAnalysis(DataAnalysis):
 		self._raw_vol_classify()
 
 	def plt_remove_limit_individual(self, stock, mode):
+		# 	limit = 0.35
+		# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
+		# 	locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
+		#
+		# 	tmp = self._bcs_data.loc[mode, :].xs(stock, level='Symbol')
+		# 	tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
+		# 	tmp = tmp.unstack(level='Percent', fill_value=np.nan)
+		# 	tmp = tmp.iloc[:, tmp.columns <= limit]
+		#
+		# 	tmp.plot(figsize=figsize, linewidth=1)
+		# 	plt.hlines(0, 0, len(tmp.index), 'k', lw=1, linewidth=1)
+		# 	plt.xlabel("")
+		# 	plt.ylabel("Deviation from closing price in bps")
+		# 	plt.title("{}: Gradual removal of {}".format(stock, namedict[mode]))
+		#
+		# 	plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
+		# 			 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
+		#
+		# 	fig.tight_layout()
+		# 	plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
+		# 	plt.close()
 		pass
-
-	# 	limit = 0.35
-	# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
-	# 	locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
-	#
-	# 	tmp = self._bcs_data.loc[mode, :].xs(stock, level='Symbol')
-	# 	tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
-	# 	tmp = tmp.unstack(level='Percent', fill_value=np.nan)
-	# 	tmp = tmp.iloc[:, tmp.columns <= limit]
-	#
-	# 	tmp.plot(figsize=figsize, linewidth=1)
-	# 	plt.hlines(0, 0, len(tmp.index), 'k', lw=1, linewidth=1)
-	# 	plt.xlabel("")
-	# 	plt.ylabel("Deviation from closing price in bps")
-	# 	plt.title("{}: Gradual removal of {}".format(stock, namedict[mode]))
-	#
-	# 	plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
-	# 			 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
-	#
-	# 	fig.tight_layout()
-	# 	plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
-	# 	plt.close()
 
 	def plt_rmv_limit_aggregated(self):
 		"""Only works with rough percentages"""
-		limit = 0.35
+		limit = 0.25
 		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
 		locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
 
@@ -83,7 +82,7 @@ class SensAnalysis(DataAnalysis):
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 			sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1,
-					   palette='gist_earth', lw=1, ci=95, n_boot=500)
+					   palette='gnuplot', lw=1, ci=95, n_boot=500)
 			ax1.grid(which='major', axis='y')
 			ax1.set_xlabel("")
 			ax1.set_ylabel("Deviation from closing price in bps")
@@ -136,39 +135,39 @@ class SensAnalysis(DataAnalysis):
 				return df
 
 	def plt_cont_rmv_indiv(self, mode):
+		limit = 0.3
 		raw = copy.deepcopy(self._raw_data.loc[mode, :])
 		raw = raw[raw['close_vol'] > 1000]
-		# raw = copy.deepcopy(self._bcs_data.loc[mode, :])
-		numstocks = {'available': self._avg_vol.index[self._avg_vol > 0],
-				   'top 75': self._avg_vol.index[:75],
+		numstocks = {'available': self._avg_turnover.index[self._avg_turnover > 0],
+				   'top 100': self._avg_turnover.index[:100],
+				   'top 50': self._avg_turnover.index[:50],
 				   'SLI': self._bluechips,
-				   'top 20': self._avg_vol.index[:20],
-				   'top 10': self._avg_vol.index[:10]}
+				   'top 20': self._avg_turnover.index[:20],
+				   'top 10': self._avg_turnover.index[:10]}
 		figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
 					ask_limit=dict(name='ask limit orders', loc='upper left'),
 					all_limit=dict(name='bid/ask limit orders', loc='upper left'))
 
 		for n in numstocks.keys():
 			cl = pd.DataFrame({'deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10 ** 4,
-						    'log10(volume)': np.log10(raw['close_vol'])})
+						    'log10(turnover)': np.log10(raw['close_turnover'])})
 			cl = cl[cl.index.get_level_values('Symbol').isin(numstocks[n])]
-
 			cl = cl.groupby(['Symbol', 'Percent']).mean()
 			cl.reset_index(drop=False, inplace=True)
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-			sns.lineplot(x='Percent', y='deviation', hue='log10(volume)',
-					   data=cl, linewidth=0.75, palette='YlOrRd', ax=ax1)
-			ax1.hlines(0, cl['Percent'].min(), cl['Percent'].max(), 'k', lw=1, linewidth=1.0)
+			sns.lineplot(x='Percent', y='deviation', hue='log10(turnover)',
+					   data=cl[cl['Percent'] <= limit], linewidth=0.9, palette='YlOrRd', ax=ax1)
+			# ax1.hlines(0, cl['Percent'].min(), cl['Percent'].max(), 'k', lw=1, linewidth=1.0)
 			ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			ax1.set_xlabel("Removed liquidity")
 			ax1.set_ylabel("Deviation from actual closing [bps]")
 			ax1.set_title("Sensitivity of {} titles with respect to {} (N = {})"
 					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
 			handles, labels = ax1.get_legend_handles_labels()
-			# ax1.grid(which='major', axis='both')
+			ax1.grid(which='major', axis='y')
 			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
-					 loc=figdict[mode]['loc'], fontsize='small', title="log10(volume)")
+					 loc=figdict[mode]['loc'], fontsize='small', title="log10(turnover)")
 			fig.tight_layout()
 			plt.savefig(figdir + "\\SensitivityFine\\Sens_Percent_{}_{}".format(mode, n))
 			# fig.show()
@@ -356,7 +355,6 @@ class DiscoAnalysis(DataAnalysis):
 			fig.show()
 			plt.close(fig)
 
-
 	def plt_deviation_discovery(self):
 		raw = self._bcs_data
 
@@ -448,6 +446,6 @@ file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 # Sens = SensAnalysis(file_data, file_bcs)
 # t = Sens.plt_rmv_limit_quant()
 
-file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-Disco = DiscoAnalysis(file_data, file_bcs)
-t = Disco.plt_closing_volume()
+# file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
+# Disco = DiscoAnalysis(file_data, file_bcs)
+# t = Disco.plt_closing_volume()

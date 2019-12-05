@@ -9,7 +9,7 @@ datadir = os.getcwd() + "\\Data"
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 mode = 'Sensitivity'
 # mode = 'Discovery'
-granularity = 'fine'
+granularity = 'rough'
 ########################################################################
 
 if mode == 'Sensitivity':
@@ -22,15 +22,14 @@ if mode == 'Sensitivity':
 		# Sens.plt_remove_limit_individual('bid_limit')
 		# Sens.plt_remove_limit_individual('ask_limit')
 		# Sens.plt_remove_limit_individual('all_limit')
-
-		Sens.plt_rmv_limit_quant()
+		# Sens.plt_rmv_limit_quant()
 
 	elif granularity == 'fine':
-		# Sens.plt_cont_rmv_indiv('bid_limit')
-		# Sens.plt_cont_rmv_indiv('ask_limit')
-		# Sens.plt_cont_rmv_indiv('all_limit')
+		Sens.plt_cont_rmv_indiv('bid_limit')
+		Sens.plt_cont_rmv_indiv('ask_limit')
+		Sens.plt_cont_rmv_indiv('all_limit')
 
-		Sens.plt_cont_rmv_agg()
+		# Sens.plt_cont_rmv_agg()
 
 
 
