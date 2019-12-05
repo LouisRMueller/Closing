@@ -8,7 +8,7 @@ datadir = os.getcwd() + "\\Data"
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 mode = 'Sensitivity'
-mode = 'Discovery'
+# mode = 'Discovery'
 granularity = 'fine'
 ########################################################################
 
@@ -17,22 +17,18 @@ if mode == 'Sensitivity':
 	Sens = SensAnalysis(file_data, file_bcs)
 
 	if granularity == 'rough':
-		Sens.plt_rmv_limit_aggregated('bid_limit')
-		Sens.plt_rmv_limit_aggregated('ask_limit')
-		Sens.plt_rmv_limit_aggregated('all_limit')
+		Sens.plt_rmv_limit_aggregated()
 
-		Sens.plt_remove_limit_individual('bid_limit')
-		Sens.plt_remove_limit_individual('ask_limit')
-		Sens.plt_remove_limit_individual('all_limit')
-		
-		Sens.plt_rmv_limit_quant('bid_limit')
-		Sens.plt_rmv_limit_quant('ask_limit')
-		Sens.plt_rmv_limit_quant('all_limit')
-		
+		# Sens.plt_remove_limit_individual('bid_limit')
+		# Sens.plt_remove_limit_individual('ask_limit')
+		# Sens.plt_remove_limit_individual('all_limit')
+
+		Sens.plt_rmv_limit_quant()
+
 	elif granularity == 'fine':
-		Sens.plt_cont_rmv_indiv('bid_limit')
-		Sens.plt_cont_rmv_indiv('ask_limit')
-		Sens.plt_cont_rmv_indiv('all_limit')
+		# Sens.plt_cont_rmv_indiv('bid_limit')
+		# Sens.plt_cont_rmv_indiv('ask_limit')
+		# Sens.plt_cont_rmv_indiv('all_limit')
 
 		Sens.plt_cont_rmv_agg()
 
@@ -42,8 +38,9 @@ elif mode == 'Discovery':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
 	Disc = DiscoAnalysis(file_data, file_bcs)
 
-	# Disc.plt_closing_volume()
+	Disc.plt_closing_volume()
 	Disc.plt_deviation_discovery()
+
 
 print('--- FINISHED ---')
 	

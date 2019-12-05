@@ -7,7 +7,7 @@ pd.set_option("display.max_columns", 8)
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
 mode = 'Sensitivity'
-granularity = 'rough'
+granularity = 'fine'
 ########################################################################
 
 

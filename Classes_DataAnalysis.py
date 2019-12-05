@@ -20,29 +20,32 @@ figdir = os.getcwd() + "\\01 Presentation December\\Figures"
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
-sns.set_palette('Set1')
+sns.set_palette('Dark2')
+
 
 class DataAnalysis:
 	def __init__(self, datapath, bluechippath):
 		self._bluechips = pd.read_csv(bluechippath)['symbol']
 		self._raw_data = pd.read_csv(datapath, parse_dates=['Date'])
-		self._figpath = os.getcwd() + "\\01 Presentation December"
 		print("--- Class Initiated ---")
 
 	def _raw_vol_classify(self):
 		self._bcs_data = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(self._bluechips)]
 		self._avg_vol = self._raw_data['close_vol'].groupby('Symbol').mean().sort_values(ascending=False).dropna()
+		self._avg_turnover = self._raw_data['close_turnover'].groupby('Symbol').mean().sort_values(ascending=False).dropna()
 
 
 class SensAnalysis(DataAnalysis):
 	def __init__(self, datapath, bluechippath):
 		super().__init__(datapath, bluechippath)
+		self._raw_data['close_turnover'] = self._raw_data['close_price'] * self._raw_data['close_vol']
 		self._raw_data['Percent'] = self._raw_data['Percent'].round(2)
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
 		self._raw_vol_classify()
 
 	def plt_remove_limit_individual(self, stock, mode):
 		pass
+
 	# 	limit = 0.35
 	# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
 	# 	locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
@@ -61,7 +64,7 @@ class SensAnalysis(DataAnalysis):
 	# 	plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
 	# 			 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
 	#
-	# 	plt.tight_layout()
+	# 	fig.tight_layout()
 	# 	plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
 	# 	plt.close()
 
@@ -73,18 +76,19 @@ class SensAnalysis(DataAnalysis):
 
 		for mode in iter(namedict.keys()):
 			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
-			df = pd.DataFrame({'Deviation':(raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10000})
+			df = pd.DataFrame({'Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10000})
 			df.reset_index(inplace=True)
 			df = df[df['Percent'] <= limit]
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + " \%"
 
-			fig, ax1 = plt.subplots(1,1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 			sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1,
 					   palette='gist_earth', lw=1, ci=95, n_boot=500)
 			ax1.grid(which='major', axis='y')
 			ax1.set_xlabel("")
 			ax1.set_ylabel("Deviation from closing price in bps")
-			ax1.set_title("Average impact of gradual removal of {} across SLI (Bootstrapped 95\% CI)".format(namedict[mode]))
+			ax1.set_title(
+				"Average impact of gradual removal of {} across SLI (Bootstrapped 95\% CI)".format(namedict[mode]))
 			loca = dates.MonthLocator()
 			form = dates.ConciseDateFormatter(loca)
 			ax1.xaxis.set_major_locator(loca)
@@ -98,28 +102,28 @@ class SensAnalysis(DataAnalysis):
 		return raw
 
 	def plt_rmv_limit_quant(self):
-		limit = 0.45
+		limit = 0.40
 		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders",
 					 all_limit="bid/ask limit orders")
 
 		for mode in iter(namedict.keys()):
 			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
 			quants = raw.groupby(['Date', 'Symbol']).first()
-			quants = quants.groupby('Date')['close_price'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
+			quants = quants.groupby('Date')['close_vol'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
 			quants.rename('quantile', inplace=True)
 			quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
 			tmp = raw[['close_price', 'adj_price']].join(quants, on=['Date', 'Symbol'], how='left')
-			df = pd.DataFrame({'Deviation': (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10**4,
+			df = pd.DataFrame({'Deviation': (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10 ** 4,
 						    'Quantile': tmp['quantile']}).reset_index()
 			df = df[df['Percent'] <= limit]
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
-			print(df.head())
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 			sns.boxplot(data=df, x='Percent', y='Deviation', palette='Set3',
 					  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
 			ax1.set_xlabel('')
-			ax1.set_title("Quantile distribution of closing price deviations when removing {}".format(namedict[mode]))
+			ax1.set_title(
+				"Quantile distribution of closing price deviations when removing {}".format(namedict[mode]))
 			ax1.set_ylabel("Deviation in bps")
 			ax1.set_xlabel("Amount of liquidity removed")
 			ax1.grid(which='major', axis='y')
@@ -127,7 +131,9 @@ class SensAnalysis(DataAnalysis):
 			plt.savefig(figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
 			fig.show()
 			plt.close()
-
+			print(mode)
+			if mode == 'all_limit':
+				return df
 
 	def plt_cont_rmv_indiv(self, mode):
 		raw = copy.deepcopy(self._raw_data.loc[mode, :])
@@ -160,12 +166,12 @@ class SensAnalysis(DataAnalysis):
 			ax1.set_title("Sensitivity of {} titles with respect to {} (N = {})"
 					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
 			handles, labels = ax1.get_legend_handles_labels()
-			ax1.grid(which='major', axis='both')
+			# ax1.grid(which='major', axis='both')
 			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title="log10(volume)")
 			fig.tight_layout()
 			plt.savefig(figdir + "\\SensitivityFine\\Sens_Percent_{}_{}".format(mode, n))
-			# plt.show()
+			# fig.show()
 			plt.close()
 
 	def plt_cont_rmv_agg(self):
@@ -184,57 +190,115 @@ class SensAnalysis(DataAnalysis):
 					    'Turnover Delta': (turn_df['adj_turnover'] - turn_df['turnover']) / turn_df['turnover']
 					    }).reset_index()
 
-		df.loc[df['Mode'] == 'all_limit', 'Percent'] = 2 * df.loc[df['Mode'] == 'all_limit', 'Percent'].values
 		df.replace({'bid_limit': 'bid limit', 'ask_limit': 'ask limit', 'all_limit': 'all limit'},
 				 inplace=True)
 
-		print(df.head())
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 		xmin, xmax = 0, 0.5
 		sns.lineplot(data=df, x='Percent', y='Deviation', hue='Mode',
-				   ax=ax1, ci='sd', palette='Set2')
+				   ax=ax1, ci=99)
 		ax1.grid(which='both')
-		ax1.hlines(0,xmin,xmax, 'k', lw=1)
+		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.set_xlim([xmin, xmax])
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.set_ylabel("Deviation in bps")
 		ax1.set_xlabel("Removed percentage of limit orders")
-		ax1.set_title("Average deviation of closing price depending on removed liquidity on SLI")
-		plt.tight_layout()
+		ax1.set_title(
+			"Average deviation of closing price depending on removed liquidity on SLI (Bootstrapped 99\% CI)")
+		fig.tight_layout()
 		plt.savefig(figdir + "\\SensitivityFine\\Avg_closeprice_SLI.png")
-		plt.show()
+		fig.show()
 		plt.close()
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 		sns.lineplot(data=df, x='Percent', y='Volume Delta', hue='Mode',
-				   ax=ax1, ci='sd', palette='Set2')
+				   ax=ax1, ci=99)
 		ax1.set_xlim([xmin, xmax])
-		ax1.hlines(0,xmin,xmax, 'k', lw=1)
+		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.grid(which='both')
 		ax1.set_ylabel("Deviation in \%")
 		ax1.set_xlabel("Removed percentage of limit orders")
-		ax1.set_title("Average deviation of volume depending on removed liquidity on SLI")
-		plt.tight_layout()
+		ax1.set_title("Average deviation of volume depending on removed liquidity on SLI (Bootstrapped 99\% CI)")
+		fig.tight_layout()
 		plt.savefig(figdir + "\\SensitivityFine\\Avg_volume_dev_SLI.png")
-		plt.show()
+		fig.show()
 		plt.close()
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 		sns.lineplot(data=df, x='Percent', y='Turnover Delta', hue='Mode',
-				   ax=ax1, ci='sd', palette='Set2')
+				   ax=ax1, ci=99)
 		ax1.set_xlim([xmin, xmax])
-		ax1.hlines(0,xmin,xmax, 'k', lw=1)
+		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 		ax1.grid(which='both')
 		ax1.set_ylabel("Deviation in \%")
 		ax1.set_xlabel("Removed percentage of limit orders")
-		ax1.set_title("Average deviation of turnover depending on removed liquidity on SLI")
-		plt.tight_layout()
+		ax1.set_title("Average deviation of turnover depending on removed liquidity on SLI (Bootstrapped 99\% CI)")
+		fig.tight_layout()
 		plt.savefig(figdir + "\\SensitivityFine\\Avg_turnover_dev_SLI.png")
-		plt.show()
+		fig.show()
+		plt.close()
+
+		return df
+
+	def plt_rmv_market_orders(self):
+		raw = self._bcs_data.loc['all_market', :]
+
+		df = pd.DataFrame({'Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10 ** 4,
+					    'Volume': raw['close_vol'] / 10 ** 6,
+					    'Volume Deviation': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol']})
+		df = df[abs(df['Deviation']) < 600]
+		# quants = raw.groupby('Date')['close_vol'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
+		# quants.rename('Quantile', inplace=True)
+		# quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
+		# df = df.join(quants)
+
+		df = df.join(pd.Series(df['Volume'].groupby('Symbol').mean(), name='Average Volume'), on='Symbol')
+
+		df.reset_index(inplace=True)
+
+		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Date', y='Deviation', hue='Average Volume', sizes=(.25, 1.5),
+				   size='Average Volume', palette='YlOrRd', ax=ax)
+		handles, labels = ax.get_legend_handles_labels()
+		ax.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
+				fontsize='small', title="Avg. vol. (mn. shares)", loc='upper left')
+		ax.grid(which='major', axis='y')
+		loca = dates.MonthLocator()
+		form = dates.ConciseDateFormatter(loca)
+		ax.xaxis.set_major_locator(loca)
+		ax.xaxis.set_major_formatter(form)
+		ax.set_ylabel("Deviation in bps")
+		ax.set_xlabel("")
+		ax.set_title("Deviation from original closing price when all market orders are removed by SLI title")
+		fig.tight_layout()
+		plt.savefig(figdir + "\\SensitivityRough\\Deviation_rmv_market")
+		# fig.show()
+		plt.close()
+
+		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Date', y='Volume Deviation', hue='Average Volume', sizes=(.25, 1.5),
+				   size='Average Volume', palette='YlOrRd', ax=ax)
+		handles, labels = ax.get_legend_handles_labels()
+		ax.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
+				fontsize='small', title="Avg. vol. (mn. shares)", loc='upper left')
+		ax.grid(which='major', axis='y')
+		ax.set_ylim([-1, 0])
+		loca = dates.MonthLocator()
+		form = dates.ConciseDateFormatter(loca)
+		ax.xaxis.set_major_locator(loca)
+		ax.xaxis.set_major_formatter(form)
+		ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+		ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		ax.set_ylabel("Drop in traded closing volume")
+		ax.set_xlabel("")
+		ax.set_title("Decrease in number of shares traded when all market orders are removed by SLI title")
+		fig.tight_layout()
+		plt.savefig(figdir + "\\SensitivityRough\\Volume_rmv_market")
+		fig.show()
 		plt.close()
 
 		return df
@@ -243,37 +307,55 @@ class SensAnalysis(DataAnalysis):
 class DiscoAnalysis(DataAnalysis):
 	def __init__(self, datapath, bluechippath):
 		super().__init__(datapath, bluechippath)
+		self._raw_data['close_turnover'] = self._raw_data['actual_close_price'] * self._raw_data['close_vol']
 		self._raw_data.set_index(['Date', 'Symbol'], inplace=True)
 		self._raw_vol_classify()
 
 	def plt_closing_volume(self):
 		limit = 50
 
-		meanvol = self._raw_data.loc[:, 'close_vol'].groupby('Symbol').mean()
-		tmp_vol = meanvol / meanvol.max()
-		tmp_vol.sort_values(ascending=False, inplace=True)
-		tmp_vol = tmp_vol[tmp_vol > 0]
+		measdict = dict(shares={'call': 'Number of shares traded', 'data': self._avg_vol, 'col': 'close_vol'},
+					 turnover={'call': 'Turnover', 'data': self._avg_turnover, 'col': 'close_turnover'})
 
-		# Volume contribution among all stocks without labels
-		fig, ax = plt.subplots(1, 1, figsize=figsize)
-		ax.bar(np.arange(1, len(tmp_vol) + 1), tmp_vol.values, width=1)
-		ax.set_yscale('log')
-		ax.set_ylabel("Volume divided by largest")
-		ax.set_xlabel("Sorted titles")
-		ax.set_title("Average daily closing volume normalized")
-		plt.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\volume_percent_aggregated", dpi=dpi)
-		plt.close()
+		for m in iter(measdict.keys()):
+			# raw = measdict[m]['data']
+			# tmp = raw[raw > 0]
+			raw = self._raw_data
+			avg_vol = measdict[m]['data']
+			maxvol = avg_vol.max()
+			tmp = pd.DataFrame({'Volume': raw[measdict[m]['col']] / maxvol}).groupby('Symbol').mean()
+			tmp.sort_values('Volume', ascending=False, inplace=True)
+			tmp.reset_index(inplace=True)
 
-		# Volume percentage of closings with labels
-		fig, ax = plt.subplots(1, 1, figsize=figsize)
-		ax.bar(tmp_vol.index[:limit], tmp_vol[:limit].values, width=0.7)
-		ax.tick_params(axis='x', rotation=90)
-		ax.set_title("Average daily closing volume normalized for {} most liquid titles".format(str(limit)))
-		ax.set_ylabel("Volume divided by largest")
-		plt.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\volume_percent_stocks", dpi=dpi)
-		plt.close()
+			fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			sns.barplot(data=tmp[tmp['Volume'] > 0], x='Symbol', y='Volume', ax=ax, ci=None, palette='rainbow')
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
+			ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+			ax.set_axisbelow(True)
+			ax.grid(which='major', axis='both')
+			ax.set_ylabel("{} divided by largest".format(measdict[m]['call']))
+			ax.set_xlabel("Sorted titles")
+			ax.set_yscale('log')
+			ax.set_title('Average {} during closing auction sorted by title'.format(measdict[m]['call']))
+			fig.tight_layout()
+			plt.savefig(figdir + "\\PriceDiscovery\\{}_percent_aggregated".format(m))
+			fig.show()
+			plt.close(fig)
+
+			fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			sns.barplot(data=tmp.iloc[:limit, :], x='Symbol', y='Volume',
+					  ax=ax, palette=sns.color_palette("Dark2", 1))
+			ax.set_axisbelow(True)
+			ax.grid(which='major', axis='y')
+			ax.set_ylabel("{} divided by largest".format(measdict[m]['call']))
+			ax.set_title("Average {0} normalized for {1} most liquid titles".format(measdict[m]['call'], str(limit)))
+			ax.tick_params(axis='x', rotation=90)
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			fig.tight_layout()
+			plt.savefig(figdir + "\\PriceDiscovery\\{}_percent_stocks".format(m))
+			fig.show()
+			plt.close(fig)
+
 
 	def plt_deviation_discovery(self):
 		raw = self._bcs_data
@@ -305,15 +387,15 @@ class DiscoAnalysis(DataAnalysis):
 			ax.xaxis.set_major_formatter(form)
 
 		axes[1].set_ylabel("Deviation [bps]")
-		plt.tight_layout()
+		fig.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_terciles.png")
-		plt.show()
+		fig.show()
 		fig.clf()
 		plt.close(fig)
 
-
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1, ci=95)
+		ax1.grid(which='major', axis='y')
 		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.xaxis.set_major_locator(loca)
 		ax1.xaxis.set_major_formatter(form)
@@ -322,9 +404,9 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_xlabel("")
 		ax1.set_ylabel("Deviation [bps]")
 		ax1.set_title("Average daily deviation of closing price from last midpoint over SLI (Bootstrapped 95\% CI)")
-		plt.tight_layout()
+		fig.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_aggregated")
-		plt.show()
+		fig.show()
 		fig.clf()
 		plt.close(fig)
 
@@ -335,7 +417,7 @@ class DiscoAnalysis(DataAnalysis):
 		stocks = self._avg_vol.index[:20]
 		raw = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(stocks)]
 
-		df = pd.DataFrame({'Dev': (raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10**4,
+		df = pd.DataFrame({'Dev': (raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10 ** 4,
 					    'Vol': raw['close_vol']})
 		df.reset_index(inplace=True)
 		ylim = 230
@@ -349,7 +431,9 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_ylim([-ylim, ylim])
 		ax1.set_xlabel('')
 		plt.xticks(rotation=90)
-		ax1.set_title("Distribution of deviations of closing from pre-close midquote of {} most \"closed\" stocks".format(limit))
+		ax1.set_title(
+			"Distribution of deviations of closing from pre-close midquote of {} most \"closed\" stocks".format(
+				limit))
 		fig.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Distribution_xsection")
 		fig.show()
@@ -358,14 +442,12 @@ class DiscoAnalysis(DataAnalysis):
 		return df
 
 
-
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
+#
+# file_data = os.getcwd() + "\\Exports\\Sensitivity_rough_v1.csv"
+# Sens = SensAnalysis(file_data, file_bcs)
+# t = Sens.plt_rmv_limit_quant()
 
-file_data = os.getcwd() + "\\Exports\\Sensitivity_rough_v1.csv"
-Sens = SensAnalysis(file_data, file_bcs)
-t = Sens.plt_rmv_limit_quant()
-
-# file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-# Disco = DiscoAnalysis(file_data, file_bcs)
-# t = Disco.plt_disco_distr_xsect(20)
-
+file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
+Disco = DiscoAnalysis(file_data, file_bcs)
+t = Disco.plt_closing_volume()
