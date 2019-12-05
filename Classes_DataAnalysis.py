@@ -82,7 +82,7 @@ class SensAnalysis(DataAnalysis):
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 			sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1,
-					   palette='gnuplot', lw=1, ci=95, n_boot=500)
+					   palette='gist_heat', lw=1, ci=95, n_boot=500)
 			ax1.grid(which='major', axis='y')
 			ax1.set_xlabel("")
 			ax1.set_ylabel("Deviation from closing price in bps")
