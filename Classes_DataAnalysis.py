@@ -32,7 +32,8 @@ class DataAnalysis:
 	def _raw_vol_classify(self):
 		self._bcs_data = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(self._bluechips)]
 		self._avg_vol = self._raw_data['close_vol'].groupby('Symbol').mean().sort_values(ascending=False).dropna()
-		self._avg_turnover = self._raw_data['close_turnover'].groupby('Symbol').mean().sort_values(ascending=False).dropna()
+		self._avg_turnover = self._raw_data['close_turnover'].groupby('Symbol').mean().sort_values(
+			ascending=False).dropna()
 
 
 class SensAnalysis(DataAnalysis):
@@ -101,14 +102,14 @@ class SensAnalysis(DataAnalysis):
 		return raw
 
 	def plt_rmv_limit_quant(self):
-		limit = 0.40
+		limit = 0.3
 		namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders",
 					 all_limit="bid/ask limit orders")
 
 		for mode in iter(namedict.keys()):
 			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
 			quants = raw.groupby(['Date', 'Symbol']).first()
-			quants = quants.groupby('Date')['close_vol'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
+			quants = quants.groupby('Date')['close_turnover'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
 			quants.rename('quantile', inplace=True)
 			quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
 			tmp = raw[['close_price', 'adj_price']].join(quants, on=['Date', 'Symbol'], how='left')
@@ -118,7 +119,7 @@ class SensAnalysis(DataAnalysis):
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-			sns.boxplot(data=df, x='Percent', y='Deviation', palette='Set3',
+			sns.boxplot(data=df, x='Percent', y='Deviation', palette='Set3', whis=[2.5, 97.5],
 					  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
 			ax1.set_xlabel('')
 			ax1.set_title(
@@ -130,9 +131,6 @@ class SensAnalysis(DataAnalysis):
 			plt.savefig(figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
 			fig.show()
 			plt.close()
-			print(mode)
-			if mode == 'all_limit':
-				return df
 
 	def plt_cont_rmv_indiv(self, mode):
 		limit = 0.3
@@ -412,21 +410,22 @@ class DiscoAnalysis(DataAnalysis):
 
 	def plt_disco_distr_xsect(self, limit=15):
 		# stocks = ['NESN','NOVN','ROG','UBSG','CSGN']
-		stocks = self._avg_vol.index[:20]
+		stocks = self._avg_turnover.index[:20]
 		raw = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(stocks)]
 
 		df = pd.DataFrame({'Dev': (raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10 ** 4,
-					    'Vol': raw['close_vol']})
+					    'Vol': raw['close_turnover']})
 		df.reset_index(inplace=True)
 		ylim = 230
 		df = df[abs(df['Dev']) <= ylim]
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		sns.boxplot(x='Symbol', y='Dev', palette='Set3', data=df, ax=ax1, order=stocks)
+		sns.boxplot(x='Symbol', y='Dev', palette=sns.color_palette('Set3'), data=df,
+				  ax=ax1, order=stocks, whis=[2.5, 97.5])
 		ax1.set_ylabel("Deviation from midquote in bps")
 		ax1.yaxis.set_major_locator(ticker.MultipleLocator(100))
 		ax1.grid(which='major', axis='y', color='k', lw=0.8)
-		ax1.set_ylim([-ylim, ylim])
+		# ax1.set_ylim([-ylim, ylim])
 		ax1.set_xlabel('')
 		plt.xticks(rotation=90)
 		ax1.set_title(
