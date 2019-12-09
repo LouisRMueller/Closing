@@ -77,7 +77,7 @@ class SensAnalysis(DataAnalysis):
 		locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
 
 		for mode in iter(namedict.keys()):
-			raw = copy.deepcopy(self._bcs_data.loc[mode, :])
+			raw = self._bcs_data.loc[mode, :]
 			df = pd.DataFrame({'Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10000})
 			df.reset_index(inplace=True)
 			df = df[df['Percent'] <= limit]
@@ -162,8 +162,7 @@ class SensAnalysis(DataAnalysis):
 				   'top 120': self._avg_turnover.index[:120],
 				   'top 60': self._avg_turnover.index[:60],
 				   'SLI': self._bluechips,
-				   'top 20': self._avg_turnover.index[:20],
-				   'top 10': self._avg_turnover.index[:10]}
+				   'top 20': self._avg_turnover.index[:20]}
 		figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
 					ask_limit=dict(name='ask limit orders', loc='upper left'),
 					all_limit=dict(name='bid/ask limit orders', loc='upper left'))
@@ -186,13 +185,13 @@ class SensAnalysis(DataAnalysis):
 			ax1.set_ylabel("Deviation from actual closing price [bps]")
 			ax1.set_title("Price sensitivity of {} titles with respect to {} (N = {})"
 					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
-			ax1.grid(which='major', axis='y')
+			ax1.grid(which='both', axis='y')
 			handles, labels = ax1.get_legend_handles_labels()
-			ax1.legend(handles=handles[1:], labels=[int(float(l)) for l in labels[1:]],
+			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
 			fig.tight_layout()
 			plt.savefig(figdir + "\\SensitivityFine\\Sens_Price_Percent_{}_{}".format(mode, n))
-			fig.show()
+			# fig.show()
 			plt.close()
 
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
@@ -201,17 +200,18 @@ class SensAnalysis(DataAnalysis):
 			ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
 			ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
 			ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+			ax1.set_ylim(top=0)
 			ax1.set_xlabel("Removed liquidity")
 			ax1.set_ylabel("Deviation from actual closing [\%]")
 			ax1.set_title("Volume sensitivity of {} titles with respect to {} (N = {})"
 					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
 			ax1.grid(which='major', axis='y')
 			handles, labels = ax1.get_legend_handles_labels()
-			ax1.legend(handles=handles[1:], labels=[int(float(l)) for l in labels[1:]],
+			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
 			fig.tight_layout()
 			plt.savefig(figdir + "\\SensitivityFine\\Sens_Vol_Percent_{}_{}".format(mode, n))
-			fig.show()
+			# fig.show()
 			plt.close()
 
 	def plt_cont_rmv_agg(self):
@@ -389,13 +389,15 @@ class DiscoAnalysis(DataAnalysis):
 			plt.close(fig)
 
 	def plt_deviation_discovery(self):
-		raw = self._bcs_data
+		raw = copy.deepcopy(self._bcs_data)
+		raw['pre_abs_spread'].replace({0: 0.01}, inplace=True)
 
 		quants = raw.groupby('Date')['close_turnover']. \
 			transform(lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']))
-		quants.rename('quantile', inplace=True)
+		quants.rename('Quantile', inplace=True)
 		# quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
-		df = pd.DataFrame(dict(dev=(raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10000,
+		df = pd.DataFrame(dict(dev=(raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10 * 4,
+						   dev_spread=(raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_abs_spread'],
 						   vol=raw['close_vol']))
 		df = df.join(quants)
 		df = df.reset_index()
@@ -405,9 +407,9 @@ class DiscoAnalysis(DataAnalysis):
 		loca = dates.MonthLocator()
 		form = dates.ConciseDateFormatter(loca)
 
-		for ax, qt in zip(axes, df['quantile'].unique()):
-			sns.lineplot(x='Date', y='dev', data=df[df['quantile'] == qt],
-					   lw=1, ax=ax, ci=95)
+		# Price Discovery Plot by Quantile
+		for ax, qt in zip(axes, df['Quantile'].unique()):
+			sns.lineplot(x='Date', y='dev', data=df[df['Quantile'] == qt], lw=1.2, ax=ax, ci=95)
 			ax.hlines(0, xmin, xmax, 'k', lw=1)
 			ax.set_ylim((-50, 50))
 			ax.set_xlim((xmin, xmax))
@@ -420,12 +422,11 @@ class DiscoAnalysis(DataAnalysis):
 		axes[1].set_ylabel("Deviation [bps]")
 		fig.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_terciles.png")
-		fig.show()
-		fig.clf()
+		# fig.show()
 		plt.close(fig)
 
 		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1, ci=95)
+		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1.2, ci=95)
 		ax1.grid(which='major', axis='y')
 		ax1.hlines(0, xmin, xmax, 'k', lw=1)
 		ax1.xaxis.set_major_locator(loca)
@@ -437,9 +438,45 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_title("Average daily deviation of closing price from last midpoint over SLI (Bootstrapped 95\% CI)")
 		fig.tight_layout()
 		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_aggregated")
+		# fig.show()
+		fig.clf()
+		plt.close(fig)
+
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1.2, ci=None, estimator='std', hue='Quantile',
+				   palette='cubehelix')
+		ax1.grid(which='major', axis='y')
+		ax1.xaxis.set_major_locator(loca)
+		ax1.xaxis.set_major_formatter(form)
+		ax1.set_yscale('log')
+		# ax1.set_ylim(bottom=0.1)
+		ax1.set_xlim((xmin, xmax))
+		ax1.set_xlabel("")
+		ax1.set_ylabel("Standard Deviation [bps]")
+		ax1.set_title(
+			"Standard deviation of closing price deviations from last midpoint over SLI (Bootstrapped 95\% CI)")
+		fig.tight_layout()
+		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_std_aggregated")
 		fig.show()
 		fig.clf()
 		plt.close(fig)
+
+		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(x='Date', y='dev_spread', data=df.dropna(), ax=ax1, lw=1.2, ci=None, estimator='std', hue='Quantile', palette='cubehelix')
+		ax1.grid(which='major', axis='y')
+		ax1.xaxis.set_major_locator(loca)
+		ax1.xaxis.set_major_formatter(form)
+		ax1.set_yscale('log')
+		ax1.set_xlim((xmin, xmax))
+		ax1.set_xlabel("")
+		ax1.set_ylabel("Standard Deviation of dislocation divided by spread")
+		ax1.set_title("Standard deviation of closing price deviations from last midpoint over SLI (Bootstrapped 95\% CI)")
+		fig.tight_layout()
+		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_std_spread_aggregated")
+		fig.show()
+		fig.clf()
+		plt.close(fig)
+
 
 		return df
 
@@ -476,6 +513,50 @@ class DiscoAnalysis(DataAnalysis):
 
 		return df
 
+	def plt_disco_by_title(self, limit):
+		titles = self._avg_turnover.index[:limit]
+		raw = copy.deepcopy(self._bcs_data.loc[self._bcs_data.index.get_level_values(level='Symbol').isin(titles)])
+		raw['pre_abs_spread'].replace({0: 0.01}, inplace=True)
+		df = pd.DataFrame(
+			{'Deviation': (raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_midquote'] * 10 ** 4,
+			 'Deviation Spread': (raw['actual_close_price'] - raw['pre_midquote']) / raw['pre_abs_spread']})
+		df.reset_index(inplace=True)
+		df = df[abs(df['Deviation']) < 300]
+
+		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Date', y='Deviation', hue='Symbol', palette='cubehelix', lw=1.2)
+		ax.set_xlabel('')
+		ax.set_ylabel('Deviation in bps')
+		ax.set_title(
+			'Deviation of closing price from last observed midquote for largest {} titles'.format(str(limit)))
+		loca = dates.MonthLocator()
+		ax.xaxis.set_major_locator(loca)
+		ax.xaxis.set_major_formatter(dates.ConciseDateFormatter(loca))
+		ax.grid(which='major', axis='y')
+		ax.set_axisbelow(True)
+		fig.tight_layout()
+		plt.savefig(figdir + "\\PriceDiscovery\\Price_Deviation_Largest_Titles")
+		fig.show()
+		plt.close(fig)
+
+		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		sns.lineplot(data=df, x='Date', y='Deviation Spread', hue='Symbol', palette='cubehelix', lw=1.2)
+		ax.set_xlabel('')
+		ax.set_ylabel('Multiple of the pre-closing spread')
+		ax.set_title(
+			'Deviation of closing price from last observed midquote for largest {} titles'.format(str(limit)))
+		loca = dates.MonthLocator()
+		ax.set_axisbelow(True)
+		ax.xaxis.set_major_locator(loca)
+		ax.xaxis.set_major_formatter(dates.ConciseDateFormatter(loca))
+		ax.grid(which='major', axis='y')
+		fig.tight_layout()
+		plt.savefig(figdir + "\\PriceDiscovery\\Spread_Deviation_Largest_Titles")
+		fig.show()
+		plt.close(fig)
+
+		print(df.sort_values('Deviation Spread').head())
+
 
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 #
@@ -483,6 +564,6 @@ file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 # Sens = SensAnalysis(file_data, file_bcs)
 # t = Sens.plt_rmv_limit_quant()
 
-# file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-# Disco = DiscoAnalysis(file_data, file_bcs)
-# t = Disco.plt_closing_volume()
+file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
+Disco = DiscoAnalysis(file_data, file_bcs)
+t = Disco.plt_deviation_discovery()
