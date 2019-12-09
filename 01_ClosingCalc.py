@@ -7,14 +7,14 @@ pd.set_option("display.max_columns", 8)
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
 mode = 'Sensitivity'
-granularity = 'fine'
+granularity = 'rough'
 ########################################################################
 
 
 if mode == 'Sensitivity':
 	Sens = SensitivityAnalysis(file_snapshots)
 	if granularity == 'rough':
-		percent = np.arange(0.05, 0.99, 0.05)
+		percent = np.arange(0.05, 0.55, 0.05)
 	elif granularity == 'fine':
 		percent = np.arange(0.01, 0.51, 0.01)
 	else:

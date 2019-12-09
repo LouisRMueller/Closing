@@ -164,7 +164,7 @@ class SensitivityAnalysis(Research):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 			
-			for symbol in current_symbols:
+			for symbol in ['SOON']:
 				close_out = self._remove_liq(date=date, title=symbol, percentage=0)
 				close_uncross = self._calc_uncross(close_out)
 				
