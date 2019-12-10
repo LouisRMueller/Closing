@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="65759e61-9a27-4324-afe5-08b6e121e486" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/02_DataAnalysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_Closing.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_ClosingCalc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Class_Sensitivity.py" beforeDir="false" afterPath="$PROJECT_DIR$/Class_Sensitivity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Export/Price_Discovery_v1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Export/Price_Discovery_v1.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Export/Price_Discovery_v1.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Export/Price_Discovery_v1.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Export/Sensitivity_v1.csv" beforeDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="1aa15a0b-d738-443b-81f7-934ce97879b6" />
+  </component>
+  <component name="IgnoredFileRootStore">
+    <option name="generatedRoots">
+      <set>
+        <option value="D:\OneDrive - Universität St.Gallen\iorcf\Closing\.idea" />
+      </set>
+    </option>
+  </component>
+  <component name="ProjectId" id="1SY9hJNvQIA3Nztz72k3U2U371w" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="C:/Program Files/Git/bin/git.exe" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="settings.github" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings>
+        <option name="useSoftWraps" value="true" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\OneDrive - Universität St.Gallen\iorcf\Closing\Documents" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="01_Closing" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="D:\OneDrive - Universität St.Gallen\iorcf\Closing\01_ClosingCalc.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.01_Closing" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="65759e61-9a27-4324-afe5-08b6e121e486" name="Default Changelist" comment="" />
+      <created>1571729780902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1571729780902</updated>
+      <workItem from="1571729785807" duration="7252000" />
+      <workItem from="1571748692690" duration="4027000" />
+      <workItem from="1571752772079" duration="569000" />
+      <workItem from="1571772250192" duration="4891000" />
+      <workItem from="1571817015134" duration="5052000" />
+      <workItem from="1571828439580" duration="7804000" />
+      <workItem from="1571843907893" duration="1657000" />
+      <workItem from="1573455336034" duration="99000" />
+      <workItem from="1573455577510" duration="311000" />
+      <workItem from="1573455927734" duration="797000" />
+      <workItem from="1573480645424" duration="1148000" />
+      <workItem from="1573544469933" duration="25854000" />
+      <workItem from="1573628239420" duration="2483000" />
+      <workItem from="1573630765198" duration="228000" />
+      <workItem from="1573631020223" duration="322000" />
+      <workItem from="1573631366538" duration="18788000" />
+      <workItem from="1573713806060" duration="435000" />
+      <workItem from="1573714285481" duration="599000" />
+      <workItem from="1573716083519" duration="406000" />
+      <workItem from="1573740701572" duration="28768000" />
+      <workItem from="1574061130320" duration="283000" />
+      <workItem from="1574061439755" duration="1685000" />
+      <workItem from="1574063874785" duration="497000" />
+      <workItem from="1574064975747" duration="60000" />
+      <workItem from="1574065069198" duration="953000" />
+      <workItem from="1574273688459" duration="22000" />
+      <workItem from="1574273773801" duration="32000" />
+      <workItem from="1574274013199" duration="601000" />
+      <workItem from="1574679866873" duration="272000" />
+    </task>
+    <task id="LOCAL-00001" summary="_calc_uncross must be rewritten without while-loop">
+      <created>1573751706426</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1573751706426</updated>
+    </task>
+    <task id="LOCAL-00002" summary="_calc_uncross must be rewritten without while-loop">
+      <created>1573752129819</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1573752129819</updated>
+    </task>
+    <task id="LOCAL-00003" summary="_calc_uncross must be rewritten without while-loop">
+      <created>1573753513943</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1573753513943</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Latest version. _calc_uncross must be checked manually">
+      <created>1574055252394</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1574055252394</updated>
+    </task>
+    <task id="LOCAL-00005" summary="_calc_uncross in Sensitivity class not yet adjusted">
+      <created>1574062608128</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1574062608128</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Algorithm working properly">
+      <created>1574083741103</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1574083741104</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="_calc_uncross must be rewritten without while-loop" />
+    <MESSAGE value="Latest version. _calc_uncross must be checked manually" />
+    <MESSAGE value="_calc_uncross in Sensitivity class not yet adjusted" />
+    <MESSAGE value="Algorithm working properly" />
+    <option name="LAST_COMMIT_MESSAGE" value="Algorithm working properly" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="side" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Closing$01_Closing.coverage" NAME="01_Closing Coverage Results" MODIFIED="1574062321325" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
