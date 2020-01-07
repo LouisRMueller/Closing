@@ -1,4 +1,4 @@
-from Classes_DataAnalysis import *
+from cls_DataAnalysis import *
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)

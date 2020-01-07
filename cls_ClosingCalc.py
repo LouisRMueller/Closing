@@ -31,7 +31,9 @@ class Research:
 		except KeyError:
 			imp_df.loc[0, :] = 0
 			mark_buy = imp_df.loc[0, 'close_vol_bid']
-		
+		except TypeError:
+			print(imp_df.head())
+			raise TypeError('FAILO')
 		try:
 			mark_sell = imp_df.loc[0, 'close_vol_ask']
 		except KeyError:
@@ -138,13 +140,14 @@ class SensitivityAnalysis(Research):
 		ret_df = pd.DataFrame([asks, bids], index=imp_df.columns, columns=imp_df.index).T
 		return ret_df
 	
-	def sens_analysis(self, key, percents=tuple([1])):
+	def sens_analysis(self, key, percents=tuple([1]), dump=False):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
 		:param key: String with mode of calculation ['bid_limit','ask_limit','all_limit','all_market','cont_market']
 		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
+		dump = {}
 		
 		if key == 'bid_limit':
 			side, mkt = 'bid', None
@@ -163,16 +166,20 @@ class SensitivityAnalysis(Research):
 		for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
+			dump.update({date:{}})
 			
-			for symbol in ['SOON']:
-				close_out = self._remove_liq(date=date, title=symbol, percentage=0)
-				close_uncross = self._calc_uncross(close_out)
-				
+			for symbol in current_symbols:
+				close_df = self._remove_liq(date=date, title=symbol, percentage=0)
+				close_uncross = self._calc_uncross(close_df)
+				dump[date].update({symbol: {}})
+
 				for p in percents:
 					res = self._result_dict[key, date, symbol, p] = {}
 					
 					remove_df = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
 					remove_uncross = self._calc_uncross(remove_df)
+
+					dump[date][symbol].update({p: remove_df})
 					
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']
@@ -183,6 +190,8 @@ class SensitivityAnalysis(Research):
 					res['adj_imbalance'] = remove_uncross['imbalance']
 			
 			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
+
+		return dump if dump else None
 	
 	def results_to_df(self):
 		"""
