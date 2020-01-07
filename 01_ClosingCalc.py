@@ -24,14 +24,14 @@ if mode == 'Sensitivity':
 	Sens.sens_analysis(key='ask_limit', percents=percent)
 	Sens.sens_analysis(key='all_limit', percents=percent)
 	Sens.sens_analysis(key='all_market')
-	Sens.export_results('Sensitivity_{}_v1'.format(granularity), 'csv')
+	Sens.export_results('Sensitivity_{}_v2'.format(granularity), 'csv')
 	print("<<< Sensitivity Sens complete >>>")
 
  
 elif mode == 'Discovery':
 	Discovery = PriceDiscovery(file_snapshots, file_prices)
 	Discovery.discovery_analysis()
-	Discovery.export_results('Price_Discovery_v1', 'csv')
+	Discovery.export_results('Price_Discovery_v2', 'csv')
 	print("<<< Price Disc complete >>>")
 
 

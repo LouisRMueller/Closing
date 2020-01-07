@@ -7,8 +7,9 @@ datadir = os.getcwd() + "\\Data"
 
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-mode = 'Sensitivity'
-granularity = 'fine'
+# mode, granularity = 'Sensitivity', 'rough'
+# mode, granularity = 'Sensitivity', 'fine'
+mode, granularity = 'Discovery', None
 ########################################################################
 
 if mode == 'Sensitivity':
@@ -16,15 +17,15 @@ if mode == 'Sensitivity':
 	Sens = SensAnalysis(file_data, file_bcs)
 
 	if granularity == 'rough':
-		# Sens.plt_rmv_limit_aggregated()
+		Sens.plt_rmv_limit_aggregated()
 		Sens.plt_rmv_market_orders()
-		# Sens.plt_rmv_limit_quant()
+		Sens.plt_rmv_limit_quant()
 
 	elif granularity == 'fine':
 		Sens.plt_cont_rmv_indiv('bid_limit')
-		# Sens.plt_cont_rmv_indiv('ask_limit')
-		# Sens.plt_cont_rmv_indiv('all_limit')
-		# Sens.plt_cont_rmv_agg()
+		Sens.plt_cont_rmv_indiv('ask_limit')
+		Sens.plt_cont_rmv_indiv('all_limit')
+		Sens.plt_cont_rmv_agg()
 
 
 
