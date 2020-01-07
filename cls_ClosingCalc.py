@@ -79,8 +79,11 @@ class SensitivityAnalysis(Research):
 			
 			OIB = cum_bids - cum_asks
 			i = np.argmin(abs(OIB))
-			
-			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]))
+
+			dump_df = pd.DataFrame({'price': df.index, 'cumulative bids': cum_bids, 'cumulative asks': cum_asks, 'OIB': OIB}).set_index('price')
+
+			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]), dump=dump_df)
+
 			return output
 	
 	def _remove_liq(self, date, title, percentage=0, market=None, side=None):
@@ -98,7 +101,7 @@ class SensitivityAnalysis(Research):
 		imp_df.replace({np.nan: 0}, inplace=True)
 		
 		if percentage == 0:
-			return imp_df
+			return imp_df[['close_vol_bid', 'close_vol_ask']]
 		
 		bids = imp_df['close_vol_bid'].tolist()
 		asks = imp_df['close_vol_ask'].tolist()
@@ -140,7 +143,7 @@ class SensitivityAnalysis(Research):
 		ret_df = pd.DataFrame([asks, bids], index=imp_df.columns, columns=imp_df.index).T
 		return ret_df
 	
-	def sens_analysis(self, key, percents=tuple([1]), dump=False):
+	def sens_analysis(self, key, percents=tuple([1])):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
@@ -179,7 +182,7 @@ class SensitivityAnalysis(Research):
 					remove_df = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
 					remove_uncross = self._calc_uncross(remove_df)
 
-					dump[date][symbol].update({p: remove_df})
+					dump[date][symbol].update({p: remove_uncross.pop('dump', None)})
 					
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']

@@ -1,5 +1,6 @@
 from fun_VerificationPlots import *
 from cls_ClosingCalc import *
+from collections import deque
 
 
 pd.set_option('display.width', 180)
@@ -15,21 +16,26 @@ percent = np.arange(0, 0.3, 0.05)
 
 Sens = SensitivityAnalysis(file_snapshots)
 
-dump = Sens.sens_analysis(key='bid_limit', percents=percent, dump=True)
-
+dump = Sens.sens_analysis(key='bid_limit', percents=percent)
+tmp = dump['2019-03-15']['UBSG'][0]
+print(tmp.head())
 
 def plot_closing_orders(dump, stock, date='2019-03-15'):
 	dic = dump[date][stock]
 
-	for p in iter(dic):
-		df = dic[p].stack()
+	for p in [0]:
+		df = dic[p][['cumulative bids', 'cumulative asks']].stack()
+		print(df.head())
+
 		df = df.reset_index(drop=False)
 		df.columns = ['price', 'side','shares']
+		df.sort_values('price', ascending=True, inplace=True)
 		df['price'] = df['price'].astype(object)
-		print(df.dtypes)
 		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 
-		sns.catplot(ax=1, data=df, x='price', y='shares', kind='bar')
+		sns.lineplot(ax=ax, data=df, x='price', y='shares', hue='side', palette='Set1')
+		ax.xaxis.set_major_locator(ticker.MaxNLocator(n=10))
+
 		plt.show()
 		plt.close()
 

@@ -9,8 +9,8 @@ from matplotlib.colors import LogNorm
 import seaborn as sns
 import copy
 
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
+# plt.rc('text', usetex=True)
+# plt.rc('font', family='serif')
 
 # register_matplotlib_converters()
 
