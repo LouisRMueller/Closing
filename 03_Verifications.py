@@ -20,24 +20,6 @@ dump = Sens.sens_analysis(key='bid_limit', percents=percent)
 tmp = dump['2019-03-15']['UBSG'][0]
 print(tmp.head())
 
-def plot_closing_orders(dump, stock, date='2019-03-15'):
-	dic = dump[date][stock]
-
-	for p in [0]:
-		df = dic[p][['cumulative bids', 'cumulative asks']].stack()
-		print(df.head())
-
-		df = df.reset_index(drop=False)
-		df.columns = ['price', 'side','shares']
-		df.sort_values('price', ascending=True, inplace=True)
-		df['price'] = df['price'].astype(object)
-		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
-
-		sns.lineplot(ax=ax, data=df, x='price', y='shares', hue='side', palette='Set1')
-		ax.xaxis.set_major_locator(ticker.MaxNLocator(n=10))
-
-		plt.show()
-		plt.close()
 
 plot_closing_orders(dump, 'UBSG')
 
