@@ -31,9 +31,7 @@ class Research:
 		except KeyError:
 			imp_df.loc[0, :] = 0
 			mark_buy = imp_df.loc[0, 'close_vol_bid']
-		except TypeError:
-			print(imp_df.head())
-			raise TypeError('FAILO')
+
 		try:
 			mark_sell = imp_df.loc[0, 'close_vol_ask']
 		except KeyError:
