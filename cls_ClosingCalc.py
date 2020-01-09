@@ -79,10 +79,13 @@ class SensitivityAnalysis(Research):
 			
 			OIB = cum_bids - cum_asks
 			i = np.argmin(abs(OIB))
+			trade_vol = min(cum_bids[i], cum_asks[i])
 
-			dump_df = pd.DataFrame({'price': df.index, 'cumulative bids': cum_bids, 'cumulative asks': cum_asks, 'OIB': OIB}).set_index('price')
+			dump_df = pd.DataFrame({'price': df.index, 'cum. bids': cum_bids,
+							    'cum. asks': cum_asks, 'OIB': OIB, 'vol': trade_vol})
+			dump_df.set_index('price', inplace=True)
 
-			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]), dump=dump_df)
+			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=trade_vol, dump=dump_df)
 
 			return output
 	
@@ -115,9 +118,8 @@ class SensitivityAnalysis(Research):
 				return ret_df
 		
 		else:  # Only considering limit orders for adjustments
-			corr = 2 if side == 'all' else 1
-			removable_bid = sum(bids[1:]) * percentage / corr
-			removable_ask = sum(asks[1:]) * percentage / corr
+			removable_bid = sum(bids[1:]) * percentage
+			removable_ask = sum(asks[1:]) * percentage
 			imp_df.drop(columns=['cont_vol_bid', 'cont_vol_ask'], inplace=True)
 		
 		# Below is the algorithm

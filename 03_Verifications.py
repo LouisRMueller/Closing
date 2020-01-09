@@ -1,7 +1,6 @@
 from fun_VerificationPlots import *
 from cls_ClosingCalc import *
-from collections import deque
-
+import itertools
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
@@ -16,16 +15,20 @@ percent = np.arange(0, 0.3, 0.05)
 
 Sens = SensitivityAnalysis(file_snapshots)
 
-dump = Sens.sens_analysis(key='bid_limit', percents=percent)
-tmp = dump['2019-03-15']['UBSG'][0]
-print(tmp.head())
+bid_dump = Sens.sens_analysis(key='bid_limit', percents=percent)
+ask_dump = Sens.sens_analysis(key='ask_limit', percents=percent)
+all_dump = Sens.sens_analysis(key='all_limit', percents=percent)
+
+tmp = bid_dump['2019-03-15']['UBSG'][0]
+
+#%%
 
 
-plot_closing_orders(dump, 'UBSG')
+plot_closing_orders(bid_dump, 'NESN', 'bid')
+plot_closing_orders(ask_dump, 'NESN', 'ask')
+plot_closing_orders(all_dump, 'NESN', 'order')
 
-# dump = Sens.sens_analysis(key='ask_limit', percents=percent, dump=True)
-# dump = Sens.sens_analysis(key='all_limit', percents=percent, dump=True)
-# Sens.export_results('Verification_v1', 'csv')
+Sens.export_results('Verification_v2', 'csv')
 
 
 

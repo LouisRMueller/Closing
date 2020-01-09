@@ -7,9 +7,9 @@ datadir = os.getcwd() + "\\Data"
 
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-# mode, granularity = 'Sensitivity', 'rough'
+mode, granularity = 'Sensitivity', 'rough'
 # mode, granularity = 'Sensitivity', 'fine'
-mode, granularity = 'Discovery', None
+# mode, granularity = 'Discovery', None
 ########################################################################
 
 if mode == 'Sensitivity':
