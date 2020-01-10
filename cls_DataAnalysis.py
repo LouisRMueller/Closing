@@ -198,11 +198,10 @@ class SensAnalysis(DataAnalysis):
 		limit = 0.2
 		raw = copy.deepcopy(self._raw_data.loc[mode, :])
 		raw = raw[raw['close_vol'] > 1000]
-		numstocks = {'available': self._avg_turnover.index[self._avg_turnover > 0],
-				   'top 120': self._avg_turnover.index[:120],
-				   'top 60': self._avg_turnover.index[:60],
-				   'SLI': self._bluechips,
-				   'top 20': self._avg_turnover.index[:20]}
+
+		stock_titles = self._bluechips[self._bluechips['symbol'] != 'DUFN']
+
+		numstocks = {'SLI': stock_titles}
 		figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
 					ask_limit=dict(name='ask limit orders', loc='upper left'),
 					all_limit=dict(name='bid/ask limit orders', loc='upper left'))
@@ -219,6 +218,7 @@ class SensAnalysis(DataAnalysis):
 			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
 			sns.lineplot(x='Percent', y='Price Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit], ax=ax1,
 					   palette='Reds', lw=1.2)
+			sns.lineplot(x='Percent', y='Price Deviation', data=cl[cl['Percent'] <= limit], ax=ax1, lw=3, color='darkslategrey')
 			ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
 			ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
 			ax1.set_xlabel("Removed liquidity")

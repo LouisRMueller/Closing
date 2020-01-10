@@ -43,3 +43,7 @@ mode, granularity = 'Sensitivity', 'rough'
 if mode == 'Sensitivity':
 	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v1.csv".format(granularity)
 	Sens = SensAnalysis(file_data, file_bcs)
+
+	Sens.plt_cont_rmv_indiv_v2('bid_limit')
+	Sens.plt_cont_rmv_indiv_v2('ask_limit')
+	Sens.plt_cont_rmv_indiv_v2('all_limit')
