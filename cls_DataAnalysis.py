@@ -48,29 +48,6 @@ class SensAnalysis(DataAnalysis):
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
 		self._raw_vol_classify()
 
-	def plt_remove_limit_individual(self, stock, mode):
-		# 	limit = 0.35
-		# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders")
-		# 	locdict = dict(bid_limit='lower center', ask_limit='upper center', all_limit='upper center')
-		#
-		# 	tmp = self._bcs_data.loc[mode, :].xs(stock, level='Symbol')
-		# 	tmp = (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10000
-		# 	tmp = tmp.unstack(level='Percent', fill_value=np.nan)
-		# 	tmp = tmp.iloc[:, tmp.columns <= limit]
-		#
-		# 	tmp.plot(figsize=figsize, linewidth=1)
-		# 	plt.hlines(0, 0, len(tmp.index), 'k', lw=1, linewidth=1)
-		# 	plt.xlabel("")
-		# 	plt.ylabel("Deviation from closing price in bps")
-		# 	plt.title("{}: Gradual removal of {}".format(stock, namedict[mode]))
-		#
-		# 	plt.legend(loc=locdict[mode], ncol=int(len(tmp.columns)),
-		# 			 labels=[str(int(x * 100)) + " \%" for x in tmp.columns])
-		#
-		# 	fig.tight_layout()
-		# 	plt.savefig(figdir + "\\SensitivityRough\\remove_{}_{}".format(mode, stock), dpi=dpi)
-		# 	plt.close()
-		pass
 
 	def plt_rmv_limit_aggregated(self):
 		"""Only works with rough percentages"""
@@ -213,6 +190,47 @@ class SensAnalysis(DataAnalysis):
 					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
 			fig.tight_layout()
 			plt.savefig(figdir + "\\SensitivityFine\\Sens_Vol_Percent_{}_{}".format(mode, n))
+			fig.show()
+			plt.close()
+
+	def plt_cont_rmv_indiv_v02(self, mode):
+		"""Only works with fine Sensitivity"""
+		limit = 0.2
+		raw = copy.deepcopy(self._raw_data.loc[mode, :])
+		raw = raw[raw['close_vol'] > 1000]
+		numstocks = {'available': self._avg_turnover.index[self._avg_turnover > 0],
+				   'top 120': self._avg_turnover.index[:120],
+				   'top 60': self._avg_turnover.index[:60],
+				   'SLI': self._bluechips,
+				   'top 20': self._avg_turnover.index[:20]}
+		figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
+					ask_limit=dict(name='ask limit orders', loc='upper left'),
+					all_limit=dict(name='bid/ask limit orders', loc='upper left'))
+
+		for n in numstocks.keys():
+			cl = pd.DataFrame(
+				{'Price Deviation': abs((raw['adj_price'] - raw['close_price']) / raw['close_price']) * 10 ** 4,
+				 'Volume Deviation': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol'],
+				 'Turnover': np.log10(raw['close_turnover'])})
+			cl = cl[cl.index.get_level_values('Symbol').isin(numstocks[n])]
+			cl = cl.groupby(['Symbol', 'Percent']).mean()
+			cl.reset_index(drop=False, inplace=True)
+
+			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			sns.lineplot(x='Percent', y='Price Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit], ax=ax1,
+					   palette='Reds', lw=1.2)
+			ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
+			ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+			ax1.set_xlabel("Removed liquidity")
+			ax1.set_ylabel("Absolute deviation from actual closing price [bps]")
+			ax1.set_title("Price sensitivity of {} titles with respect to {} (N = {})"
+					    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
+			ax1.grid(which='both', axis='y')
+			handles, labels = ax1.get_legend_handles_labels()
+			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
+					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
+			fig.tight_layout()
+			# plt.savefig(figdir + "\\SensitivityFine\\Sens_Price_Percent_{}_{}".format(mode, n))
 			fig.show()
 			plt.close()
 

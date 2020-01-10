@@ -27,16 +27,16 @@ class Research:
 		:return: Pandas DataFrame without the market orders
 		"""
 		try:
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
+			mark_buy = imp_df.loc[0, 'end_close_vol_bid']
 		except KeyError:
 			imp_df.loc[0, :] = 0
-			mark_buy = imp_df.loc[0, 'close_vol_bid']
+			mark_buy = imp_df.loc[0, 'end_close_vol_bid']
 
 		try:
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
+			mark_sell = imp_df.loc[0, 'end_close_vol_ask']
 		except KeyError:
 			imp_df.loc[0, :] = 0
-			mark_sell = imp_df.loc[0, 'close_vol_ask']
+			mark_sell = imp_df.loc[0, 'end_close_vol_ask']
 		
 		df = imp_df.drop(0, axis=0).sort_index()
 		
@@ -62,12 +62,12 @@ class SensitivityAnalysis(Research):
 		"""
 		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
 		
-		if 0 in df[['close_vol_ask', 'close_vol_bid']].sum().values:  # Where one side is empty
+		if 0 in df[['end_close_vol_ask', 'end_close_vol_bid']].sum().values:  # Where one side is empty
 			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
 		
 		else:
 			n_lim = df.shape[0]
-			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim), deque(df['close_vol_ask'], n_lim)
+			limit_bids, limit_asks = deque(df['end_close_vol_bid'], n_lim), deque(df['end_close_vol_ask'], n_lim)
 			
 			neg_bids = limit_bids.copy()
 			neg_bids.appendleft(0)
@@ -102,13 +102,13 @@ class SensitivityAnalysis(Research):
 		imp_df.replace({np.nan: 0}, inplace=True)
 		
 		if percentage == 0:
-			return imp_df[['close_vol_bid', 'close_vol_ask']]
+			return imp_df[['end_close_vol_bid', 'end_close_vol_ask']]
 		
-		bids = imp_df['close_vol_bid'].tolist()
-		asks = imp_df['close_vol_ask'].tolist()
+		bids = imp_df['end_close_vol_bid'].tolist()
+		asks = imp_df['end_close_vol_ask'].tolist()
 		
 		if market == "remove_all":  # Removes all market orders in closing auction
-			ret_df = imp_df.loc[:, ('close_vol_ask', 'close_vol_bid')]
+			ret_df = imp_df.loc[:, ('end_close_vol_ask', 'end_close_vol_bid')]
 			try:
 				ret_df.loc[0, :] = 0
 				return ret_df
@@ -118,8 +118,7 @@ class SensitivityAnalysis(Research):
 		else:  # Only considering limit orders for adjustments
 			removable_bid = sum(bids[1:]) * percentage
 			removable_ask = sum(asks[1:]) * percentage
-			imp_df.drop(columns=['cont_vol_bid', 'cont_vol_ask'], inplace=True)
-		
+
 		# Below is the algorithm
 		if side in ['bid', 'all']:
 			b = len(bids) - 1
@@ -139,8 +138,7 @@ class SensitivityAnalysis(Research):
 				removable_ask -= min(removable_ask, local_vol)
 				a += 1
 		
-		
-		ret_df = pd.DataFrame([asks, bids], index=imp_df.columns, columns=imp_df.index).T
+		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
 		return ret_df
 	
 	def sens_analysis(self, key, percents=tuple([1])):
@@ -164,7 +162,7 @@ class SensitivityAnalysis(Research):
 		# 	side, mkt = 'all', 'remove_cont'
 		
 		else:
-			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
+			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','end_cont_market']")
 		
 		for date in self._dates:
 			t0 = time()
@@ -229,12 +227,12 @@ class PriceDiscovery(Research):
 		
 		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
 		
-		if 0 in df[['close_vol_ask', 'close_vol_bid']].sum().values:
+		if 0 in df[['end_close_vol_ask', 'end_close_vol_bid']].sum().values:
 			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
 
 		else:
 			n_lim = df.shape[0]
-			limit_bids, limit_asks = deque(df['close_vol_bid'], n_lim), deque(df['close_vol_ask'], n_lim)
+			limit_bids, limit_asks = deque(df['end_close_vol_bid'], n_lim), deque(df['end_close_vol_ask'], n_lim)
 			
 			neg_bids = limit_bids.copy()
 			neg_bids.appendleft(0)
@@ -262,7 +260,7 @@ class PriceDiscovery(Research):
 			pass
 
 		n_lim = imp_df.shape[0]
-		limit_bids, limit_asks = deque(imp_df['cont_vol_bid'], n_lim) , deque(imp_df['cont_vol_ask'], n_lim)
+		limit_bids, limit_asks = deque(imp_df['end_cont_vol_bid'], n_lim) , deque(imp_df['end_cont_vol_ask'], n_lim)
 		neg_asks = limit_asks.copy() ; neg_asks.appendleft(0)
 
 		cum_bids = np.cumsum(limit_bids)
@@ -272,7 +270,7 @@ class PriceDiscovery(Research):
 
 		i_top_bid = np.argmax(total)
 		i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
-		maxbid, minask = imp_df['cont_vol_bid'].index[i_top_bid], imp_df['cont_vol_ask'].index[i_top_ask]
+		maxbid, minask = imp_df['end_cont_vol_bid'].index[i_top_bid], imp_df['end_cont_vol_ask'].index[i_top_ask]
 
 		if i_top_bid > i_top_ask:
 			raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
@@ -289,7 +287,7 @@ class PriceDiscovery(Research):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
-		:param key: String with mode of calculation ['bid_limit','ask_limit','all_limit','all_market','cont_market']
+		:param key: String with mode of calculation ['bid_limit','ask_limit','all_limit','all_market','end_cont_market']
 		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
 
