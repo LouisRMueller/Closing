@@ -4,10 +4,11 @@ pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
 
 ########################################################################
-file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v2.csv"
+file_snapshots = os.getcwd() + "\\Data\\20193115_closing_orders.csv"
+# file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v2.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
 mode = 'Sensitivity'
-granularity = 'fine'
+granularity = 'rough'
 ########################################################################
 
 
@@ -16,7 +17,7 @@ if mode == 'Sensitivity':
 	if granularity == 'rough':
 		percent = np.arange(0, 0.55, 0.05)
 	elif granularity == 'fine':
-		percent = np.arange(0, 0.21, 0.01)
+		percent = np.arange(0, 0.51, 0.01)
 	else:
 		raise ValueError("Wrong input for granularity.")
 		

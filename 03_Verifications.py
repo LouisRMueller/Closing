@@ -1,9 +1,11 @@
-from fun_VerificationPlots import *
 from cls_ClosingCalc import *
-# from cls_DataAnalysis import *
+from cls_DataAnalysis import *
+from fun_VerificationPlots import *
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 8)
+
+#%%
 
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\20190315_closing_orders.csv"
@@ -21,7 +23,6 @@ all_dump = Sens.sens_analysis(key='all_limit', percents=percent)
 
 tmp = bid_dump['2019-03-15']['UBSG'][0]
 
-#%%
 
 for T in ['ABBN', 'CSGN','NESN','NOVN','ROG','UBSG']:
 	plot_closing_orders(bid_dump, T, 'bids only')
@@ -30,18 +31,15 @@ for T in ['ABBN', 'CSGN','NESN','NOVN','ROG','UBSG']:
 
 Sens.export_results('Verification_v2', 'csv')
 
-
-raise ValueError
+#%%
 
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-mode, granularity = 'Sensitivity', 'rough'
-# mode, granularity = 'Sensitivity', 'fine'
-# mode, granularity = 'Discovery', None
+mode, granularity = 'Sensitivity', 'fine'
 ########################################################################
 
 if mode == 'Sensitivity':
-	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v1.csv".format(granularity)
+	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v2.csv".format(granularity)
 	Sens = SensAnalysis(file_data, file_bcs)
 
 	Sens.plt_cont_rmv_indiv_v2('bid_limit')

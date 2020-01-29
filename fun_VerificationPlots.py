@@ -1,11 +1,8 @@
 import pandas as pd
-from pandas.plotting import register_matplotlib_converters
-import numpy as np
+
 import os
 from matplotlib import pyplot as plt
-from matplotlib import dates
 from matplotlib import ticker
-from matplotlib.colors import LogNorm
 import seaborn as sns
 import itertools
 
@@ -26,7 +23,6 @@ sns.set_palette(def_palette, 2)
 def_color = sns.color_palette(def_palette, 1)[0]
 
 
-
 def plot_closing_orders(dump, stock, mode, date='2019-03-15'):
 	dic = dump[date][stock]
 	fig, axes = plt.subplots(2, 3, figsize=figsize, dpi=dpi, sharey=True)
@@ -41,17 +37,17 @@ def plot_closing_orders(dump, stock, mode, date='2019-03-15'):
 		df = df[['cum. bids', 'cum. asks']].stack()
 
 		df = df.reset_index(drop=False)
-		df.columns = ['price', 'side','shares']
+		df.columns = ['price', 'side', 'shares']
 		df.sort_values('price', ascending=True, inplace=True)
 		df = df[(df['price'] <= xmax) & (df['price'] >= xmin)]
 
 		sns.lineplot(ax=ax, data=df, x='price', y='shares', hue='side', markers='.', lw=1)
 		l1, l2 = ax.lines[0], ax.lines[1]
-		x1, y1 = l1.get_xydata()[:,0], l1.get_xydata()[:,1]
-		x2, y2 = l2.get_xydata()[:,0], l2.get_xydata()[:,1]
-		ax.fill_between(x1,y1, y2, where= y1 > y2, alpha=0.15)
-		ax.fill_between(x2,y1, y2, where= y1 < y2, alpha=0.15)
-		ax.set_title("{2}: {0: 0.0f}\% ({1})".format(-p*100, mode, stock), fontsize='medium')
+		x1, y1 = l1.get_xydata()[:, 0], l1.get_xydata()[:, 1]
+		x2, y2 = l2.get_xydata()[:, 0], l2.get_xydata()[:, 1]
+		ax.fill_between(x1, y1, y2, where=y1 > y2, alpha=0.15)
+		ax.fill_between(x2, y1, y2, where=y1 < y2, alpha=0.15)
+		ax.set_title("{2}: {0: 0.0f}\% ({1})".format(-p * 100, mode, stock), fontsize='medium')
 		ax.set_xlim(left=xmin, right=xmax)
 		ax.set_ylim(bottom=0)
 		ax.set_xlabel('calculated closing price: {0: 0.3f} CHF'.format(opt_price), fontsize='small')
