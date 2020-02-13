@@ -191,12 +191,9 @@ class SensitivityAnalysis(Research):
 					res['adj_vol'] = remove_uncross['trade_vol']
 					res['adj_imbalance'] = remove_uncross['imbalance']
 
-			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
+			print(">> [{0}] {1} finished ({2:.2f} sec.) >>".format(key, date, time() - t0))
 
 		return
-
-	def interval_analysis(self):
-		pass
 
 	def results_to_df(self):
 		"""
@@ -330,3 +327,6 @@ class PriceDiscovery(Research):
 		df.index.set_names(['Date', 'Symbol'], inplace=True)
 		df.sort_index()
 		return df
+
+class Intervals(Research):
+	def
