@@ -17,9 +17,9 @@ percent = np.arange(0, 0.3, 0.05)
 
 Sens = SensitivityAnalysis(file_snapshots)
 
-bid_dump = Sens.sens_analysis(key='bid_limit', percents=percent)
-ask_dump = Sens.sens_analysis(key='ask_limit', percents=percent)
-all_dump = Sens.sens_analysis(key='all_limit', percents=percent)
+bid_dump = Sens.sensitivity_processing(key='bid_limit', percents=percent)
+ask_dump = Sens.sensitivity_processing(key='ask_limit', percents=percent)
+all_dump = Sens.sensitivity_processing(key='all_limit', percents=percent)
 
 tmp = bid_dump['2019-03-15']['UBSG'][0]
 

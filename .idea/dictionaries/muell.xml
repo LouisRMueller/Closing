@@ -2,7 +2,10 @@
   <dictionary name="muell">
     <words>
       <w>maxbid</w>
+      <w>midquote</w>
       <w>minask</w>
+      <w>preclose</w>
+      <w>snapbook</w>
     </words>
   </dictionary>
 </component>

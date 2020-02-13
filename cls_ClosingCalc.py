@@ -10,10 +10,12 @@ class Research:
 	def __init__(self, file_snapshots):
 		t0 = time()
 		self._snapbook = pd.read_csv(file_snapshots, header=0)
+		self._snapbook.rename(columns={'start_close_vol_bid': 'SS_0_vol_bid', 'start_close_vol_ask': 'SS_0_vol_ask'}, inplace=True)
 		self._symbols = self._snapbook['symbol'].unique()
 		self._dates = self._snapbook['onbook_date'].unique()
 		self._snapbook.set_index(['onbook_date', 'symbol', 'price'], drop=True, inplace=True)
 		self._snapbook.sort_index(inplace=True)
+		self._snapbook.replace({np.nan: 0}, inplace=True)
 
 		self._result_dict = {}  # Collects all the results
 
@@ -27,47 +29,36 @@ class Research:
 		:return: Pandas DataFrame without the market orders
 		"""
 		try:
-			mark_buy = imp_df.loc[0, 'end_close_vol_bid']
+			mark_buy = imp_df.loc[0, 'bids']
 		except KeyError:
 			imp_df.loc[0, :] = 0
-			mark_buy = imp_df.loc[0, 'end_close_vol_bid']
+			mark_buy = imp_df.loc[0, 'bids']
 
 		try:
-			mark_sell = imp_df.loc[0, 'end_close_vol_ask']
+			mark_sell = imp_df.loc[0, 'asks']
 		except KeyError:
 			imp_df.loc[0, :] = 0
-			mark_sell = imp_df.loc[0, 'end_close_vol_ask']
+			mark_sell = imp_df.loc[0, 'asks']
 
 		df = imp_df.drop(0, axis=0).sort_index()
 
 		return df, mark_buy, mark_sell
 
-	def get_SB(self):
-		return self._snapbook
-
-	def export_results(self, filename, filetype):
-		df = self.results_to_df()
-		if filetype == 'xlsx':
-			df.round(4).to_excel(os.getcwd() + "\\Exports\\{}.xlsx".format(filename))
-		elif filetype == 'csv':
-			df.round(4).to_csv(os.getcwd() + "\\Exports\\{}.csv".format(filename))
-
-
-class SensitivityAnalysis(Research):
 	@staticmethod
-	def _calc_uncross(imp_df):
+	def _calc_uncross(bids: pd.Series, asks: pd.Series):
 		"""
 		Function calculates the theoretical uncross price of a closing order book.
 		:return: dict()
 		"""
-		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
+		base_df = pd.DataFrame({'bids': bids, 'asks': asks})
+		df, mark_buy, mark_sell = Research._extract_market_orders(base_df)
 
-		if 0 in df[['end_close_vol_ask', 'end_close_vol_bid']].sum().values:  # Where one side is empty
+		if 0 in df[['asks', 'bids']].sum().values:  # Where one side is empty
 			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
 
 		else:
 			n_lim = df.shape[0]
-			limit_bids, limit_asks = deque(df['end_close_vol_bid'], n_lim), deque(df['end_close_vol_ask'], n_lim)
+			limit_bids, limit_asks = deque(df['bids'], n_lim), deque(df['asks'], n_lim)
 
 			neg_bids = limit_bids.copy()
 			neg_bids.appendleft(0)
@@ -83,6 +74,55 @@ class SensitivityAnalysis(Research):
 
 			return output
 
+	@staticmethod
+	def _calc_preclose(bids: pd.Series, asks: pd.Series):
+		"""
+		This helper function calculates the hypothetical last midquote before closing auctions start.
+		This method takes only inputs from the self._remove_liq method.
+		"""
+
+		base_df = pd.DataFrame({'bids': bids, 'asks': asks})
+		try:
+			base_df.drop(index=[0], inplace=True)
+		except KeyError:
+			pass
+
+		n_lim = base_df.shape[0]
+		limit_bids, limit_asks = deque(base_df['bids'], n_lim), deque(base_df['asks'], n_lim)
+		neg_asks = limit_asks.copy()
+		neg_asks.appendleft(0)
+
+		cum_bids = np.cumsum(limit_bids)
+		cum_asks = sum(limit_asks) - np.cumsum(neg_asks)
+
+		total = cum_bids + cum_asks
+
+		i_top_bid = np.argmax(total)
+		i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
+		maxbid, minask = base_df['bids'].index[i_top_bid], base_df['asks'].index[i_top_ask]
+
+		if i_top_bid > i_top_ask:
+			raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
+
+		else:
+			output = dict(abs_spread=round(minask - maxbid, 4),
+					    midquote=round((maxbid + minask) / 2, 4),
+					    rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
+			return output
+
+	def get_SB(self):
+		return self._snapbook
+
+	def export_results(self, filename, filetype):
+		df = self.results_to_df()
+		if filetype == 'xlsx':
+			df.round(4).to_excel(os.getcwd() + "\\Exports\\{}.xlsx".format(filename))
+		elif filetype == 'csv':
+			df.round(4).to_csv(os.getcwd() + "\\Exports\\{}.csv".format(filename))
+
+
+class SensitivityAnalysis(Research):
+
 	def _remove_liq(self, date, title, percentage=0, market=None, side=None):
 		"""
 		This function removes a certain percentage of liquidity from the closing auction.
@@ -95,7 +135,7 @@ class SensitivityAnalysis(Research):
 		:return: A dateframe with new bid-ask book based on removing adjustments.
 		"""
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
-		imp_df.replace({np.nan: 0}, inplace=True)
+		# imp_df.replace({np.nan: 0}, inplace=True)
 
 		if percentage == 0:
 			return imp_df[['end_close_vol_ask', 'end_close_vol_bid']]
@@ -113,8 +153,8 @@ class SensitivityAnalysis(Research):
 		elif market == 'remove_cont':
 			ret_df = imp_df.loc[:, ('end_close_vol_ask', 'end_close_vol_bid')]
 			try:
-				ret_df.loc[0, 'end_close_vol_ask'] -= imp_df.loc[0, 'start_close_vol_ask']
-				ret_df.loc[0, 'end_close_vol_bid'] -= imp_df.loc[0, 'start_close_vol_bid']
+				ret_df.loc[0, 'end_close_vol_ask'] -= imp_df.loc[0, 'SS_0_vol_ask']
+				ret_df.loc[0, 'end_close_vol_bid'] -= imp_df.loc[0, 'SS_0_vol_bid']
 				ret_df[ret_df < 0] = 0
 				return ret_df
 			except KeyError:
@@ -146,7 +186,7 @@ class SensitivityAnalysis(Research):
 		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
 		return ret_df
 
-	def sens_analysis(self, key, percents=tuple([1])):
+	def sensitivity_processing(self, key, percents=tuple([1])):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
@@ -171,15 +211,15 @@ class SensitivityAnalysis(Research):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
- 			for symbol in current_symbols:
+			for symbol in current_symbols:
 				close_df = self._remove_liq(date=date, title=symbol, percentage=0)
-				close_uncross = self._calc_uncross(close_df)
+				close_uncross = self._calc_uncross(bids=close_df['end_close_vol_bid'], asks=close_df['end_close_vol_ask'])
 
 				for p in percents:
 					res = self._result_dict[key, date, symbol, p] = {}
 
 					remove_df = self._remove_liq(date=date, title=symbol, percentage=p, side=side, market=mkt)
-					remove_uncross = self._calc_uncross(remove_df)
+					remove_uncross = self._calc_uncross(bids=remove_df['end_close_vol_bid'], asks=remove_df['end_close_vol_ask'])
 
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']
@@ -189,7 +229,7 @@ class SensitivityAnalysis(Research):
 					res['adj_vol'] = remove_uncross['trade_vol']
 					res['adj_imbalance'] = remove_uncross['imbalance']
 
-			print(">> [{0}] {1} finished ({2:.2f} sec.) >>".format(key, date, time() - t0))
+			print(">> [{0}] {1} finished ({2:.2f} sec.) <<".format(key, date, time() - t0))
 
 		return
 
@@ -204,91 +244,21 @@ class SensitivityAnalysis(Research):
 
 class PriceDiscovery(Research):
 	def __init__(self, file_snapshots, file_close_prices):
+		"""
+		This method needs to be initiated again because we are additionally including closing prices.
+		"""
 		super().__init__(file_snapshots)
 		t0 = time()
 		self._closeprices = pd.read_csv(file_close_prices, header=0)
 		self._closeprices.set_index(['onbook_date', 'symbol'], drop=True, inplace=True)
 		self._closeprices.sort_index(inplace=True)
 
-		self._price_discovery_results = {}  # Collects all the results
-
 		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
-	def _calc_uncross(self, date, title):
-		"""
-		Function calculates the theoretical uncross price of a closing order book.
-		:param date:
-		:param title:
-		:return: dict()
-		"""
-		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
-		imp_df.replace({np.nan: 0}, inplace=True)
-
-		df, mark_buy, mark_sell = Research._extract_market_orders(imp_df)
-
-		if 0 in df[['end_close_vol_ask', 'end_close_vol_bid']].sum().values:
-			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
-
-		else:
-			n_lim = df.shape[0]
-			limit_bids, limit_asks = deque(df['end_close_vol_bid'], n_lim), deque(df['end_close_vol_ask'], n_lim)
-
-			neg_bids = limit_bids.copy()
-			neg_bids.appendleft(0)
-
-			cum_bids = mark_buy + sum(limit_bids) - np.cumsum(neg_bids)
-			cum_asks = mark_sell + np.cumsum(limit_asks)
-
-			OIB = cum_bids - cum_asks
-			i = np.argmin(abs(OIB))
-
-			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=min(cum_bids[i], cum_asks[i]))
-			return output
-
-	def _calc_preclose_price(self, date, title):
-		"""
-		This helper function calculates the hypothetical last midquote before closing auctions start.
-		This method takes only inputs from the self._remove_liq method.
-		"""
-		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
-		imp_df.replace({np.nan: 0}, inplace=True)
-
-		try:
-			imp_df.drop(index=[0], inplace=True)
-		except KeyError:
-			pass
-
-		n_lim = imp_df.shape[0]
-		limit_bids, limit_asks = deque(imp_df['end_cont_vol_bid'], n_lim), deque(imp_df['end_cont_vol_ask'], n_lim)
-		neg_asks = limit_asks.copy();
-		neg_asks.appendleft(0)
-
-		cum_bids = np.cumsum(limit_bids)
-		cum_asks = sum(limit_asks) - np.cumsum(neg_asks)
-
-		total = cum_bids + cum_asks
-
-		i_top_bid = np.argmax(total)
-		i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
-		maxbid, minask = imp_df['end_cont_vol_bid'].index[i_top_bid], imp_df['end_cont_vol_ask'].index[i_top_ask]
-
-		if i_top_bid > i_top_ask:
-			raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
-
-		else:
-			if (maxbid + minask) == 0:
-				print("Symbol: {}".format(title))
-			output = dict(abs_spread=round(minask - maxbid, 4),
-					    midquote=round((maxbid + minask) / 2, 4),
-					    rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
-			return output
-
-	def discovery_analysis(self):
+	def discovery_processing(self):
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
-		:param key: String with mode of calculation ['bid_limit','ask_limit','all_limit','all_market','end_cont_market']
-		:param percents: Iterable object with integers of percentages to be looped through.
 		"""
 
 		for date in self._dates:
@@ -296,10 +266,11 @@ class PriceDiscovery(Research):
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
 			for symbol in current_symbols:
-				close_uncross = self._calc_uncross(date, symbol)
-				preclose_uncross = self._calc_preclose_price(date, symbol)
+				SB = self._snapbook.loc[(date, symbol), :]
+				close_uncross = self._calc_uncross(bids=SB['end_close_vol_bid'], asks=SB['end_close_vol_ask'])
+				preclose_uncross = self._calc_preclose(bids=SB['end_cont_vol_bid'].copy(), asks=SB['end_cont_vol_ask'])
 
-				res = self._price_discovery_results[date, symbol] = {}
+				res = self._result_dict[date, symbol] = {}
 
 				res['pre_abs_spread'] = preclose_uncross['abs_spread']
 				res['pre_midquote'] = preclose_uncross['midquote']
@@ -310,21 +281,55 @@ class PriceDiscovery(Research):
 				res['close_imbalance'] = close_uncross['imbalance']
 
 				try:
-					res['actual_close_price'] = self._closeprices.loc[(date, symbol), 'price_org_ccy']
+					res['actual_close_price'] = self._closeprices.loc[(date, symbol), 'price_org_ccy'].copy()
 				except KeyError:
 					res['actual_close_price'] = np.nan
-			# print("--- {} completed".format(symbol))
 
-			print(">> {} finished ({} seconds)".format(date, round(time() - t0, 2)))
+			print(">> {0} finished ({1:.2f} sec.) >>".format(date, time() - t0))
 
 	def results_to_df(self):
 		"""
 		Export such that it can be used further in later stages.
 		"""
-		df = pd.DataFrame.from_dict(self._price_discovery_results, orient='index')
+		df = pd.DataFrame.from_dict(self._result_dict, orient='index')
 		df.index.set_names(['Date', 'Symbol'], inplace=True)
 		df.sort_index()
 		return df
 
-class Intervals(Research):
-	def
+
+class IntervalAnalysis(Research):
+	def interval_processing(self):
+		for date in self._dates:
+			t0 = time()
+			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
+
+			for symbol in current_symbols:
+				SB = self._snapbook.loc[(date, symbol), :]
+				SS_bids = SB.loc[:, (SB.columns.str.contains('SS_')) & (SB.columns.str.contains('_bid'))].copy()
+				SS_asks = SB.loc[:, (SB.columns.str.contains('SS_')) & (SB.columns.str.contains('_ask'))].copy()
+				SS_bids.rename(columns=lambda c: c.split('_')[1], inplace=True)
+				SS_asks.rename(columns=lambda c: c.split('_')[1], inplace=True)
+
+				if any(SS_asks.columns != SS_bids.columns):
+					raise ValueError('Columns not identical')
+				else:
+					lags = list(SS_asks.columns)
+
+				for lg in lags:
+					res = self._result_dict[date, symbol, int(lg)] = {}
+					snap_uncross = self._calc_uncross(bids=SS_bids[lg], asks=SS_asks[lg])
+
+					res['close_price'] = snap_uncross['price']
+					res['close_vol'] = snap_uncross['trade_vol']
+					res['close_imbalance'] = snap_uncross['imbalance']
+
+			print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
+
+	def results_to_df(self):
+		"""
+		Export such that it can be used further in later stages.
+		"""
+		df = pd.DataFrame.from_dict(self._result_dict, orient='index')
+		df.index.set_names(['Date', 'Symbol', 'Lag'], inplace=True)
+		df.sort_index(inplace=True)
+		return df
