@@ -116,7 +116,6 @@ class SensitivityAnalysis(Research):
 				ret_df.loc[0, 'end_close_vol_ask'] -= imp_df.loc[0, 'start_close_vol_ask']
 				ret_df.loc[0, 'end_close_vol_bid'] -= imp_df.loc[0, 'start_close_vol_bid']
 				ret_df[ret_df < 0] = 0
-				print(ret_df)
 				return ret_df
 			except KeyError:
 				return ret_df
@@ -172,8 +171,7 @@ class SensitivityAnalysis(Research):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
-			# for symbol in ['UBSG']:
-			for symbol in current_symbols:
+ 			for symbol in current_symbols:
 				close_df = self._remove_liq(date=date, title=symbol, percentage=0)
 				close_uncross = self._calc_uncross(close_df)
 
