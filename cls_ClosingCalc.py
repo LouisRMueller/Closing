@@ -21,6 +21,7 @@ class Research:
 
 		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
+
 	@staticmethod
 	def _extract_market_orders(imp_df):
 		"""
