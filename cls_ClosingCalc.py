@@ -21,9 +21,8 @@ class Research:
 
 		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
-
 	@staticmethod
-	def _extract_market_orders(imp_df):
+	def _extract_market_orders(imp_df: pd.DataFrame):
 		"""
 		Removes market orders from an order book snapshot.
 		:param imp_df: Pandas DataFrame
@@ -71,7 +70,7 @@ class Research:
 			i = np.argmin(abs(OIB))
 			trade_vol = min(cum_bids[i], cum_asks[i])
 
-			output = dict(price=df.index[i], imbalance=OIB[i], trade_vol=trade_vol)
+			output = dict(price=df.index[i], trade_vol=trade_vol, bids=cum_bids[i], asks=cum_asks[i])
 
 			return output
 
@@ -136,7 +135,6 @@ class SensitivityAnalysis(Research):
 		:return: A dateframe with new bid-ask book based on removing adjustments.
 		"""
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
-		# imp_df.replace({np.nan: 0}, inplace=True)
 
 		if percentage == 0:
 			return imp_df[['end_close_vol_ask', 'end_close_vol_bid']]
@@ -224,11 +222,15 @@ class SensitivityAnalysis(Research):
 
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']
-					res['close_imbalance'] = close_uncross['imbalance']
+					res['close_bids'] = close_uncross['bids']
+					res['close_asks'] = close_uncross['asks']
+					# res['close_imbalance'] = close_uncross['imbalance']
 
 					res['adj_price'] = remove_uncross['price']
 					res['adj_vol'] = remove_uncross['trade_vol']
-					res['adj_imbalance'] = remove_uncross['imbalance']
+					res['adj_bids'] = remove_uncross['bids']
+					res['adj_asks'] = remove_uncross['asks']
+					# res['adj_imbalance'] = remove_uncross['imbalance']
 
 			print(">> [{0}] {1} finished ({2:.2f} sec.) <<".format(key, date, time() - t0))
 
@@ -279,7 +281,9 @@ class PriceDiscovery(Research):
 
 				res['close_price_calculated'] = close_uncross['price']
 				res['close_vol'] = close_uncross['trade_vol']
-				res['close_imbalance'] = close_uncross['imbalance']
+				res['close_bids'] = close_uncross['bids']
+				res['close_asks'] = close_uncross['asks']
+				# res['close_imbalance'] = close_uncross['imbalance']
 
 				try:
 					res['actual_close_price'] = self._closeprices.loc[(date, symbol), 'price_org_ccy'].copy()
@@ -296,7 +300,6 @@ class PriceDiscovery(Research):
 		df.index.set_names(['Date', 'Symbol'], inplace=True)
 		df.sort_index()
 		return df
-
 
 class IntervalAnalysis(Research):
 	def interval_processing(self):
@@ -322,7 +325,9 @@ class IntervalAnalysis(Research):
 
 					res['close_price'] = snap_uncross['price']
 					res['close_vol'] = snap_uncross['trade_vol']
-					res['close_imbalance'] = snap_uncross['imbalance']
+					res['snap_bids'] = snap_uncross['bids']
+					res['snap_asks'] = snap_uncross['asks']
+					# res['close_imbalance'] = snap_uncross['imbalance']
 
 			print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
 
