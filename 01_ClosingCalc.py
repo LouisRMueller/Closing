@@ -6,7 +6,8 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
-mode = 'Discovery'
+base = 'LimitOrders' # ('LimitOrders', ''TotalVolume')
+mode = 'Sensitivity'
 granularity = 'rough'
 ########################################################################
 
@@ -20,13 +21,13 @@ if mode == 'Sensitivity':
 	else:
 		raise ValueError("Wrong input for granularity.")
 		
-	Sens.sensitivity_processing(key='bid_limit', percents=percent)
-	Sens.sensitivity_processing(key='ask_limit', percents=percent)
-	Sens.sensitivity_processing(key='all_limit', percents=percent)
-	Sens.sensitivity_processing(key='all_market')
-	Sens.sensitivity_processing(key='cont_market')
+	Sens.sensitivity_processing(key='bid_limit', percents=percent, remove_func=base)
+	Sens.sensitivity_processing(key='ask_limit', percents=percent, remove_func=base)
+	Sens.sensitivity_processing(key='all_limit', percents=percent, remove_func=base)
+	Sens.sensitivity_processing(key='all_market') if base == 'LimitOrders' else None
+	Sens.sensitivity_processing(key='cont_market') if base == 'LimitOrders' else None
 
-	Sens.export_results('Sensitivity_{}_v3'.format(granularity), 'csv')
+	Sens.export_results('Sensitivity_{}_{}_v3'.format(granularity,base), 'csv')
 
 	print("<<< Sensitivity Sens complete >>>")
 
