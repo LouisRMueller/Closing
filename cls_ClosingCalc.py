@@ -80,7 +80,6 @@ class Research:
 		This helper function calculates the hypothetical last midquote before closing auctions start.
 		This method takes only inputs from the self._remove_liq method.
 		"""
-
 		base_df = pd.DataFrame({'bids': bids, 'asks': asks})
 		try:
 			base_df.drop(index=[0], inplace=True)
@@ -230,7 +229,7 @@ class SensitivityAnalysis(Research):
 					res['adj_vol'] = remove_uncross['trade_vol']
 					res['adj_bids'] = remove_uncross['bids']
 					res['adj_asks'] = remove_uncross['asks']
-					# res['adj_imbalance'] = remove_uncross['imbalance']
+				# res['adj_imbalance'] = remove_uncross['imbalance']
 
 			print(">> [{0}] {1} finished ({2:.2f} sec.) <<".format(key, date, time() - t0))
 
@@ -264,14 +263,18 @@ class PriceDiscovery(Research):
 		It calls other helper functions in order to determine the results of the analysis.
 		"""
 
-		for date in self._dates:
+		for date in ['2019-01-03']: # Alternative Looping
+		# for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
-			for symbol in current_symbols:
+			# for symbol in current_symbols:
+			for symbol in ['CLN']: # Alternative Looping
 				SB = self._snapbook.loc[(date, symbol), :]
 				close_uncross = self._calc_uncross(bids=SB['end_close_vol_bid'], asks=SB['end_close_vol_ask'])
-				preclose_uncross = self._calc_preclose(bids=SB['end_cont_vol_bid'].copy(), asks=SB['end_cont_vol_ask'])
+
+
+				preclose_uncross = self._calc_preclose(bids=SB['start_close_vol_bid'].copy(), asks=SB['start_close_vol_ask'])
 
 				res = self._result_dict[date, symbol] = {}
 
@@ -301,6 +304,7 @@ class PriceDiscovery(Research):
 		df.sort_index()
 		return df
 
+
 class IntervalAnalysis(Research):
 	def interval_processing(self):
 		for date in self._dates:
@@ -327,7 +331,7 @@ class IntervalAnalysis(Research):
 					res['close_vol'] = snap_uncross['trade_vol']
 					res['snap_bids'] = snap_uncross['bids']
 					res['snap_asks'] = snap_uncross['asks']
-					# res['close_imbalance'] = snap_uncross['imbalance']
+				# res['close_imbalance'] = snap_uncross['imbalance']
 
 			print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
 

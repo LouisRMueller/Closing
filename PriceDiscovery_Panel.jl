@@ -24,4 +24,7 @@ felm1 = reg(raw, @formula(close_vol ~ pre_rel_spread + close_imbalance + fe(Symb
 
 regtable(lm1, felm1)
 
-PD_raw[(PD_raw[:, :pre_abs_spread] .== 0) .& (PD_raw[:, :Date] .== Date(2019,12,20)) ,:]
+#%%
+
+# Print all observations with zero spreads before close
+PD_raw[PD_raw[:, :pre_abs_spread].==0, :]
