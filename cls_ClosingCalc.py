@@ -223,10 +223,10 @@ class SensitivityAnalysis(Research):
 					b -= 1
 
 		if side in ['ask', 'all']:
-			if bids[0] != 0:
-				local_vol = bids[0]
-				bids[0] = local_vol - min(local_vol, removable_bid)
-				removable_bid -= min(removable_bid, local_vol)
+			if asks[0] != 0:
+				local_vol = asks[0]
+				asks[0] = local_vol - min(local_vol, removable_ask)
+				removable_ask -= min(removable_ask, local_vol)
 			else:
 				a = 1
 				# remaining_liq = removable_ask / percentage
