@@ -22,7 +22,7 @@ class Research:
 		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
 	@staticmethod
-	def _extract_market_orders(imp_df: pd.DataFrame):
+	def _extract_market_orders(imp_df: pd.DataFrame) -> tuple:
 		"""
 		Removes market orders from an order book snapshot.
 		:param imp_df: Pandas DataFrame
@@ -45,7 +45,7 @@ class Research:
 		return df, mark_buy, mark_sell
 
 	@staticmethod
-	def _calc_uncross(bids: pd.Series, asks: pd.Series):
+	def _calc_uncross(bids: pd.Series, asks: pd.Series) -> dict:
 		"""
 		Function calculates the theoretical uncross price of a closing order book.
 		:return: dict()
@@ -75,7 +75,7 @@ class Research:
 			return output
 
 	@staticmethod
-	def _calc_preclose(bids: pd.Series, asks: pd.Series):
+	def _calc_preclose(bids: pd.Series, asks: pd.Series) -> dict:
 		"""
 		This helper function calculates the hypothetical last midquote before closing auctions start.
 		This method takes only inputs from the self._remove_liq method.
@@ -112,7 +112,7 @@ class Research:
 	def get_SB(self):
 		return self._snapbook
 
-	def export_results(self, filename, filetype):
+	def export_results(self, filename, filetype) -> None:
 		df = self.results_to_df()
 		if filetype == 'xlsx':
 			df.round(4).to_excel(os.getcwd() + "\\Exports\\{}.xlsx".format(filename))
@@ -122,7 +122,7 @@ class Research:
 
 class SensitivityAnalysis(Research):
 
-	def _remove_liq_limit(self, date, title, percentage=0, side=None, market=None):
+	def _remove_liq_limit(self, date, title, percentage=0, side=None, market=None) -> pd.DataFrame:
 		"""
 		This function removes a certain percentage of liquidity from the closing auction.
 		It is called for a every date-title combination individually
@@ -239,7 +239,7 @@ class SensitivityAnalysis(Research):
 		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
 		return ret_df
 
-	def sensitivity_processing(self, key, percents=tuple([1]), remove_func=None):
+	def sensitivity_processing(self, key, percents=tuple([1]), remove_func=None) -> None:
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
@@ -296,7 +296,7 @@ class SensitivityAnalysis(Research):
 
 		return
 
-	def results_to_df(self):
+	def results_to_df(self) -> pd.DataFrame:
 		"""
 		Export such that it can be used further in later stages.
 		"""
@@ -318,7 +318,7 @@ class PriceDiscovery(Research):
 
 		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
-	def discovery_processing(self):
+	def discovery_processing(self) -> None:
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
@@ -357,7 +357,7 @@ class PriceDiscovery(Research):
 
 			print(">> {0} finished ({1:.2f} sec.) >>".format(date, time() - t0))
 
-	def results_to_df(self):
+	def results_to_df(self) -> pd.DataFrame:
 		"""
 		Export such that it can be used further in later stages.
 		"""
@@ -368,7 +368,7 @@ class PriceDiscovery(Research):
 
 
 class IntervalAnalysis(Research):
-	def interval_processing(self):
+	def interval_processing(self) -> None:
 		for date in self._dates:
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
@@ -398,7 +398,7 @@ class IntervalAnalysis(Research):
 
 			print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
 
-	def results_to_df(self):
+	def results_to_df(self) -> pd.DataFrame:
 		"""
 		Export such that it can be used further in later stages.
 		"""
