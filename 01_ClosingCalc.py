@@ -6,8 +6,8 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
-base = 'TotalVolume'  # ('LimitOrders', ''TotalVolume')
-mode = 'Sensitivity'
+base = 'LimitOrders'  # ('LimitOrders', ''TotalVolume')
+mode = 'Intervals'
 granularity = 'fine'
 ########################################################################
 

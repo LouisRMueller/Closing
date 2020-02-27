@@ -17,7 +17,7 @@ register_matplotlib_converters()
 conv = 2.54
 dpi = 300
 figsize = (22 / conv, 13 / conv)
-cwd = os.getcwd() + "\\02 Slides January"
+cwd = os.getcwd() + "\\01 Presentation December"
 figdir = cwd + "\\Figures"
 
 pd.set_option('display.width', 180)

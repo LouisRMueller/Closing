@@ -1,8 +1,10 @@
-import pandas as pd
-import numpy as np
 from time import time
 import os
 import copy
+
+from tqdm import tqdm
+import pandas as pd
+import numpy as np
 from collections import deque
 
 
@@ -70,7 +72,8 @@ class Research:
 			i = np.argmin(abs(OIB))
 			trade_vol = min(cum_bids[i], cum_asks[i])
 
-			output = dict(price=df.index[i], trade_vol=trade_vol, bids=cum_bids[i], asks=cum_asks[i], OIB=OIB[i])
+			output = dict(price=df.index[i], trade_vol=trade_vol, bids=cum_bids[i], asks=cum_asks[i],
+					    OIB=OIB[i] / (cum_bids[i] + cum_asks[i]))
 
 			return output
 
@@ -260,8 +263,7 @@ class SensitivityAnalysis(Research):
 		else:
 			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
 
-
-		for date in self._dates:
+		for date in tqdm(self._dates):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
@@ -325,15 +327,14 @@ class PriceDiscovery(Research):
 		"""
 
 		# for date in ['2019-01-03']: # Alternative Looping
-		for date in self._dates:
+		for date in tqdm(self._dates):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
 			for symbol in current_symbols:
-			# for symbol in ['CLN']: # Alternative Looping
+				# for symbol in ['CLN']: # Alternative Looping
 				SB = self._snapbook.loc[(date, symbol), :]
 				close_uncross = self._calc_uncross(bids=SB['end_close_vol_bid'], asks=SB['end_close_vol_ask'])
-
 
 				preclose_uncross = self._calc_preclose(bids=SB['SS_0_vol_bid'].copy(), asks=SB['SS_0_vol_ask'])
 
@@ -369,7 +370,7 @@ class PriceDiscovery(Research):
 
 class IntervalAnalysis(Research):
 	def interval_processing(self) -> None:
-		for date in self._dates:
+		for date in tqdm(self._dates):
 			t0 = time()
 			current_symbols = self.get_SB().loc[date, :].index.get_level_values(0).unique()
 
@@ -394,9 +395,9 @@ class IntervalAnalysis(Research):
 					res['snap_bids'] = snap_uncross['bids']
 					res['snap_asks'] = snap_uncross['asks']
 					res['snap_OIB'] = snap_uncross['OIB']
-				# res['close_imbalance'] = snap_uncross['imbalance']
+			# res['close_imbalance'] = snap_uncross['imbalance']
 
-			print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
+			# print(">> {0} finished ({1:.2f} sec.) <<".format(date, time() - t0))
 
 	def results_to_df(self) -> pd.DataFrame:
 		"""
