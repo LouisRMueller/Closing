@@ -2,10 +2,11 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 import numpy as np
 import os
+import itertools
+
 from matplotlib import pyplot as plt
 from matplotlib import dates
 from matplotlib import ticker
-from matplotlib.colors import LogNorm
 import seaborn as sns
 import copy
 
@@ -14,24 +15,25 @@ plt.rc('font', family='serif')
 
 register_matplotlib_converters()
 
-conv = 2.54
-dpi = 300
-figsize = (22 / conv, 13 / conv)
-cwd = os.getcwd() + "\\01 Presentation December"
-figdir = cwd + "\\Figures"
-
-pd.set_option('display.width', 180)
-pd.set_option("display.max_columns", 8)
-def_palette = "cubehelix"
+pd.set_option('display.width', 300)
+pd.set_option("display.max_columns", 12)
+def_palette = "Set1"
 sns.set_palette(def_palette, desat=0.8)
 def_color = sns.color_palette(def_palette, 1)[0]
 
 
-class DataAnalysis:
+class Visualization:
 	def __init__(self, datapath, bluechippath):
 		self._bluechips = pd.read_csv(bluechippath)['symbol']
 		self._raw_data = pd.read_csv(datapath, parse_dates=['Date'])
-		print("--- Class Initiated ---")
+
+		self._figsize = (22 / 2.54, 13 / 2.54)
+		self._cwd = os.getcwd() + "\\03 Presentation April"
+		self._figdir = self._cwd + "\\Figures"
+		self._lw = 1.2
+		self._dpi = 300
+
+		print("--- SuperClass Initiated ---")
 
 	def _raw_vol_classify(self):
 		self._bcs_data = self._raw_data[self._raw_data.index.get_level_values(level='Symbol').isin(self._bluechips)]
@@ -39,8 +41,11 @@ class DataAnalysis:
 		self._avg_turnover = self._raw_data['close_turnover'].groupby('Symbol').mean().sort_values(
 			ascending=False).dropna()
 
+	def return_data(self):
+		return self._raw_data
 
-class SensAnalysis(DataAnalysis):
+
+class SensVisual(Visualization):
 	def __init__(self, datapath, bluechippath):
 		super().__init__(datapath, bluechippath)
 		self._raw_data['close_turnover'] = self._raw_data['close_price'] * self._raw_data['close_vol']
@@ -62,7 +67,7 @@ class SensAnalysis(DataAnalysis):
 			colcount = df['Percent'].nunique()
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + " \%"
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.lineplot(x='Date', y='Deviation', hue='Percent', data=df, ax=ax1, lw=1.25, ci=95, err_kws=dict(alpha=0.4),
 					   palette=sns.color_palette(def_palette, colcount + 2, 0.8)[:colcount])
 			ax1.set_axisbelow(True)
@@ -77,7 +82,7 @@ class SensAnalysis(DataAnalysis):
 			ax1.xaxis.set_major_formatter(form)
 
 			fig.tight_layout()
-			plt.savefig(figdir + "\\SensitivityRough\\agg_remove_{}".format(mode))
+			plt.savefig(self._figdir + "\\SensitivityRough\\agg_remove_{}".format(mode))
 			fig.show()
 			plt.close()
 
@@ -102,7 +107,7 @@ class SensAnalysis(DataAnalysis):
 			df = df[df['Percent'] <= limit]
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.boxplot(data=df, x='Percent', y='Price Deviation', palette='Reds', whis=[2.5, 97.5],
 					  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
 			ax1.set_xlabel('')
@@ -112,11 +117,11 @@ class SensAnalysis(DataAnalysis):
 			ax1.grid(which='major', axis='y')
 			ax1.set_axisbelow(True)
 			fig.tight_layout()
-			plt.savefig(figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
+			plt.savefig(self._figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
 			fig.show()
 			plt.close()
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.boxplot(data=df, x='Percent', y='Volume Deviation', palette='Blues', whis=[2.5, 97.5],
 					  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
 			ax1.set_xlabel('')
@@ -127,7 +132,7 @@ class SensAnalysis(DataAnalysis):
 			ax1.grid(which='major', axis='y')
 			ax1.set_axisbelow(True)
 			fig.tight_layout()
-			plt.savefig(figdir + "\\SensitivityRough\\Quantile_distribution_volume_{}".format(mode))
+			plt.savefig(self._figdir + "\\SensitivityRough\\Quantile_distribution_volume_{}".format(mode))
 			fig.show()
 			plt.close()
 
@@ -154,7 +159,7 @@ class SensAnalysis(DataAnalysis):
 			cl = cl.groupby(['Symbol', 'Percent']).mean()
 			cl.reset_index(drop=False, inplace=True)
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.lineplot(x='Percent', y='Price Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit], ax=ax1,
 					   palette='Reds', lw=1.2)
 			ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
@@ -168,11 +173,11 @@ class SensAnalysis(DataAnalysis):
 			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
 			fig.tight_layout()
-			plt.savefig(figdir + "\\SensitivityFine\\Sens_Price_Percent_{}_{}".format(mode, n))
+			plt.savefig(self._figdir + "\\SensitivityFine\\Sens_Price_Percent_{}_{}".format(mode, n))
 			fig.show()
 			plt.close()
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.lineplot(x='Percent', y='Volume Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit],
 					   palette='Blues', ax=ax1, lw=1.2)
 			ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
@@ -188,7 +193,7 @@ class SensAnalysis(DataAnalysis):
 			ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
 					 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
 			fig.tight_layout()
-			plt.savefig(figdir + "\\SensitivityFine\\Sens_Vol_Percent_{}_{}".format(mode, n))
+			plt.savefig(self._figdir + "\\SensitivityFine\\Sens_Vol_Percent_{}_{}".format(mode, n))
 			fig.show()
 			plt.close()
 
@@ -215,7 +220,7 @@ class SensAnalysis(DataAnalysis):
 			cl.reset_index(drop=False, inplace=True)
 			cl['Reducer'] = 'Average'
 
-			fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.lineplot(x='Percent', y='Price Deviation', hue='log10(turnover)', data=cl[cl['Percent'] <= limit], ax=ax1,
 					   palette='Reds', lw=1.1, alpha=0.8)
 			sns.lineplot(x='Percent', y='Price Deviation', data=cl[cl['Percent'] <= limit], ax=ax1,
@@ -248,7 +253,7 @@ class SensAnalysis(DataAnalysis):
 
 		df.reset_index(inplace=True)
 
-		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(data=df, x='Date', y='Deviation', hue='Average Volume', sizes=(.5, 1.5),
 				   size='Average Volume', palette='Reds', ax=ax)
 		handles, labels = ax.get_legend_handles_labels()
@@ -264,11 +269,11 @@ class SensAnalysis(DataAnalysis):
 		ax.set_xlabel("")
 		ax.set_title("Deviation from original closing price when all market orders are removed by SLI title")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\SensitivityRough\\Deviation_rmv_market")
+		plt.savefig(self._figdir + "\\SensitivityRough\\Deviation_rmv_market")
 		fig.show()
 		plt.close()
 
-		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(data=df, x='Date', y='Volume Deviation', hue='Average Volume', sizes=(.5, 1.5),
 				   size='Average Volume', palette='Blues', ax=ax)
 		handles, labels = ax.get_legend_handles_labels()
@@ -286,12 +291,12 @@ class SensAnalysis(DataAnalysis):
 		ax.set_xlabel("")
 		ax.set_title("Decrease in number of shares traded when all market orders are removed by SLI title")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\SensitivityRough\\Volume_rmv_market")
+		plt.savefig(self._figdir + "\\SensitivityRough\\Volume_rmv_market")
 		fig.show()
 		plt.close()
 
 
-class DiscoAnalysis(DataAnalysis):
+class DiscoVisual(Visualization):
 	def __init__(self, datapath, bluechippath):
 		super().__init__(datapath, bluechippath)
 		self._raw_data['close_turnover'] = self._raw_data['actual_close_price'] * self._raw_data['close_vol']
@@ -312,7 +317,7 @@ class DiscoAnalysis(DataAnalysis):
 			tmp.sort_values('Volume', ascending=False, inplace=True)
 			tmp.reset_index(inplace=True)
 
-			fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.barplot(data=tmp[tmp['Volume'] > 0], x='Symbol', y='Volume', ax=ax, ci=None,
 					  palette=[sns.color_palette('Blues', 3, 0.7)[-1]])
 			ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
@@ -324,11 +329,11 @@ class DiscoAnalysis(DataAnalysis):
 			ax.set_yscale('log')
 			ax.set_title('Average {} during closing auction sorted by title'.format(measdict[m]['call']))
 			fig.tight_layout()
-			plt.savefig(figdir + "\\PriceDiscovery\\{}_percent_aggregated".format(m))
+			plt.savefig(self._figdir + "\\PriceDiscovery\\{}_percent_aggregated".format(m))
 			fig.show()
 			plt.close(fig)
 
-			fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			sns.barplot(data=tmp.iloc[:limit, :], x='Symbol', y='Volume', ax=ax,
 					  palette=[sns.color_palette('Blues', 3, 0.7)[-1]])
 			ax.set_axisbelow(True)
@@ -339,7 +344,7 @@ class DiscoAnalysis(DataAnalysis):
 			ax.tick_params(axis='x', rotation=90)
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			fig.tight_layout()
-			plt.savefig(figdir + "\\PriceDiscovery\\{}_percent_stocks".format(m))
+			plt.savefig(self._figdir + "\\PriceDiscovery\\{}_percent_stocks".format(m))
 			fig.show()
 			plt.close(fig)
 
@@ -356,7 +361,7 @@ class DiscoAnalysis(DataAnalysis):
 		df = df.join(quants)
 		df = df.reset_index()
 
-		fig, axes = plt.subplots(3, 1, figsize=figsize, sharex=True, dpi=dpi)
+		fig, axes = plt.subplots(3, 1, figsize=self._figsize, sharex=True, dpi=self._dpi)
 		xmin, xmax = df['Date'].iloc[0], df['Date'].iloc[-1]
 		loca = dates.MonthLocator()
 		form = dates.ConciseDateFormatter(loca)
@@ -376,11 +381,11 @@ class DiscoAnalysis(DataAnalysis):
 
 		axes[1].set_ylabel("Deviation [bps]")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_terciles.png")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Closing_Deviations_terciles.png")
 		fig.show()
 		plt.close(fig)
 
-		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1.2, ci=95, color=sns.color_palette('Reds', 4)[-1])
 		ax1.grid(which='major', axis='y')
 		ax1.hlines(0, xmin, xmax, 'k', lw=1)
@@ -392,12 +397,12 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_ylabel("Deviation [bps]")
 		ax1.set_title("Average daily deviation of closing price from last midpoint over SLI (Bootstrapped 95\% CI)")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_aggregated")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Closing_Deviations_aggregated")
 		fig.show()
 		fig.clf()
 		plt.close(fig)
 
-		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(x='Date', y='dev', data=df, ax=ax1, lw=1.2, ci=None, estimator='std', hue='Quantile',
 				   palette=def_palette + '_r')
 		ax1.grid(which='major', axis='y')
@@ -410,12 +415,12 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_title(
 			"Standard deviation of closing price deviations from last midpoint over SLI (Bootstrapped 95\% CI)")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_std_aggregated")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Closing_Deviations_std_aggregated")
 		fig.show()
 		fig.clf()
 		plt.close(fig)
 
-		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(x='Date', y='dev_spread', data=df, ax=ax1, lw=1.2, ci=None, estimator='std',
 				   hue='Quantile', palette=def_palette + '_r')
 		ax1.grid(which='major', axis='y')
@@ -427,7 +432,7 @@ class DiscoAnalysis(DataAnalysis):
 		ax1.set_ylabel("Standard Deviation of dislocation divided by spread")
 		ax1.set_title("Standard deviation of closing price deviations from last midpoint over SLI (Bootstrapped 95\% CI)")
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Closing_Deviations_std_spread_aggregated")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Closing_Deviations_std_spread_aggregated")
 		# fig.show()
 		fig.clf()
 		plt.close(fig)
@@ -446,7 +451,7 @@ class DiscoAnalysis(DataAnalysis):
 		ylim = 135
 		df = df[abs(df['Dev']) <= ylim]
 
-		fig, ax1 = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.boxplot(x='Symbol', y='Dev', palette=[sns.color_palette('Reds', 5, 0.8)[-2]], data=df,
 				  ax=ax1, whis=[2.5, 97.5], linewidth=1, order=stocks)
 		ax1.set_ylabel("Deviation from midquote in bps")
@@ -460,7 +465,7 @@ class DiscoAnalysis(DataAnalysis):
 			"Distribution of deviations of closing from pre-close midquote of {} most \"closed\" stocks".format(
 				limit))
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Distribution_xsection")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Distribution_xsection")
 		fig.show()
 		plt.close()
 
@@ -476,7 +481,7 @@ class DiscoAnalysis(DataAnalysis):
 		df.reset_index(inplace=True)
 		df = df[abs(df['Deviation']) < 300]
 
-		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(data=df, x='Date', y='Deviation', hue='Symbol', palette='cubehelix', lw=1.2)
 		ax.set_xlabel('')
 		ax.set_ylabel('Deviation in bps')
@@ -488,11 +493,11 @@ class DiscoAnalysis(DataAnalysis):
 		ax.grid(which='major', axis='y')
 		ax.set_axisbelow(True)
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Price_Deviation_Largest_Titles")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Price_Deviation_Largest_Titles")
 		fig.show()
 		plt.close(fig)
 
-		fig, ax = plt.subplots(1, 1, figsize=figsize, dpi=dpi)
+		fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 		sns.lineplot(data=df, x='Date', y='Deviation Spread', hue='Symbol', palette='cubehelix', lw=1.2)
 		ax.set_xlabel('')
 		ax.set_ylabel('Multiple of the pre-closing spread')
@@ -504,16 +509,288 @@ class DiscoAnalysis(DataAnalysis):
 		ax.xaxis.set_major_formatter(dates.ConciseDateFormatter(loca))
 		ax.grid(which='major', axis='y')
 		fig.tight_layout()
-		plt.savefig(figdir + "\\PriceDiscovery\\Spread_Deviation_Largest_Titles")
+		plt.savefig(self._figdir + "\\PriceDiscovery\\Spread_Deviation_Largest_Titles")
 		fig.show()
 		plt.close(fig)
 
-# file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-# file_data = os.getcwd() + "\\Exports\\Sensitivity_rough_v1.csv"
-# Sens = SensAnalysis(file_data, file_bcs)
-# t = Sens.plt_rmv_limit_quant()
 
-# file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-# file_data = os.getcwd() + "\\Exports\\Price_Discovery_v1.csv"
-# Disco = DiscoAnalysis(file_data, file_bcs)
-# t = Disco.plt_deviation_discovery()
+class IntervalVisual(Visualization):
+	def __init__(self, datapath, bluechippath):
+		super().__init__(datapath, bluechippath)
+
+		self._extract_indicators()
+		super()._raw_vol_classify()
+
+	def _extract_indicators(self):
+		raw = self._raw_data
+		raw['close_turnover'] = raw['close_price'] * raw['close_vol']
+		raw['Absolute Imbalance'] = (raw['snap_bids'] - raw['snap_asks']) * raw['close_price']
+		raw['Relative Imbalance'] = ((raw['snap_bids'] - raw['snap_asks']) / ((raw['snap_bids'] + raw['snap_asks']) / 2))
+		raw['Turnover'] = raw['snap_price'] * raw['snap_vol']
+		raw['Deviation'] = (raw['snap_price'] - raw['close_price']) / raw['close_price'] * 10000
+		raw.set_index(['Date', 'Symbol', 'Lag'], inplace=True)
+
+	def plot_months(self, save=False):
+		def base_plot(linefunc, filename):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			linefunc(ax)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel("Seconds since start of auction")
+			ax.legend(ncol=2, fontsize='small')
+			ax.set_xlim([0, 600])
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\Intervals\\{1}".format(self._figdir, filename))
+			plt.show()
+
+		raw = self._raw_data.copy(deep=True)
+		tmp = raw.groupby(['Lag', 'Date']).mean().reset_index()
+		tmp['Date'] = tmp['Date'].apply(lambda d: d.strftime('%B'))
+		tmp.rename(columns={'snap_OIB': 'Relative Imbalance', 'Date': 'Month'}, inplace=True)
+
+		def volume_plot(ax):
+			sns.lineplot(data=tmp, x='Lag', y='Turnover', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
+			ax.set_title("Average hypothetical closing turnover of SLI titles by month")
+			ax.set_ylabel("Turnover [CHF]")
+
+		def rel_OIB_plot(ax):
+			sns.lineplot(data=tmp, x='Lag', y='Relative Imbalance', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
+			ax.axhline(0, c='k', lw=1.2)
+			ax.set_ylim([-0.006, 0.006])
+			ax.set_title("Average relative order imbalance of SLI titles by month")
+			ax.set_ylabel("Relative order imbalance [\%]")
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+
+		def abs_OIB_plot(ax):
+			ax.axhline(0, c='k', lw=1.2)
+			sns.lineplot(data=tmp, x='Lag', y='Absolute Imbalance', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
+			ax.set_title("Average order imbalance of SLI titles by month")
+			ax.set_ylabel("Order imbalance [CHF]")
+
+		def price_plot(ax):
+			ax.axhline(0, c='k', lw=1.2)
+			sns.lineplot(data=tmp, x='Lag', y='Deviation', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
+			ax.set_title("Average price deviation SLI titles by month")
+			ax.set_ylabel("Price deviation [bps]")
+
+		base_plot(volume_plot, 'VolumePlotMonthly')
+		base_plot(rel_OIB_plot, 'RelativeOIBMonthly')
+		base_plot(abs_OIB_plot, 'AbsoluteOIBMonthly')
+		base_plot(price_plot, 'PriceDeviationMonthly')
+
+		return raw
+
+	def plot_stocks_individual(self, nstocks=5, save=False):
+		def base_plot(data, linefunc, stock, filename=None):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			linefunc(data, ax, stock)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel('')
+			ax.legend(ncol=5, fontsize='small')
+			ax.set_xlim(['2019-01-01', '2020-01-01'])
+			locator = dates.MonthLocator(interval=1)
+			formatter = dates.ConciseDateFormatter(locator, show_offset=False)
+			ax.xaxis.set_major_locator(locator)
+			ax.xaxis.set_major_formatter(formatter)
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\Intervals\\{1}_{2}".format(self._figdir, stock, filename))
+			plt.close()
+
+		stocks = self._avg_turnover.index[:nstocks].to_list()
+
+		def deviation_plot(data, ax, stock):
+			data = data[abs(data['Deviation']) < data['Deviation'].std() * 2]
+			sns.lineplot(data=data, x='Date', y='Deviation', hue='Lag', lw=1,
+					   ax=ax, ci=None, palette='cubehelix_r')
+			ax.set_ylabel("Deviation from closing price [bps]")
+			ax.set_title("Deviation of current price from closing price for {} (without outliers)".format(stock))
+
+		def relative_OIB_plot(data, ax, stock):
+			data = data[abs(data['Relative Imbalance']) < data['Relative Imbalance'].std() * 3]
+			sns.lineplot(data=data, x='Date', y='Relative Imbalance', hue='Lag', lw=1,
+					   ax=ax, ci=None, palette='cubehelix_r')
+			ax.set_ylabel("Relative imbalance")
+			ax.set_title("Relative order imbalance of current price from closing price for {} (without outliers".format(stock))
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+
+		def absolute_OIB_plot(data, ax, stock):
+			# data['Absolute Imbalance'] = abs(data['Absolute Imbalance'])
+			sns.lineplot(data=data, x='Date', y='Absolute Imbalance', hue='Lag', lw=1,
+					   ax=ax, ci=None, palette='cubehelix_r')
+			ax.set_ylabel("Absolute imbalance [CHF]")
+			ax.set_title("Absolute order imbalance of current price from closing price for {}".format(stock))
+
+		# ax.set_yscale('log')
+
+		def turnover_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Date', y='Turnover', hue='Lag', lw=1,
+					   ax=ax, ci=None, palette='cubehelix_r')
+			ax.set_ylabel("Turnover in [CHF]")
+			ax.set_title("Hypothetical turnover for {} by lag".format(stock))
+			ax.set_ylim(bottom=0)
+
+		def turnover_log_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Date', y='Turnover', hue='Lag', lw=1,
+					   ax=ax, ci=None, palette='cubehelix_r')
+			ax.set_ylabel("Turnover in [CHF]")
+			ax.set_title("Hypothetical logarithmic turnover for {} by lag".format(stock))
+			ax.set_yscale('log')
+
+		for s in stocks:
+			tmp = self._raw_data.xs(s, level='Symbol').reset_index(inplace=False)
+			tmp['Lag'] = 'sec. ' + tmp['Lag'].astype(str)
+
+			base_plot(tmp, deviation_plot, s, 'Deviation')
+			base_plot(tmp, relative_OIB_plot, s, 'RelativeImbalance')
+			base_plot(tmp, absolute_OIB_plot, s, 'AbsoluteImbalance')
+			base_plot(tmp, turnover_plot, s, 'Turnover')
+			base_plot(tmp, turnover_log_plot, s, 'Turnover_log')
+
+		return tmp
+
+	def plot_stocks_compare(self, nstocks=5, save=False):
+		def base_plot(plotfunc, handle):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			plotfunc(ax)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel("Seconds since start of auction")
+			ax.legend(ncol=2, fontsize='small')
+			ax.set_xlim([0, 600])
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\Intervals\\Comparison\\{1}".format(self._figdir, handle))
+			plt.show()
+
+		stocks = self._avg_turnover.index[:nstocks].to_list()
+		raw = self._raw_data.reset_index(inplace=False)
+		raw = raw[raw['Symbol'].isin(stocks)]
+
+		def turnover_plot(ax):
+			sns.lineplot(data=raw, x='Lag', y='Turnover', hue='Symbol', lw=self._lw,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_ylim(bottom=0)
+
+		def relative_OIB_plot(ax):
+			ax.axhline(y=0, lw=1, c='k', ls='dashed')
+			sns.lineplot(data=raw, x='Lag', y='Relative Imbalance', hue='Symbol', lw=self._lw,
+					   ax=ax, palette='rainbow', hue_order=stocks, ci=None)
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+
+		def deviation_plot(ax):
+			ax.axhline(y=0, lw=1, c='k', ls='dashed')
+			sns.lineplot(data=raw, x='Lag', y='Deviation', hue='Symbol', lw=self._lw,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_ylabel('Average deviation from closing price [bps]')
+
+		def deviation_conf_plot(ax):
+			ax.axhline(y=0, lw=1, c='k', ls='dashed')
+			sns.lineplot(data=raw, x='Lag', y='Deviation', hue='Symbol', lw=self._lw,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=95)
+			ax.set_ylabel('Average deviation from closing price [bps]')
+
+		base_plot(turnover_plot, 'Turnover')
+		base_plot(relative_OIB_plot, 'RelativeTurnover')
+		base_plot(deviation_plot, 'Deviation')
+		base_plot(deviation_conf_plot, 'DeviationConf')
+
+	def plot_stocks_within(self, nstocks=5, save=False):
+		"""
+		Very chaotic representation, but it indicates that many of the one-sided order imbalances are persistent.
+		This probably comes from large rebalancing.
+		"""
+
+		def base_plot(plotfunc, stock, handle):
+			tmp = raw[raw['Symbol'] == stock]
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			plotfunc(tmp, ax, stock)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel("Seconds since start of auction")
+			# ax.legend(ncol=2, fontsize='small')
+			ax.set_xlim([0, 600])
+			# ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\Intervals\\Within\\{1}_{2}".format(self._figdir, handle, stock))
+			plt.show()
+
+
+		stocks = self._avg_turnover.index[:nstocks].to_list()
+		raw = self._raw_data.reset_index(inplace=False)
+		raw = raw[raw['Symbol'].isin(stocks)]
+
+		def deviation_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Lag', y='Deviation', ax=ax, hue='Date', legend=None,
+					   estimator=None, lw=0.5, palette='rainbow')
+			ax.set_ylim([-500, 500])
+			ax.set_ylabel("Deviation from closing price [bps]k")
+			ax.set_title("{0}: Deviation of current price to closing price through auction".format(stock))
+
+		def relative_OIB_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, units='Date', legend=None,
+					   estimator=None, lw=0.5, palette='rainbow')
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			ax.set_title("{0}: Relative order imbalance throughout auction".format(stock))
+			ax.set_ylabel("Relative Imbalance [\%]")
+
+		def absolute_OIB_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Lag', y='Absolute Imbalance', ax=ax, hue='Date',
+					   estimator=None, lw=0.5, legend=None, palette='rainbow')
+			ax.set_title("{0}: Absolute order imbalance throughout auction".format(stock))
+			ax.set_ylabel("Absolute Imbalance [CHF]")
+
+		for s in stocks:
+			base_plot(deviation_plot, s, 'Deviation')
+			base_plot(relative_OIB_plot, s, 'RelativeImbalance')
+			base_plot(absolute_OIB_plot, s, 'AbsoluteImbalance')
+
+
+	def plot_stocks_box(self, nstocks=5, save=False):
+		def base_plot_box(plotfunc, stock, handle):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi, sharex=True, sharey=True)
+			tmp = raw.loc[raw['Symbol'] == stock, :]
+			plotfunc(tmp, ax, stock)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel("Seconds since start of auction")
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\Intervals\\Boxplots\\{1}_{2}".format(self._figdir, handle, stock))
+			plt.show()
+
+		stocks = self._avg_turnover.index[:nstocks]
+		raw = self._raw_data.reset_index(inplace=False)
+		raw = raw.loc[raw['Symbol'].isin(stocks.tolist()), :]
+		raw.loc[:, 'Lag'] = raw.loc[:, 'Lag'].astype(object)
+
+
+		def box_deviation_plot(data, ax, stock):
+			sns.boxplot(data=data, x='Lag', y='Deviation', ax=ax, color=def_color)
+			ax.set_ylim([-700, 700])
+			ax.set_ylabel("Deviation [bps]")
+			ax.set_title("{0}: Deviation from closing price by lag".format(stock))
+
+		def box_relative_OIB_plot(data, ax, stock):
+			sns.boxplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, color=def_color)
+			ax.set_ylim([-0.20, 0.20])
+			ax.set_ylabel("Relative imbalance [\%]")
+			ax.set_title("{0}: Deviation from closing price by lag".format(stock))
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+
+		for s in stocks:
+			base_plot_box(box_deviation_plot, s, 'DeviationBox')
+			base_plot_box(box_relative_OIB_plot, s, 'RelativeImbalanceBox')
+
+
+
+########################################################################
+file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
+# mode, granularity = 'Sensitivity', 'rough'
+# mode, granularity = 'Sensitivity', 'fine'
+# mode, granularity = 'Discovery', None
+mode, granularity = 'Intervals', None
+file_data = os.getcwd() + "\\Exports\\Intervals_v3.csv"
+Inter = IntervalVisual(file_data, file_bcs)
+df = Inter.plot_stocks_within(save=True)
+# df = Inter.plot_stocks_within(save=False)

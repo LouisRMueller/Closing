@@ -6,9 +6,9 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
-base = 'LimitOrders'  # ('LimitOrders', ''TotalVolume')
-mode = 'Intervals'
-granularity = 'fine'
+base = 'TotalVolume'  # ('LimitOrders', ''TotalVolume')
+mode = 'Discovery'
+granularity = 'rough'
 ########################################################################
 
 
@@ -29,7 +29,7 @@ if mode == 'Sensitivity':
 
 	Sens.export_results('Sensitivity_{}_{}_v3'.format(granularity, base), 'csv')
 
-	print("<<< Sensitivity Sens complete >>>")
+	print("<<< {1} Sensitivity {0} complete >>>".format(granularity, base))
 
 
 elif mode == 'Discovery':
