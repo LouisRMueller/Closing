@@ -9,9 +9,9 @@ datadir = os.getcwd() + "\\Data"
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 # mode, granularity = 'Sensitivity', 'rough'
 # mode, granularity = 'Sensitivity', 'fine'
-# mode, granularity = 'Discovery', None
-mode, granularity = 'Intervals', None
-base = 'TotalVolume'
+mode, granularity = 'Discovery', None
+# mode, granularity = 'Intervals', None
+# base = 'TotalVolume'
 # base = 'LimitVolume'
 ########################################################################
 
@@ -20,7 +20,7 @@ if mode == 'Sensitivity':
 	Sens = SensVisual(file_data, file_bcs)
 
 	if granularity == 'rough':
-		Sens.plt_rmv_limit_aggregated()
+		Sens.plot_removed_time()
 		Sens.plt_rmv_market_orders()
 		Sens.plt_rmv_limit_quant()
 
@@ -30,15 +30,10 @@ if mode == 'Sensitivity':
 		Sens.plt_cont_rmv_indiv('all_limit')
 		Sens.plt_cont_rmv_agg()
 
-
-
 elif mode == 'Discovery':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v3.csv"
 	Disc = DiscoVisual(file_data, file_bcs)
-	Disc.plt_disco_distr_xsect()
-	Disc.plt_closing_volume()
-	Disc.plt_deviation_discovery()
-	Disc.plt_disco_by_title(5)
+	Disc.plot_oib_returns()
 
 elif mode == 'Intervals':
 	file_data = os.getcwd() + "\\Exports\\Intervals_v3.csv"

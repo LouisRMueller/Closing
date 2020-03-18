@@ -5,15 +5,15 @@ pd.set_option("display.max_columns", 8)
 
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
-file_prices = os.getcwd() + "\\Data\\orders_closing_prices.csv"
-base = 'TotalVolume'  # ('LimitOrders', ''TotalVolume')
-mode = 'Discovery'
+file_prices = os.getcwd() + "\\Data\\closing_prices.csv"
+base = 'SidePassive'  # Limiting to  {'SideLiquidity','FullLiquidity','CrossedVolume'}
+mode = 'Sensitivity'
 granularity = 'rough'
 ########################################################################
 
 
 if mode == 'Sensitivity':
-	Sens = SensitivityAnalysis(file_snapshots)
+	Sens = SensitivityAnalysis(file_snapshots, base=base)
 	if granularity == 'rough':
 		percent = np.arange(0, 0.55, 0.05).round(2)
 	elif granularity == 'fine':
@@ -21,11 +21,11 @@ if mode == 'Sensitivity':
 	else:
 		raise ValueError("Wrong input for granularity.")
 
-	Sens.sensitivity_processing(key='bid_limit', percents=percent, remove_func=base)
-	Sens.sensitivity_processing(key='ask_limit', percents=percent, remove_func=base)
-	Sens.sensitivity_processing(key='all_limit', percents=percent, remove_func=base)
-	Sens.sensitivity_processing(key='all_market', remove_func=base) if base == 'LimitOrders' else None
-	Sens.sensitivity_processing(key='cont_market', remove_func=base) if base == 'LimitOrders' else None
+	Sens.process(key='bid_limit', percents=percent)
+	Sens.process(key='ask_limit', percents=percent)
+	Sens.process(key='all_limit', percents=percent)
+	Sens.process(key='all_market')
+	Sens.process(key='cont_market')
 
 	Sens.export_results('Sensitivity_{}_{}_v3'.format(granularity, base), 'csv')
 

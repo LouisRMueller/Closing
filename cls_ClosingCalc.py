@@ -9,9 +9,9 @@ from collections import deque
 
 
 class Research:
-	def __init__(self, file_snapshots):
+	def __init__(self, file):
 		t0 = time()
-		self._snapbook = pd.read_csv(file_snapshots, header=0)
+		self._snapbook = pd.read_csv(file, header=0)
 		self._snapbook.rename(columns={'start_close_vol_bid': 'SS_0_vol_bid', 'start_close_vol_ask': 'SS_0_vol_ask'}, inplace=True)
 		self._symbols = self._snapbook['symbol'].unique()
 		self._dates = self._snapbook['onbook_date'].unique()
@@ -21,7 +21,7 @@ class Research:
 
 		self._result_dict = {}  # Collects all the results
 
-		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
+		print(">>> Super-Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
 	@property
 	def snapshots(self):
@@ -54,7 +54,7 @@ class Research:
 	def _calc_uncross(bids: pd.Series, asks: pd.Series) -> dict:
 		"""
 		Function calculates the theoretical uncross price of a closing order book.
-		:return: dict()
+		:return: dict() with price/trade_vol/cum_bids/cum_asks/total_bids/total_asks
 		"""
 		base_df = pd.DataFrame({'bids': bids, 'asks': asks})
 		df, mark_buy, mark_sell = Research._extract_market_orders(base_df)
@@ -75,14 +75,9 @@ class Research:
 			imbalances = cum_bids - cum_asks
 			i = np.argmin(abs(imbalances))
 			trade_vol = min(cum_bids[i], cum_asks[i])
-
-			if trade_vol > 0:
-				oib = imbalances[i] / (cum_bids[i] + cum_asks[i])
-			else:
-				oib = np.nan
-
-			output = dict(price=df.index[i], trade_vol=trade_vol, bids=cum_bids[i], asks=cum_asks[i],
-					    oib=oib)
+			sum_bids, sum_asks = max(cum_bids), max(cum_asks)
+			output = dict(price=df.index[i], trade_vol=trade_vol, cum_bids=cum_bids[i], cum_asks=cum_asks[i],
+					    total_bids=sum_bids, total_asks=sum_asks)
 
 			return output
 
@@ -129,26 +124,33 @@ class Research:
 
 
 class SensitivityAnalysis(Research):
+	def __init__(self, file, base):
+		super().__init__(file)
+		if base in {'SidePassive', 'SideLiquidity', 'FullPassive', 'FullLiquidity', 'CrossedVolume'}:
+			self._base = base
+		else:
+			raise KeyError("base not in {'SidePassive','SideLiquidity','FullPassive','FullLiquidity','CrossedVolume'}")
 
-	def _remove_liq_limit(self, date, title, percentage=0, side=None, market=None) -> pd.DataFrame:
+	def _remove_orders(self, date, title, perc=0, side=None, market=None) -> pd.DataFrame:
 		"""
 		This function removes a certain percentage of liquidity from the closing auction.
 		It is called for a every date-title combination individually
 		:param date: Onbook_date
 		:param title: Name of the stock
-		:param percentage: Values in decimals, i.e. 5% is handed in as 0.05
+		:param perc: Values in decimals, i.e. 5% is handed in as 0.05
 		:param side: ['bid','ask','all']. Which side should be included in the removal
 		:param market: True if market orders are included and False otherwise
 		:return: A dateframe with new bid-ask book based on removing adjustments.
 		"""
 		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
 
-		if percentage == 0:
+		if perc == 0:
 			return imp_df[['end_close_vol_ask', 'end_close_vol_bid']]
 
 		bids = imp_df['end_close_vol_bid'].tolist()
 		asks = imp_df['end_close_vol_ask'].tolist()
 
+		# Removal of Market Orders
 		if market == "remove_all":  # Removes all market orders in closing auction
 			ret_df = imp_df.loc[:, ('end_close_vol_ask', 'end_close_vol_bid')]
 			try:
@@ -166,82 +168,57 @@ class SensitivityAnalysis(Research):
 			except KeyError:
 				return ret_df
 
-		else:  # Only considering limit orders for adjustments
-			removable_bid = sum(bids[1:]) * percentage
-			removable_ask = sum(asks[1:]) * percentage
+		if self._base == 'SidePassive':  # Only considering limit orders for adjustments
+			rem_bid = sum(bids[1:]) * perc
+			rem_ask = sum(asks[1:]) * perc
+		elif self._base == 'SideLiquidity':
+			rem_bid = sum(bids) * perc
+			rem_ask = sum(bids) * perc
+		elif self._base == 'FullPassive':
+			rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc
+			rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc
+		elif self._base == 'FullLiquidity':
+			rem_bid = sum(bids) + sum(asks) * perc
+			rem_ask = sum(bids) + sum(asks) * perc
+		elif self._base == 'CrossedVolume':
+			close_volume = self._calc_uncross(bids=imp_df['end_close_vol_bid'], asks=imp_df['end_close_vol_ask'])['trade_vol']
+			rem_bid = close_volume * perc
+			rem_ask = close_volume * perc
+		else:
+			raise KeyError("base not in {'SidePassive','SideLiquidity','FullPassive','FullLiquidity','CrossedVolume'}")
 
-		# Below is the algorithm
-		if side in ['bid', 'all']:
-			b = len(bids) - 1
-			# remaining_liq = removable_bid / percentage
-			while removable_bid > 0:
-				local_vol = bids[b]
-				bids[b] = local_vol - min(local_vol, removable_bid)
-				removable_bid -= min(removable_bid, local_vol)
-				b -= 1
-
-		if side in ['ask', 'all']:
-			a = 1
-			# remaining_liq = removable_ask / percentage
-			while removable_ask > 0:
-				local_vol = asks[a]
-				asks[a] = local_vol - min(local_vol, removable_ask)
-				removable_ask -= min(removable_ask, local_vol)
-				a += 1
-
-		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
-		return ret_df
-
-	def _remove_liq_total(self, date, title, percentage=0, side=None) -> pd.DataFrame:
-		"""
-		This function removes a certain percentage of liquidity from the closing auction.
-		It is called for a every date-title combination individually
-		"""
-		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
-
-		if percentage == 0:
-			return imp_df[['end_close_vol_ask', 'end_close_vol_bid']]
-
-		close_volume = self._calc_uncross(bids=imp_df['end_close_vol_bid'], asks=imp_df['end_close_vol_ask'])['trade_vol']
-
-		bids = imp_df['end_close_vol_bid'].tolist()
-		asks = imp_df['end_close_vol_ask'].tolist()
-
-		removable_bid = close_volume * percentage
-		removable_ask = close_volume * percentage
-
-		# Below is the algorithm
 		if side in ['bid', 'all']:
 			if bids[0] != 0:
 				local_vol = bids[0]
-				bids[0] = local_vol - min(local_vol, removable_bid)
-				removable_bid -= min(removable_bid, local_vol)
+				bids[0] = local_vol - min(local_vol, rem_bid)
+				rem_bid -= min(rem_bid, local_vol)
 			else:
 				b = len(bids) - 1
-				while removable_bid > 0:
+				while rem_bid > 0:
 					local_vol = bids[b]
-					bids[b] = local_vol - min(local_vol, removable_bid)
-					removable_bid -= min(removable_bid, local_vol)
+					bids[b] = local_vol - min(local_vol, rem_bid)
+					rem_bid -= min(rem_bid, local_vol)
 					b -= 1
 
 		if side in ['ask', 'all']:
 			if asks[0] != 0:
 				local_vol = asks[0]
-				asks[0] = local_vol - min(local_vol, removable_ask)
-				removable_ask -= min(removable_ask, local_vol)
+				asks[0] = local_vol - min(local_vol, rem_bid)
+				rem_bid -= min(rem_bid, local_vol)
 			else:
 				a = 1
-				# remaining_liq = removable_ask / percentage
-				while removable_ask > 0:
+				# remaining_liq = rem_ask / percentage
+				while rem_ask > 0:
 					local_vol = asks[a]
-					asks[a] = local_vol - min(local_vol, removable_ask)
-					removable_ask -= min(removable_ask, local_vol)
+					asks[a] = local_vol - min(local_vol, rem_ask)
+					rem_ask -= min(rem_ask, local_vol)
 					a += 1
+
 
 		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
 		return ret_df
 
-	def sensitivity_processing(self, key, percents=tuple([1]), remove_func=None) -> None:
+	def process(self, key, percents=tuple([1])) -> None:
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
@@ -264,37 +241,32 @@ class SensitivityAnalysis(Research):
 			current_symbols = self.snapshots.loc[date, :].index.get_level_values(0).unique()
 
 			for symbol in current_symbols:
-				close_df = self._remove_liq_limit(date=date, title=symbol, percentage=0)
+				close_df = self._remove_orders(date=date, title=symbol, perc=0)
 				close_uncross = self._calc_uncross(bids=close_df['end_close_vol_bid'], asks=close_df['end_close_vol_ask'])
 
 				for p in percents:
 					res = self._result_dict[key, date, symbol, p] = {}
 
-					if remove_func == 'LimitOrders':
-						remove_df = self._remove_liq_limit(date=date, title=symbol, percentage=p, side=side, market=mkt)
-					elif remove_func == 'TotalVolume':
-						remove_df = self._remove_liq_total(date=date, title=symbol, percentage=p, side=side)
-					else:
-						raise ValueError("Removal Logic not in ['LimitOrders', 'Total Volume']")
+					remove_df = self._remove_orders(date=date, title=symbol, perc=p, side=side, market=mkt)
 
-					remove_limit = self._calc_uncross(bids=remove_df['end_close_vol_bid'], asks=remove_df['end_close_vol_ask'])
+					removed_liq = self._calc_uncross(bids=remove_df['end_close_vol_bid'], asks=remove_df['end_close_vol_ask'])
 
 					res['close_price'] = close_uncross['price']
 					res['close_vol'] = close_uncross['trade_vol']
-					res['close_bids'] = close_uncross['bids']
-					res['close_asks'] = close_uncross['asks']
-					res['close_oib'] = close_uncross['oib']
+					res['close_cum_bids'] = close_uncross['cum_bids']
+					res['close_cum_asks'] = close_uncross['cum_asks']
+					res['close_bids'] = close_uncross['total_bids']
+					res['close_asks'] = close_uncross['total_asks']
 					# res['close_imbalance'] = close_uncross['imbalance']
 
-					res['adj_price'] = remove_limit['price']
-					res['adj_vol'] = remove_limit['trade_vol']
-					res['adj_bids'] = remove_limit['bids']
-					res['adj_asks'] = remove_limit['asks']
-					res['adj_oib'] = remove_limit['oib']
+					res['adj_price'] = removed_liq['price']
+					res['adj_vol'] = removed_liq['trade_vol']
+					res['adj_cum_bids'] = removed_liq['cum_bids']
+					res['adj_cum_asks'] = removed_liq['cum_asks']
+					res['adj_bids'] = removed_liq['total_bids']
+					res['adj_asks'] = removed_liq['total_asks']
 
 		print(">> [{0}] finished <<".format(key))
-
-		return
 
 	def results_to_df(self) -> pd.DataFrame:
 		"""
@@ -316,7 +288,7 @@ class PriceDiscovery(Research):
 		self._closeprices.set_index(['onbook_date', 'symbol'], drop=True, inplace=True)
 		self._closeprices.sort_index(inplace=True)
 
-		print(">>> Class initiated ({} seconds)".format(round(time() - t0, 2)))
+		print(">>> Sub-Class initiated ({} seconds)".format(round(time() - t0, 2)))
 
 	def discovery_processing(self) -> None:
 		"""
@@ -334,7 +306,7 @@ class PriceDiscovery(Research):
 				close_uncross = self._calc_uncross(bids=sb['end_close_vol_bid'], asks=sb['end_close_vol_ask'])
 				start_close_uncross = self._calc_uncross(bids=sb['SS_0_vol_bid'], asks=sb['SS_0_vol_ask'])
 
-				preclose_uncross = self._calc_preclose(bids=sb['end_cont_vol_bid'].copy(), asks=sb['SS_0_vol_ask'])
+				preclose_uncross = self._calc_preclose(bids=sb['SS_0_vol_bid'].copy(), asks=sb['SS_0_vol_ask'])
 
 				res = self._result_dict[date, symbol] = {}
 
@@ -344,23 +316,20 @@ class PriceDiscovery(Research):
 
 				res['start_price'] = start_close_uncross['price']
 				res['start_vol'] = start_close_uncross['trade_vol']
-				res['start_bids'] = start_close_uncross['bids']
-				res['start_asks'] = start_close_uncross['asks']
-				res['start_oib'] = start_close_uncross['oib']
+				res['start_bids'] = start_close_uncross['total_bids']
+				res['start_asks'] = start_close_uncross['total_asks']
 
 				res['close_price'] = close_uncross['price']
 				res['close_vol'] = close_uncross['trade_vol']
-				res['close_bids'] = close_uncross['bids']
-				res['close_asks'] = close_uncross['asks']
-				res['close_oib'] = close_uncross['oib']
-				# res['close_imbalance'] = close_uncross['imbalance']
+				res['close_bids'] = close_uncross['total_bids']
+				res['close_asks'] = close_uncross['total_asks']
 
 				try:
 					res['actual_close_price'] = self._closeprices.loc[(date, symbol), 'price_org_ccy'].copy()
 				except KeyError:
 					res['actual_close_price'] = np.nan
 
-		# print(">> {0} finished ({1:.2f} sec.) >>".format(date, time() - t0))
+	# print(">> {0} finished ({1:.2f} sec.) >>".format(date, time() - t0))
 
 	def results_to_df(self) -> pd.DataFrame:
 		"""
@@ -399,9 +368,10 @@ class IntervalAnalysis(Research):
 					res['close_vol'] = close_uncross['trade_vol']
 					res['snap_price'] = snap_uncross['price']
 					res['snap_vol'] = snap_uncross['trade_vol']
-					res['snap_bids'] = snap_uncross['bids']
-					res['snap_asks'] = snap_uncross['asks']
-					res['snap_oib'] = snap_uncross['oib']
+					res['snap_bids'] = snap_uncross['total_bids']
+					res['snap_asks'] = snap_uncross['total_asks']
+					res['snap_cum_bids'] = snap_uncross['cum_bids']
+					res['snap_cum_asks'] = snap_uncross['cum_asks']
 
 	def results_to_df(self) -> pd.DataFrame:
 		"""
