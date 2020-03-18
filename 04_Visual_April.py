@@ -11,16 +11,15 @@ file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 # mode, granularity = 'Sensitivity', 'fine'
 mode, granularity = 'Discovery', None
 # mode, granularity = 'Intervals', None
-# base = 'TotalVolume'
-# base = 'LimitVolume'
+base = 'TotalVolume' # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
 ########################################################################
 
 if mode == 'Sensitivity':
 	file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_v3.csv".format(granularity)
-	Sens = SensVisual(file_data, file_bcs)
+	Sens = SensVisual(datapath=file_data, base=base)
 
 	if granularity == 'rough':
-		Sens.plot_removed_time()
+		Sens.plot_removed_time(save=True, show)
 		Sens.plt_rmv_market_orders()
 		Sens.plt_rmv_limit_quant()
 

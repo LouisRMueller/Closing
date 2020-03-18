@@ -126,10 +126,10 @@ class Research:
 class SensitivityAnalysis(Research):
 	def __init__(self, file, base):
 		super().__init__(file)
-		if base in {'SidePassive', 'SideLiquidity', 'FullPassive', 'FullLiquidity', 'CrossedVolume'}:
+		if base in {'SeparatePassive', 'SeparateOrders', 'FullPassive', 'FullLiquidity', 'CrossedVolume'}:
 			self._base = base
 		else:
-			raise KeyError("base not in {'SidePassive','SideLiquidity','FullPassive','FullLiquidity','CrossedVolume'}")
+			raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
 
 	def _remove_orders(self, date, title, perc=0, side=None, market=None) -> pd.DataFrame:
 		"""
@@ -168,10 +168,10 @@ class SensitivityAnalysis(Research):
 			except KeyError:
 				return ret_df
 
-		if self._base == 'SidePassive':  # Only considering limit orders for adjustments
+		if self._base == 'SeparatePassive':  # Only considering limit orders for adjustments
 			rem_bid = sum(bids[1:]) * perc
 			rem_ask = sum(asks[1:]) * perc
-		elif self._base == 'SideLiquidity':
+		elif self._base == 'SeparateOrders':
 			rem_bid = sum(bids) * perc
 			rem_ask = sum(bids) * perc
 		elif self._base == 'FullPassive':
@@ -185,35 +185,33 @@ class SensitivityAnalysis(Research):
 			rem_bid = close_volume * perc
 			rem_ask = close_volume * perc
 		else:
-			raise KeyError("base not in {'SidePassive','SideLiquidity','FullPassive','FullLiquidity','CrossedVolume'}")
+			raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
 
 		if side in ['bid', 'all']:
-			if bids[0] != 0:
-				local_vol = bids[0]
-				bids[0] = local_vol - min(local_vol, rem_bid)
-				rem_bid -= min(rem_bid, local_vol)
-			else:
-				b = len(bids) - 1
-				while rem_bid > 0:
+			while rem_bid > 0:
+				if bids[0] != 0:
+					local_vol = bids[0]
+					bids[0] = local_vol - min(local_vol, rem_bid)
+					rem_bid -= min(rem_bid, local_vol)
+				else:
+					b = len(bids) - 1
 					local_vol = bids[b]
 					bids[b] = local_vol - min(local_vol, rem_bid)
 					rem_bid -= min(rem_bid, local_vol)
 					b -= 1
 
 		if side in ['ask', 'all']:
-			if asks[0] != 0:
-				local_vol = asks[0]
-				asks[0] = local_vol - min(local_vol, rem_bid)
-				rem_bid -= min(rem_bid, local_vol)
-			else:
-				a = 1
-				# remaining_liq = rem_ask / percentage
-				while rem_ask > 0:
+			while rem_ask > 0:
+				if asks[0] != 0:
+					local_vol = asks[0]
+					asks[0] = local_vol - min(local_vol, rem_bid)
+					rem_bid -= min(rem_bid, local_vol)
+				else:
+					a = 1
 					local_vol = asks[a]
 					asks[a] = local_vol - min(local_vol, rem_ask)
 					rem_ask -= min(rem_ask, local_vol)
 					a += 1
-
 
 		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
 		return ret_df

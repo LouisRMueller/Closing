@@ -6,7 +6,7 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\closing_prices.csv"
-base = 'SidePassive'  # Limiting to  {'SideLiquidity','FullLiquidity','CrossedVolume'}
+base = 'SidePassive'  # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
 mode = 'Sensitivity'
 granularity = 'rough'
 ########################################################################

@@ -40,62 +40,97 @@ class Visualization:
 class SensVisual(Visualization):
 	def __init__(self, datapath, base):
 		super().__init__(datapath)
-		self._base = base  # LimitVolume vs TotalVolume
-		self._modes = dict(bid_limit="bid limit orders", ask_limit="ask limit orders", all_limit="all limit orders",
-					    all_market="all market orders", cont_market="market orders from continuous phase")
-
 		self._extract_factors()
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
-		print(self._raw_data.loc['all_market',:])
+		self._raw_data.drop(index=['ALC'], level='Symbol', inplace=True)
+
+		# Attributes
+		if base in {'SeparateLiquidity', 'FullLiquidity', 'CrossedVolume'}:
+			self._base = base  # LimitOrders vs TotalVolume
+		else:
+			raise ValueError("base not in {'SeparateLiquidity','FullLiquidity','CrossedVolume'}")
+
+		self._base_d = dict(SeparateLiquidity='Based on one-sided liquidity',
+						FullLiquidity='Based on full liquidity',
+						CrossedVolume='Based on executed volume')
+
+		self._mode_d = dict(bid_limit="bid orders", ask_limit="ask orders", all_limit="all orders",
+						all_market="market orders", cont_market="market orders (cont. phase)")
 
 	def _extract_factors(self):
 		data = self._raw_data
 		data['Percent'] = data['Percent'].round(2)
 		data['Closing turnover'] = data['close_price'] * data['close_vol']
 		data['Deviation price'] = (data['adj_price'] - data['close_price']) / data['close_price'] * 10000
-		data['Deviation turnover'] = (data['adj_vol'] - data['close_vol']) * data['close_price'] * 100
+		data['Deviation turnover'] = (data['adj_vol'] - data['close_vol']) / data['close_vol']
 
 		self._avg_turnover = data.groupby('Symbol')['Closing turnover'].mean().sort_values(ascending=False).dropna()
 
-	def plot_removed_time(self, save=False):
+	def plot_removed_time(self, save=False, show=True):
 		"""Only works with rough percentages"""
-		limit = 0.25
+		b = self._base
+		limit = 0.3
 
 		def base_plot(funcdata, linefunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-			ax.grid(which='major', axis='both')
-			ax.axhline(0, c='k', lw=1)
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1.5)
 			linefunc(funcdata, ax)
-			# ax.legend(ncol=6, fontsize='small')
+			ax.legend(ncol=1, fontsize='small')
+			ax.set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 1, 1)])
+			ax.set_xlabel("")
+
 			loca = dates.MonthLocator()
 			form = dates.ConciseDateFormatter(loca, show_offset=False)
 			ax.xaxis.set_major_locator(loca)
 			ax.xaxis.set_major_formatter(form)
 			ax.set_axisbelow(True)
 			fig.tight_layout()
-			# if save:
-			# 	plt.savefig(self._figdir + "\\SensitivityRough\\agg_remove_{}".format(mode))
-			plt.show()
+			if save:
+				plt.savefig(self._figdir + "\\SensitivityRough\\{b}\\remove_{n}_{m}".format(n=filename, m=mode, b=b))
+			plt.show() if show else plt.close()
 
 		def agg_price_fun(funcdata, ax):
-			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', ax=ax, lw=1.25, ci=None, err_kws=dict(alpha=0.4),
-					   palette='magma')
+			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
+					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Reds_d')
+			ax.set_ylabel("Deviation of closing price [bps]")
+			ax.set_title("{b}: Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+
+		def agg_volume_fun(funcdata, ax):
+			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
+					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Blues_d')
+			ax.set_ylabel("Deviation of closing volume [\%]")
+			ax.set_title("{b}: Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+			ax.set_ylim(top=0)
+
+		def agg_price_mkt_fun(funcdata, ax):
+			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
+					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Reds_d', legend=None)
+			ax.set_ylabel("Deviation of closing price [bps]")
+			ax.set_title("Average effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
+
+		def agg_volume_mkt_fun(funcdata, ax):
+			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
+					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Blues_d', legend=None)
+			ax.set_ylabel("Deviation of closing volume [\%]")
+			ax.set_title("Average effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			ax.set_ylim(top=0)
 
 		# EXECUTION
-		for mode in iter(self._modes.keys()):
+		for mode in iter(self._mode_d.keys()):
 			df = self._raw_data.loc[mode, ['Deviation price', 'Deviation turnover']].reset_index(inplace=False)
-			df = df[(df['Percent'] <= limit) & (df['Percent'] > 0)]
-			colcount = df['Percent'].nunique()
-			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + " \%"
+			df = df[((df['Percent'] <= limit) & (df['Percent'] > 0)) | (df['Percent'] == 1)]
+			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + "\%"
 
-			base_plot(df, agg_price_fun, None)
-			# fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-			# ax1.set_axisbelow(True)
-			# ax1.grid(which='major', axis='y')
-			# ax1.set_xlabel("")
-			# ax1.set_ylabel("Deviation from closing price in bps")
-			# ax1.set_title(
-			# 	"Average impact of gradual removal of {} across SLI (Bootstrapped 95\% CI)".format(namedict[mode]))
+			if mode in {'all_market', 'cont_market'}:
+				base_plot(df, agg_price_mkt_fun, 'Price')
+				base_plot(df, agg_volume_mkt_fun, 'Turnover')
+			else:
+				base_plot(df, agg_price_fun, 'Price')
+				base_plot(df, agg_volume_fun, 'Turnover')
+
 
 # def plt_rmv_limit_quant(self):
 # 	limit = 0.2
@@ -717,7 +752,6 @@ class IntervalVisual(Visualization):
 # file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
 # file_rets = os.getcwd() + "\\Data\\end_of_day_returns_bluechips.csv"
 granularity = 'rough'
-file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_LimitOrders_v3.csv".format(granularity)
-Sens = SensVisual(file_data, 'Volume')
-# df = Sens.plot_removed_time()
-
+file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_TotalVolume_v3.csv".format(granularity)
+Sens = SensVisual(file_data, base='CrossedVolume')
+df = Sens.plot_removed_time(save=True)
