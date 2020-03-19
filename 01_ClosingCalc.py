@@ -6,7 +6,7 @@ pd.set_option("display.max_columns", 8)
 ########################################################################
 file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\closing_prices.csv"
-base = 'SidePassive'  # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
+base = 'FullLiquidity'  # Limiting to  {'SeparateOrders','FullLiquidity','CrossedVolume'}
 mode = 'Sensitivity'
 granularity = 'rough'
 ########################################################################
@@ -15,7 +15,7 @@ granularity = 'rough'
 if mode == 'Sensitivity':
 	Sens = SensitivityAnalysis(file_snapshots, base=base)
 	if granularity == 'rough':
-		percent = np.arange(0, 0.55, 0.05).round(2)
+		percent = np.arange(0, 0.80, 0.05).round(2)
 	elif granularity == 'fine':
 		percent = np.arange(0, 0.41, 0.01).round(2)
 	else:

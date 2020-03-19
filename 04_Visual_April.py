@@ -7,11 +7,13 @@ datadir = os.getcwd() + "\\Data"
 
 ########################################################################
 file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-# mode, granularity = 'Sensitivity', 'rough'
+mode, granularity = 'Sensitivity', 'rough'
 # mode, granularity = 'Sensitivity', 'fine'
-mode, granularity = 'Discovery', None
+# mode, granularity = 'Discovery', None
 # mode, granularity = 'Intervals', None
-base = 'TotalVolume' # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
+# base = 'SeparateLiquidity' # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
+# base = 'FullLiquidity' # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
+base = 'CrossedVolume' # Limiting to  {'SeparateLiquidity','FullLiquidity','CrossedVolume'}
 ########################################################################
 
 if mode == 'Sensitivity':
@@ -19,9 +21,7 @@ if mode == 'Sensitivity':
 	Sens = SensVisual(datapath=file_data, base=base)
 
 	if granularity == 'rough':
-		Sens.plot_removed_time(save=True, show)
-		Sens.plt_rmv_market_orders()
-		Sens.plt_rmv_limit_quant()
+		Sens.plot_removed_time(save=True, show=False)
 
 	elif granularity == 'fine':
 		Sens.plt_cont_rmv_indiv('bid_limit')

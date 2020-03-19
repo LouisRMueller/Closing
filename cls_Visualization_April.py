@@ -38,7 +38,7 @@ class Visualization:
 
 
 class SensVisual(Visualization):
-	def __init__(self, datapath, base):
+	def __init__(self, datapath: str, base: str):
 		super().__init__(datapath)
 		self._extract_factors()
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
@@ -52,7 +52,7 @@ class SensVisual(Visualization):
 
 		self._base_d = dict(SeparateLiquidity='Based on one-sided liquidity',
 						FullLiquidity='Based on full liquidity',
-						CrossedVolume='Based on executed volume')
+						CrossedVolume='Based on crossed volume')
 
 		self._mode_d = dict(bid_limit="bid orders", ask_limit="ask orders", all_limit="all orders",
 						all_market="market orders", cont_market="market orders (cont. phase)")
@@ -64,12 +64,16 @@ class SensVisual(Visualization):
 		data['Deviation price'] = (data['adj_price'] - data['close_price']) / data['close_price'] * 10000
 		data['Deviation turnover'] = (data['adj_vol'] - data['close_vol']) / data['close_vol']
 
+		# Absolute deviations for symmetric removals
+		sel = data.loc[data['Mode'].isin(['all_limit', 'all_market', 'cont_market']), 'Deviation price']
+		data.loc[data['Mode'].isin(['all_limit', 'all_market', 'cont_market']), 'Deviation price'] = sel.abs()
+
 		self._avg_turnover = data.groupby('Symbol')['Closing turnover'].mean().sort_values(ascending=False).dropna()
 
-	def plot_removed_time(self, save=False, show=True):
+	def plot_removed_time(self, save: bool = False, show: bool = True) -> None:
 		"""Only works with rough percentages"""
 		b = self._base
-		limit = 0.3
+		limit = 0.4
 
 		def base_plot(funcdata, linefunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
@@ -94,13 +98,13 @@ class SensVisual(Visualization):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
 					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Reds_d')
 			ax.set_ylabel("Deviation of closing price [bps]")
-			ax.set_title("{b}: Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_title("[{b}] Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
 
 		def agg_volume_fun(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
 					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Blues_d')
 			ax.set_ylabel("Deviation of closing volume [\%]")
-			ax.set_title("{b}: Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_title("[{b}] Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
 			ax.set_ylim(top=0)
 
@@ -108,13 +112,13 @@ class SensVisual(Visualization):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
 					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Reds_d', legend=None)
 			ax.set_ylabel("Deviation of closing price [bps]")
-			ax.set_title("Average effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
+			ax.set_title("Average absolute effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
 
 		def agg_volume_mkt_fun(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
 					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Blues_d', legend=None)
 			ax.set_ylabel("Deviation of closing volume [\%]")
-			ax.set_title("Average effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
+			ax.set_title("Average absolute effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			ax.set_ylim(top=0)
 
@@ -754,4 +758,4 @@ class IntervalVisual(Visualization):
 granularity = 'rough'
 file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_TotalVolume_v3.csv".format(granularity)
 Sens = SensVisual(file_data, base='CrossedVolume')
-df = Sens.plot_removed_time(save=True)
+Sens.plot_removed_time(save=True, show=True)

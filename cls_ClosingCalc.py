@@ -60,7 +60,8 @@ class Research:
 		df, mark_buy, mark_sell = Research._extract_market_orders(base_df)
 
 		if 0 in df[['asks', 'bids']].sum().values:  # Where one side is empty
-			return dict(price=np.nan, imbalance=np.nan, trade_vol=np.nan)
+			return dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan,
+					  total_bids=np.nan, total_asks=np.nan)
 
 		else:
 			n_lim = df.shape[0]
@@ -175,11 +176,11 @@ class SensitivityAnalysis(Research):
 			rem_bid = sum(bids) * perc
 			rem_ask = sum(bids) * perc
 		elif self._base == 'FullPassive':
-			rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc
-			rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc
+			rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc / 2
+			rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc / 2
 		elif self._base == 'FullLiquidity':
-			rem_bid = sum(bids) + sum(asks) * perc
-			rem_ask = sum(bids) + sum(asks) * perc
+			rem_bid = min((sum(bids) + sum(asks)) * perc / 2, sum(bids))
+			rem_ask = min((sum(bids) + sum(asks)) * perc / 2, sum(asks))
 		elif self._base == 'CrossedVolume':
 			close_volume = self._calc_uncross(bids=imp_df['end_close_vol_bid'], asks=imp_df['end_close_vol_ask'])['trade_vol']
 			rem_bid = close_volume * perc
@@ -188,26 +189,26 @@ class SensitivityAnalysis(Research):
 			raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
 
 		if side in ['bid', 'all']:
+			b = len(bids) - 1
 			while rem_bid > 0:
 				if bids[0] != 0:
 					local_vol = bids[0]
 					bids[0] = local_vol - min(local_vol, rem_bid)
 					rem_bid -= min(rem_bid, local_vol)
 				else:
-					b = len(bids) - 1
 					local_vol = bids[b]
 					bids[b] = local_vol - min(local_vol, rem_bid)
 					rem_bid -= min(rem_bid, local_vol)
 					b -= 1
 
 		if side in ['ask', 'all']:
+			a = 1
 			while rem_ask > 0:
 				if asks[0] != 0:
 					local_vol = asks[0]
 					asks[0] = local_vol - min(local_vol, rem_bid)
 					rem_bid -= min(rem_bid, local_vol)
 				else:
-					a = 1
 					local_vol = asks[a]
 					asks[a] = local_vol - min(local_vol, rem_ask)
 					rem_ask -= min(rem_ask, local_vol)
