@@ -77,8 +77,13 @@ class Research:
 			i = np.argmin(abs(imbalances))
 			trade_vol = min(cum_bids[i], cum_asks[i])
 			sum_bids, sum_asks = max(cum_bids), max(cum_asks)
-			output = dict(price=df.index[i], trade_vol=trade_vol, cum_bids=cum_bids[i], cum_asks=cum_asks[i],
-					    total_bids=sum_bids, total_asks=sum_asks)
+
+			if min(cum_bids[i], cum_asks[i]) == 0:
+				output = dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan,
+						  total_bids=sum_bids, total_asks=sum_asks)
+			else:
+				output = dict(price=df.index[i], trade_vol=trade_vol, cum_bids=cum_bids[i], cum_asks=cum_asks[i],
+						    total_bids=sum_bids, total_asks=sum_asks)
 
 			return output
 
@@ -174,7 +179,7 @@ class SensitivityAnalysis(Research):
 			rem_ask = sum(asks[1:]) * perc
 		elif self._base == 'SeparateOrders':
 			rem_bid = sum(bids) * perc
-			rem_ask = sum(bids) * perc
+			rem_ask = sum(asks) * perc
 		elif self._base == 'FullPassive':
 			rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc / 2
 			rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc / 2
@@ -206,8 +211,8 @@ class SensitivityAnalysis(Research):
 			while rem_ask > 0:
 				if asks[0] != 0:
 					local_vol = asks[0]
-					asks[0] = local_vol - min(local_vol, rem_bid)
-					rem_bid -= min(rem_bid, local_vol)
+					asks[0] = local_vol - min(local_vol, rem_ask)
+					rem_ask -= min(rem_ask, local_vol)
 				else:
 					local_vol = asks[a]
 					asks[a] = local_vol - min(local_vol, rem_ask)
@@ -247,7 +252,6 @@ class SensitivityAnalysis(Research):
 					res = self._result_dict[key, date, symbol, p] = {}
 
 					remove_df = self._remove_orders(date=date, title=symbol, perc=p, side=side, market=mkt)
-
 					removed_liq = self._calc_uncross(bids=remove_df['end_close_vol_bid'], asks=remove_df['end_close_vol_ask'])
 
 					res['close_price'] = close_uncross['price']
@@ -264,6 +268,8 @@ class SensitivityAnalysis(Research):
 					res['adj_cum_asks'] = removed_liq['cum_asks']
 					res['adj_bids'] = removed_liq['total_bids']
 					res['adj_asks'] = removed_liq['total_asks']
+
+				# print("{} - {} OK".format(symbol, p))
 
 		print(">> [{0}] finished <<".format(key))
 
