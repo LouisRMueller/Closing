@@ -28,7 +28,6 @@ class Visualization:
 		self._figsize = (22 / 2.54, 13 / 2.54)
 		self._cwd = os.getcwd() + "\\03 Presentation April"
 		self._figdir = self._cwd + "\\Figures"
-		self._lw = 1.2
 		self._dpi = 300
 
 		print("--- SuperClass Initiated ---")
@@ -38,26 +37,28 @@ class Visualization:
 
 
 class SensVisual(Visualization):
-	def __init__(self, datapath: str, base: str):
+	def __init__(self, datapath: str, base: str, limit: float = 0.3):
 		super().__init__(datapath)
-		self._extract_factors()
+		self._manipulate_data()
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
 		self._raw_data.drop(index=['ALC'], level='Symbol', inplace=True)
+		self._define_quantiles()
 
 		# Attributes
-		if base in {'SeparateLiquidity', 'FullLiquidity', 'CrossedVolume'}:
+		if base in {'SeparateOrders', 'FullLiquidity', 'CrossedVolume'}:
 			self._base = base  # LimitOrders vs TotalVolume
 		else:
-			raise ValueError("base not in {'SeparateLiquidity','FullLiquidity','CrossedVolume'}")
+			raise ValueError("base not in {'SeparateOrders','FullLiquidity','CrossedVolume'}")
 
-		self._base_d = dict(SeparateLiquidity='Based on one-sided liquidity',
-						FullLiquidity='Based on full liquidity',
-						CrossedVolume='Based on crossed volume')
+		self._base_d = dict(SeparateOrders='Separate liquidity basis',
+						FullLiquidity='Full liquidity basis',
+						CrossedVolume='Execution volume basis')
 
-		self._mode_d = dict(bid_limit="bid orders", ask_limit="ask orders", all_limit="all orders",
-						all_market="market orders", cont_market="market orders (cont. phase)")
+		self._mode_d = dict(bid_limit="bid orders", ask_limit="ask orders", all_limit="bid/ask orders",
+						all_market="all market orders", cont_market="market orders (cont. phase)")
+		self._limit = limit
 
-	def _extract_factors(self):
+	def _manipulate_data(self):
 		data = self._raw_data
 		data['Percent'] = data['Percent'].round(2)
 		data['Closing turnover'] = data['close_price'] * data['close_vol']
@@ -70,17 +71,26 @@ class SensVisual(Visualization):
 
 		self._avg_turnover = data.groupby('Symbol')['Closing turnover'].mean().sort_values(ascending=False).dropna()
 
-	def plot_removed_time(self, save: bool = False, show: bool = True) -> None:
+	def _define_quantiles(self):
+		data = self._raw_data.sort_index()
+		quants = data['Closing turnover'].groupby(['Mode', 'Date', 'Symbol']).first()
+		quants = quants.groupby('Date').transform(lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']))
+		quants.rename('Volume quantile', inplace=True)
+
+		self._raw_data = data.join(quants)
+
+	def plot_removal_time(self, save: bool = False, show: bool = True) -> None:
 		"""Only works with rough percentages"""
 		b = self._base
-		limit = 0.4
+		data = self._raw_data
+		limit = 0.6
 
 		def base_plot(funcdata, linefunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			ax.grid(which='major', axis='y')
 			ax.axhline(0, c='k', lw=1.5)
 			linefunc(funcdata, ax)
-			ax.legend(ncol=1, fontsize='small')
+			ax.legend(ncol=2, fontsize='small')
 			ax.set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 1, 1)])
 			ax.set_xlabel("")
 
@@ -91,40 +101,41 @@ class SensVisual(Visualization):
 			ax.set_axisbelow(True)
 			fig.tight_layout()
 			if save:
-				plt.savefig(self._figdir + "\\SensitivityRough\\{b}\\remove_{n}_{m}".format(n=filename, m=mode, b=b))
+				plt.savefig(self._figdir + "\\Sensitivity\\{b}\\remove_{n}_{m}".format(n=filename, m=mode, b=b),
+						  transparent=True)
 			plt.show() if show else plt.close()
 
 		def agg_price_fun(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
-					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Reds_d')
+					   ax=ax, lw=0.9, ci=None, err_kws=dict(alpha=0.2), palette='Reds_d')
 			ax.set_ylabel("Deviation of closing price [bps]")
-			ax.set_title("[{b}] Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_title("[{b}] Average effect of removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
 
 		def agg_volume_fun(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
-					   ax=ax, lw=1.1, ci=None, err_kws=dict(alpha=0.2), palette='Blues_d')
+					   ax=ax, lw=0.9, ci=None, err_kws=dict(alpha=0.2), palette='Blues_d')
 			ax.set_ylabel("Deviation of closing volume [\%]")
-			ax.set_title("[{b}] Average effect or removal of {m} on closing price".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_title("[{b}] Average effect of removal of {m} on closing volume".format(b=self._base_d[b], m=self._mode_d[mode]))
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-			ax.set_ylim(top=0)
+			ax.set_ylim(top=0, bottom=-1)
 
 		def agg_price_mkt_fun(funcdata, ax):
-			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Percent', estimator='mean',
-					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Reds_d', legend=None)
+			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Volume quantile', estimator='mean',
+					   ax=ax, lw=1.2, ci=None, err_kws=dict(alpha=0.2), palette='Reds')
 			ax.set_ylabel("Deviation of closing price [bps]")
 			ax.set_title("Average absolute effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
 
 		def agg_volume_mkt_fun(funcdata, ax):
-			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Percent', estimator='mean',
-					   ax=ax, lw=1.1, ci=95, err_kws=dict(alpha=0.2), palette='Blues_d', legend=None)
+			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Volume quantile', estimator='mean',
+					   ax=ax, lw=1.2, ci=None, err_kws=dict(alpha=0.2), palette='Blues')
 			ax.set_ylabel("Deviation of closing volume [\%]")
-			ax.set_title("Average absolute effect of removal of {m} on closing price".format(m=self._mode_d[mode]))
+			ax.set_title("Average absolute effect of removal of {m} on closing volume".format(m=self._mode_d[mode]))
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
-			ax.set_ylim(top=0)
+			ax.set_ylim(top=0, bottom=-1)
 
 		# EXECUTION
 		for mode in iter(self._mode_d.keys()):
-			df = self._raw_data.loc[mode, ['Deviation price', 'Deviation turnover']].reset_index(inplace=False)
+			df = data.loc[mode, ['Deviation price', 'Deviation turnover', 'Volume quantile']].reset_index(inplace=False)
 			df = df[((df['Percent'] <= limit) & (df['Percent'] > 0)) | (df['Percent'] == 1)]
 			df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + "\%"
 
@@ -135,213 +146,71 @@ class SensVisual(Visualization):
 				base_plot(df, agg_price_fun, 'Price')
 				base_plot(df, agg_volume_fun, 'Turnover')
 
+	def plot_removal_quantiles(self, save: bool = False, show: bool = True) -> None:
+		limit = 0.35
+		b = self._base
+		data = self._raw_data[['Deviation price', 'Deviation turnover', 'Volume quantile']]
 
-# def plt_rmv_limit_quant(self):
-# 	limit = 0.2
-# 	namedict = dict(bid_limit="bid limit orders", ask_limit="ask limit orders",
-# 				 all_limit="bid/ask limit orders")
-#
-# 	for mode in iter(namedict.keys()):
-# 		raw = copy.deepcopy(self._bcs_data.loc[mode, :])
-# 		quants = raw.groupby(['Date', 'Symbol']).first()
-# 		quants = quants.groupby('Date')['close_turnover'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
-# 		quants.rename('quantile', inplace=True)
-# 		quants.replace({1: 'least liquid', 2: 'neutral', 3: 'most liquid'}, inplace=True)
-#
-# 		tmp = raw[['close_price', 'adj_price', 'close_vol', 'adj_vol']].join(quants, on=['Date', 'Symbol'], how='left')
-# 		df = pd.DataFrame({'Price Deviation': (tmp['adj_price'] - tmp['close_price']) / tmp['close_price'] * 10 ** 4,
-# 					    'Volume Deviation': (tmp['adj_vol'] - tmp['close_vol']) / tmp['close_vol'],
-# 					    'Quantile': tmp['quantile']}).reset_index()
-# 		df = df[df['Percent'] <= limit]
-# 		df['Percent'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
-#
-# 		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 		sns.boxplot(data=df, x='Percent', y='Price Deviation', palette='Reds', whis=[2.5, 97.5],
-# 				  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
-# 		ax1.set_xlabel('')
-# 		ax1.set_title("Quantile distribution of closing price deviations when removing {}".format(namedict[mode]))
-# 		ax1.set_ylabel("Deviation in bps")
-# 		ax1.set_xlabel("Amount of liquidity removed")
-# 		ax1.grid(which='major', axis='y')
-# 		ax1.set_axisbelow(True)
-# 		fig.tight_layout()
-# 		plt.savefig(self._figdir + "\\SensitivityRough\\Quantile_distribution_{}".format(mode))
-# 		fig.show()
-# 		plt.close()
-#
-# 		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 		sns.boxplot(data=df, x='Percent', y='Volume Deviation', palette='Blues', whis=[2.5, 97.5],
-# 				  ax=ax1, hue='Quantile', showfliers=False, linewidth=1)
-# 		ax1.set_xlabel('')
-# 		ax1.set_title("Quantile distribution of closing volume deviations when removing {}".format(namedict[mode]))
-# 		ax1.set_ylabel("Deviation in \%")
-# 		ax1.set_xlabel("Amount of liquidity removed")
-# 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-# 		ax1.grid(which='major', axis='y')
-# 		ax1.set_axisbelow(True)
-# 		fig.tight_layout()
-# 		plt.savefig(self._figdir + "\\SensitivityRough\\Quantile_distribution_volume_{}".format(mode))
-# 		fig.show()
-# 		plt.close()
-#
-# def plt_cont_rmv_indiv(self, mode):
-# 	"""Only works with fine Sensitivity"""
-# 	limit = 0.2
-# 	raw = copy.deepcopy(self._raw_data.loc[mode, :])
-# 	raw = raw[raw['close_vol'] > 1000]
-# 	numstocks = {'available': self._avg_turnover.index[self._avg_turnover > 0],
-# 			   'top 120': self._avg_turnover.index[:120],
-# 			   'top 60': self._avg_turnover.index[:60],
-# 			   'SLI': self._bluechips,
-# 			   'top 20': self._avg_turnover.index[:20]}
-# 	figdict = dict(bid_limit=dict(name='bid limit orders', loc='lower left'),
-# 				ask_limit=dict(name='ask limit orders', loc='upper left'),
-# 				all_limit=dict(name='bid/ask limit orders', loc='upper left'))
-#
-# 	for n in numstocks.keys():
-# 		cl = pd.DataFrame(
-# 			{'Price Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10 ** 4,
-# 			 'Volume Deviation': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol'],
-# 			 'Turnover': np.log10(raw['close_turnover'])})
-# 		cl = cl[cl.index.get_level_values('Symbol').isin(numstocks[n])]
-# 		cl = cl.groupby(['Symbol', 'Percent']).mean()
-# 		cl.reset_index(drop=False, inplace=True)
-#
-# 		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 		sns.lineplot(x='Percent', y='Price Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit], ax=ax1,
-# 				   palette='Reds', lw=1.2)
-# 		ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
-# 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-# 		ax1.set_xlabel("Removed liquidity")
-# 		ax1.set_ylabel("Deviation from actual closing price [bps]")
-# 		ax1.set_title("Price sensitivity of {} titles with respect to {} (N = {})"
-# 				    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
-# 		ax1.grid(which='both', axis='y')
-# 		handles, labels = ax1.get_legend_handles_labels()
-# 		ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
-# 				 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
-# 		fig.tight_layout()
-# 		plt.savefig(self._figdir + "\\SensitivityFine\\Sens_Price_Percent_{}_{}".format(mode, n))
-# 		fig.show()
-# 		plt.close()
-#
-# 		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 		sns.lineplot(x='Percent', y='Volume Deviation', hue='Turnover', data=cl[cl['Percent'] <= limit],
-# 				   palette='Blues', ax=ax1, lw=1.2)
-# 		ax1.xaxis.set_major_locator(ticker.MultipleLocator(1 / 100))
-# 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-# 		ax1.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-# 		ax1.set_ylim(top=0)
-# 		ax1.set_xlabel("Removed liquidity")
-# 		ax1.set_ylabel("Deviation from actual closing [\%]")
-# 		ax1.set_title("Volume sensitivity of {} titles with respect to {} (N = {})"
-# 				    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
-# 		ax1.grid(which='major', axis='y')
-# 		handles, labels = ax1.get_legend_handles_labels()
-# 		ax1.legend(handles=handles[1:], labels=[round(float(l), 1) for l in labels[1:]],
-# 				 loc=figdict[mode]['loc'], fontsize='small', title='log10(turnover)')
-# 		fig.tight_layout()
-# 		plt.savefig(self._figdir + "\\SensitivityFine\\Sens_Vol_Percent_{}_{}".format(mode, n))
-# 		fig.show()
-# 		plt.close()
-#
-# def plt_cont_rmv_indiv_v2(self, mode):
-# 	"""Only works with fine Sensitivity"""
-# 	limit = 0.3
-# 	raw = copy.deepcopy(self._raw_data.loc[mode, :])
-# 	raw = raw[raw['close_vol'] > 1000]
-#
-# 	stock_titles = self._bluechips[self._bluechips != 'DUFN']
-#
-# 	numstocks = {'SLI': stock_titles}
-# 	figdict = dict(bid_limit=dict(name='bid', loc='lower left'),
-# 				ask_limit=dict(name='ask', loc='upper left'),
-# 				all_limit=dict(name='bid/ask', loc='upper left'))
-#
-# 	for n in numstocks.keys():
-# 		cl = pd.DataFrame(
-# 			{'Price Deviation': abs((raw['adj_price'] - raw['close_price']) / raw['close_price']) * 10 ** 4,
-# 			 'Volume Deviation': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol'],
-# 			 'log10(turnover)': np.log10(raw['close_turnover'])})
-# 		cl = cl[cl.index.get_level_values('Symbol').isin(numstocks[n])]
-# 		cl = cl.groupby(['Symbol', 'Percent']).mean()
-# 		cl.reset_index(drop=False, inplace=True)
-# 		cl['Reducer'] = 'Average'
-#
-# 		fig, ax1 = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 		sns.lineplot(x='Percent', y='Price Deviation', hue='log10(turnover)', data=cl[cl['Percent'] <= limit], ax=ax1,
-# 				   palette='Reds', lw=1.1, alpha=0.8)
-# 		sns.lineplot(x='Percent', y='Price Deviation', data=cl[cl['Percent'] <= limit], ax=ax1,
-# 				   lw=2.5, color='black', ci=None, markers='o', legend='full', label='Average', marker='o')
-# 		ax1.yaxis.set_major_locator(ticker.MultipleLocator(20))
-# 		ax1.xaxis.set_major_locator(ticker.MultipleLocator(5 / 100))
-# 		ax1.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-# 		ax1.set_xlabel("Percentage of removed {} liquidity".format(figdict[mode]['name']))
-# 		ax1.set_ylabel("Absolute deviation from actual closing price [bps]")
-# 		ax1.set_title("Price sensitivity of {} titles in 2019 with respect to removal of best {} limit orders (N = {})"
-# 				    .format(n, figdict[mode]['name'], str(len(numstocks[n]))))
-# 		ax1.grid(which='major', axis='both')
-# 		ax1.set_xlim(left=0, right=limit)
-# 		ax1.set_ylim(bottom=0, top=140)
-# 		fig.tight_layout()
-# 		plt.savefig(os.getcwd() + "\\02 Slides January\\Figures\\Sensitivity_{}_{}".format(mode, n))
-# 		fig.show()
-# 		plt.close()
-#
-# def plt_rmv_market_orders(self):
-# 	"""Rough Sensitivity Data"""
-# 	raw = self._bcs_data.loc['all_market', :]
-#
-# 	df = pd.DataFrame({'Deviation': (raw['adj_price'] - raw['close_price']) / raw['close_price'] * 10 ** 4,
-# 				    'Turnover': raw['close_vol'] * raw['close_price'] / 10 ** 6,
-# 				    'Volume Deviation': (raw['adj_vol'] - raw['close_vol']) / raw['close_vol']})
-# 	df = df[abs(df['Deviation']) < 600]
-#
-# 	df = df.join(pd.Series(df['Turnover'].groupby('Symbol').mean(), name='Average Volume'), on='Symbol')
-#
-# 	df.reset_index(inplace=True)
-#
-# 	fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 	sns.lineplot(data=df, x='Date', y='Deviation', hue='Average Volume', sizes=(.5, 1.5),
-# 			   size='Average Volume', palette='Reds', ax=ax)
-# 	handles, labels = ax.get_legend_handles_labels()
-# 	ax.legend(handles=handles[1:], labels=[round(float(l)) for l in labels[1:]],
-# 			fontsize='small', title="Turnover (mn. CHF)", loc='upper left')
-# 	ax.grid(which='major', axis='y')
-# 	loca = dates.MonthLocator()
-# 	form = dates.ConciseDateFormatter(loca)
-# 	ax.xaxis.set_major_locator(loca)
-# 	ax.xaxis.set_major_formatter(form)
-# 	ax.yaxis.set_major_locator(ticker.MultipleLocator(50))
-# 	ax.set_ylabel("Deviation in bps")
-# 	ax.set_xlabel("")
-# 	ax.set_title("Deviation from original closing price when all market orders are removed by SLI title")
-# 	fig.tight_layout()
-# 	plt.savefig(self._figdir + "\\SensitivityRough\\Deviation_rmv_market")
-# 	fig.show()
-# 	plt.close()
-#
-# 	fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-# 	sns.lineplot(data=df, x='Date', y='Volume Deviation', hue='Average Volume', sizes=(.5, 1.5),
-# 			   size='Average Volume', palette='Blues', ax=ax)
-# 	handles, labels = ax.get_legend_handles_labels()
-# 	ax.legend(handles=handles[1:], labels=[round(float(l)) for l in labels[1:]],
-# 			fontsize='small', title="Turnover (mn. CHF)", loc='upper left')
-# 	ax.grid(which='major', axis='y')
-# 	ax.set_ylim([-1, 0])
-# 	loca = dates.MonthLocator()
-# 	form = dates.ConciseDateFormatter(loca)
-# 	ax.xaxis.set_major_locator(loca)
-# 	ax.xaxis.set_major_formatter(form)
-# 	ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
-# 	ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
-# 	ax.set_ylabel("Drop in traded closing volume")
-# 	ax.set_xlabel("")
-# 	ax.set_title("Decrease in number of shares traded when all market orders are removed by SLI title")
-# 	fig.tight_layout()
-# 	plt.savefig(self._figdir + "\\SensitivityRough\\Volume_rmv_market")
-# 	fig.show()
-# 	plt.close()
+		def base_plot(funcdata, linefunc, filename):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1)
+			linefunc(funcdata, ax)
+			ax.legend(fontsize='small')
+			ax.set_axisbelow(True)
+			fig.tight_layout()
+			if save:
+				plt.savefig(self._figdir + "\\Sensitivity\\{b}\\quantile_removal_{n}_{m}".format(n=filename, m=mode, b=b),
+						  transparent=True)
+			plt.show() if show else plt.close()
+
+		def quant_price_func(funcdata, ax):
+			sns.boxplot(data=funcdata[funcdata['Percent'] <= limit], ax=ax, x='PercentStr', y='Deviation price',
+					  hue='Volume quantile', showfliers=False, whis=[2.5, 97.5], palette='Reds', linewidth=1)
+			ax.set_ylabel("Price deviation [bps]")
+			ax.set_title("[{b}] Quantile distribution of changes in closing price by removing {m}".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_xlabel("Removed Liquidity [\%]")
+
+		def quant_vol_func(funcdata, ax):
+			sns.boxplot(data=funcdata, ax=ax, x='PercentStr', y='Deviation turnover', hue='Volume quantile',
+					  showfliers=False, whis=[2.5, 97.5], palette='Blues', linewidth=1)
+			ax.set_ylabel("Turnover deviation [\%]")
+			ax.set_title("[{b}] Quantile distrubution of changes in closing turnover by removing {m}".format(b=self._base_d[b], m=self._mode_d[mode]))
+			ax.set_xlabel("Removed Liquidity [\%]")
+			ax.set_ylim([-1.05, 0.05])
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+
+		def quant_price_mkt_func(funcdata, ax):
+			sns.boxplot(data=funcdata, ax=ax, x='Mode', y='Deviation price',
+					  hue='Volume quantile', showfliers=False, whis=[2.5, 97.5], palette='Reds', linewidth=1)
+			ax.set_ylabel("Price deviation [bps]")
+			ax.set_xlabel("")
+			ax.set_title("Quantile distribution of changes in closing price by removing market orders".format(b=self._base_d[b]))
+			mode = 'market'
+
+		def quant_vol_mkt_func(funcdata, ax):
+			sns.boxplot(data=funcdata, ax=ax, x='Mode', y='Deviation turnover', hue='Volume quantile',
+					  showfliers=False, whis=[2.5, 97.5], palette='Blues', linewidth=1)
+			ax.set_ylabel("Turnover deviation [\%]")
+			ax.set_title("Quantile distrubution of changes in closing turnover by removing market orders".format(b=self._base_d[b]))
+			ax.set_xlabel("")
+			ax.set_ylim([-1.05, 0.05])
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			mode = 'market'
+
+		for mode in iter(self._mode_d.keys()):
+			tmp = data.loc[mode, :].reset_index(inplace=False)
+			tmp = tmp[tmp['Percent'] > 0]
+			tmp['PercentStr'] = (tmp['Percent'] * 100).astype(int).astype(str) + '\%'
+			if mode not in {'all_market', 'cont_market'}:
+				base_plot(tmp, quant_price_func, 'Price')
+				base_plot(tmp, quant_vol_func, 'Turnover')
+
+		tmp2 = data.loc[['all_market', 'cont_market']].reset_index(inplace=False)
+		tmp2['Mode'].replace(self._mode_d, inplace=True)
+		mode = 'market'
+		base_plot(tmp2, quant_price_mkt_func, 'Price')
+		base_plot(tmp2, quant_vol_mkt_func, 'Turnover')
 
 
 class DiscoVisual(Visualization):
@@ -350,31 +219,39 @@ class DiscoVisual(Visualization):
 		self._raw_data.set_index(['Date', 'Symbol'], inplace=True)
 		self._returns = pd.read_csv(returnpath, index_col=['Date', 'Symbol'], parse_dates=['Date'])
 		self._calculate_factors()
-		self._close_volume_classify()
+		self._define_quantiles()
+
+		# Attributes
+		self._lw = 1.2
+		self._ms = 8
+		self._avg_turnover = self._raw_data['Close turnover'].groupby('Symbol').mean().sort_values(ascending=False)
 
 	def _calculate_factors(self):
 		data = self._raw_data
 		rets = self._returns
 
-		data['close_turnover'] = data['actual_close_price'] * data['close_vol']
+		data['Close turnover'] = data['actual_close_price'] * data['close_vol'] / 10 ** 6
 		data['Closing Return'] = (data['actual_close_price'] - data['pre_midquote']) / data['pre_midquote']
 		data['Absolute Imbalance'] = (data['start_bids'] - data['start_asks']) * data['close_price'] / 10 ** 6
 		data['Relative Imbalance'] = (data['start_bids'] - data['start_asks']) / (data['start_bids'] + data['start_asks'])
-
-		# Add liquidity quantiles
-		quants = data.groupby('Date')['close_turnover'].transform(lambda x: pd.qcut(x, 3, labels=range(1, 4)))
-		quants.rename('Volume quantile', inplace=True)
-		quants.replace({1: 'least volume', 2: 'neutral', 3: 'most volume'}, inplace=True)
-		self._raw_data = data.join(quants, on=['Date', 'Symbol'])
 
 		# Calculate WPDC
 		rets = rets.join(rets['return_open_close'].abs().groupby('Date').sum(), rsuffix='_abs_total', on='Date')
 		rets['PDC'] = rets['return_close'] / rets['return_open_close']
 		rets['WPDC'] = rets['PDC'] * abs(rets['return_open_close'] / rets['return_open_close_abs_total'])
-		rets = rets.join(rets['WPDC'].groupby('Date').sum(), rsuffix='day', on='Date')
+		self._returns = rets.join(rets['WPDC'].groupby('Date').sum(), rsuffix='day', on='Date')
+
+	def _define_quantiles(self):
+		data = self._raw_data.sort_index()
+		rets = self._returns.sort_index()
+
+		quants = data['Close turnover'].groupby('Date').transform(
+			lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']))
+		quants.rename('Volume quantile', inplace=True)
+		self._raw_data = data.join(quants)
 		self._returns = rets.join(quants)
 
-	def plot_oib_returns(self, save):
+	def plot_oib_returns(self, save: bool = False, show: bool = True) -> None:
 		def base_plot(funcdata, linefunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			ax.grid(which='major', axis='both')
@@ -388,54 +265,52 @@ class DiscoVisual(Visualization):
 			fig.tight_layout()
 			if save:
 				plt.savefig("{0}\\PriceDiscovery\\{1}".format(self._figdir, filename))
-			plt.show()
+			plt.show() if show else plt.close()
 
 		data = self._raw_data
 		returns = self._returns
 
 		def abs_oib_returns(tmp, ax):
 			sns.scatterplot(data=tmp, x='Absolute Imbalance', y='Closing Return', ax=ax, hue='Volume quantile',
-						 ec='k', palette='cubehelix')
-			ax.set_title("Full order imbalance versus closing return by closing volume tercile")
-			ax.set_xlabel("Absolute imbalance at auction start [CHF]")
+						 ec='k', palette='cubehelix_r')
+			ax.set_title("Absolute order imbalance versus closing return by closing volume tercile")
+			ax.set_xlabel("Absolute imbalance at auction start [million CHF]")
 			xlimit = min(abs(min(tmp['Absolute Imbalance'])), max(tmp['Absolute Imbalance'])) * 1.4
 			ax.set_xlim([-xlimit, xlimit])
 
 		def rel_oib_returns(tmp, ax):  # Only marginally useful
 			sns.scatterplot(data=tmp, x='Relative Imbalance', y='Closing Return', ax=ax, hue='Volume quantile',
-						 ec='k', palette='cubehelix')
+						 ec='k', palette='cubehelix_r')
 			ax.set_title("Relative order imbalance versus closing return by closing volume tercile")
-			ax.set_xlabel("Relative order imbalance at auction start [\%]")
+			ax.set_xlabel("Relative order imbalance at auction start")
 			ax.set_xlim([-1, 1])
-			ax.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 
 		base_plot(data, abs_oib_returns, 'AbsoluteOIB_Returns')
 		base_plot(data, rel_oib_returns, 'RelativeOIB_Returns')
 
-		return returns
+	def plots_wpdc(self, save: bool = False, show: bool = True):
+		lw = self._lw
+		data = self._raw_data
+		returns = self._returns
+		wpdc_oib_df = data[['Relative Imbalance', 'Close turnover']].join(returns).reset_index()
 
-	def wpdc_plots(self, save):
 		def base_plot(funcdata, axfunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
 			ax.grid(which='major', axis='both')
 			ax.axhline(0, c='k', lw=1)
 			axfunc(funcdata, ax)
-			ax.legend(ncol=4, fontsize='x-small')
 			ax.set_ylabel('WPDC')
+			ax.legend(ncol=2, fontsize='small')
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			ax.set_axisbelow(True)
 			fig.tight_layout()
 			if save:
 				plt.savefig("{0}\\PriceDiscovery\\{1}".format(self._figdir, filename))
-			plt.show()
-
-		data = self._raw_data
-		returns = self._returns
-		wpdc_oib_df = data[['Relative Imbalance', 'close_turnover']].join(returns).reset_index()
+			plt.show() if show else plt.close()
 
 		def wpdc_time_plot(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='WPDC', ax=ax, hue='Volume quantile', estimator='sum',
-					   ci=None, lw=1.1, palette='cubehelix', marker='.', mew=0, ms=8)
+					   ci=None, lw=lw, palette='cubehelix_r', marker='.', mew=0, ms=9)
 			ax.set_title("Weighted price discovery contribution per day over time in 2019")
 			ax.set_xlabel("")
 			ax.set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 1, 1)])
@@ -446,19 +321,19 @@ class DiscoVisual(Visualization):
 
 		def wpdc_oib_stockday_plot(funcdata, ax):
 			sns.scatterplot(data=funcdata, x='Relative Imbalance', y='WPDC', ax=ax, hue='Volume quantile',
-						 ec='k', palette='cubehelix')
+						 ec='k', palette='cubehelix_r')
 			ax.set_title("Weighted price discovery contribution and relative order imbalance by stockday")
-			ax.set_xlabel("Relative Imbalance")
+			ax.set_xlabel("Relative imbalance")
 			ax.axvline(0, c='k', lw=1)
 
 		def wpdc_oib_stock_plot(funcdata, ax):
 			funtmp = funcdata[funcdata['return_open_close'] != 0]
 			funtmp = funtmp.groupby('Symbol').median().reset_index()
 			sns.scatterplot(data=funtmp, x='Relative Imbalance', y='PDC', ax=ax, size='Symbol', hue='Symbol', ec='k',
-						 palette='cubehelix_r', hue_order=self._avg_turnover.index,
+						 palette='cubehelix', hue_order=self._avg_turnover.index,
 						 sizes=(10, 400), size_order=self._avg_turnover.index)
 			ax.set_title("Weighted price discovery contribution and relative order imbalance by stock")
-			ax.set_xlabel("Relative Imbalance")
+			ax.set_xlabel("Relative imbalance")
 			# ax.legend(loc='lower right')
 			ax.set_xlim(right=0.6)
 			ax.set_ylim(top=0.1, bottom=-0.1)
@@ -466,14 +341,12 @@ class DiscoVisual(Visualization):
 
 		def wpdc_oib_day_plot(funcdata, ax):
 			funtmp = funcdata[funcdata['return_open_close'] != 0]
-			funtmp.loc[:, 'Date'] = "grt" + (funtmp['Date'].dt.dayofyear).astype(str)
-			vols = funtmp.groupby('Date').sum()['close_turnover']
-			vols = (vols / vols.max() * 400).to_dict()
+			funtmp.loc[:, 'Date'] = "-" + (funtmp['Date'].dt.dayofyear).astype(str)
 			funtmp = funtmp.groupby('Date').mean().reset_index()
-			funtmp.rename(columns={'close_turnover': 'Turnover'}, inplace=True)
+			funtmp.rename(columns={'Close turnover': 'Turnover [mn. CHF]'}, inplace=True)
 
-			sns.scatterplot(data=funtmp, x='Relative Imbalance', y='WPDCday', ax=ax, size='Turnover',
-						 ec='k', legend=None, sizes=(5, 500))
+			sns.scatterplot(data=funtmp, x='Relative Imbalance', y='WPDCday', ax=ax, size='Turnover [mn. CHF]',
+						 ec='k', sizes=(5, 400), legend='brief', hue='Turnover [mn. CHF]', palette='cubehelix_r')
 			ax.axvline(0, c='k', lw=1)
 			ax.set_title("Weighted price discovery contribution and relative order imbalance by day")
 			ax.set_xlabel("Relative Imbalance")
@@ -485,277 +358,304 @@ class DiscoVisual(Visualization):
 		base_plot(wpdc_oib_df, wpdc_oib_stock_plot, 'WPDC_OIB_stock')
 		base_plot(wpdc_oib_df, wpdc_oib_day_plot, 'WPDC_OIB_day')
 
+	def plot_stocks_time_compare(self, nstocks=6, save: bool = False, show: bool = True) -> None:
+		lw = self._lw
+		ms = self._ms
+		stocks = self._avg_turnover.index[:nstocks].to_list()
+		data = self._raw_data.reset_index(inplace=False)
+
+		def base_plot(plotfunc, handle):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			ax.axhline(y=0, lw=1, c='k')
+			plotfunc(ax)
+			ax.grid(which='major', axis='y')
+			ax.set_xlabel("")
+			handles, labels = ax.get_legend_handles_labels()
+			ax.legend(handles=handles[1:], labels=labels[1:], fontsize='small', ncol=2)
+			ax.set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 1, 1)])
+			loca = dates.MonthLocator()
+			form = dates.ConciseDateFormatter(loca, show_offset=False)
+			ax.xaxis.set_major_locator(loca)
+			ax.xaxis.set_major_formatter(form)
+			fig.tight_layout()
+			if save:
+				plt.savefig("{0}\\PriceDiscovery\\Stocks_{1}".format(self._figdir, handle))
+			plt.show() if show else plt.close()
+
+		def turnover_plot(ax):
+			sns.lineplot(data=data, x='Date', y='Close turnover', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_title("Closing turnover over time for the {n} largest SLI titles".format(n=nstocks))
+			ax.set_ylabel("Closing turnover [million CHF]")
+			ax.set_ylim(bottom=0)
+
+		def absolute_oib_plot(ax):
+			sns.lineplot(data=data, x='Date', y='Absolute Imbalance', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_title("Absolute order imbalance over time for the {n} largest SLI titles".format(n=nstocks))
+			ax.set_ylabel("Absolute order imbalance [million CHF]")
+
+		def relative_oib_plot(ax):
+			sns.lineplot(data=data, x='Date', y='Relative Imbalance', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_ylabel("Relative order imbalance")
+			ax.set_title("Relative order imbalance over time for the {n} largest SLI titles".format(n=nstocks))
+
+		def deviation_plot(ax):
+			sns.lineplot(data=data, x='Date', y='Closing Return', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_title("Closing auction return over time for the {n} largest SLI titles".format(n=nstocks))
+			ax.set_ylabel('Return during closing auction [\%]')
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			ax.set_ylim([-.01, .01])
+
+		base_plot(turnover_plot, 'Turnover')
+		base_plot(absolute_oib_plot, 'AbsoluteImbalance')
+		base_plot(relative_oib_plot, 'RelativeImbalance')
+		base_plot(deviation_plot, 'Deviation')
+
 
 class IntervalVisual(Visualization):
-	def __init__(self, datapath, bluechippath):
-		super().__init__(datapath, bluechippath)
-
+	def __init__(self, datapath):
+		super().__init__(datapath)
 		self._extract_indicators()
-		self._close_volume_classify()
+		self._avg_turnover = self._raw_data['Close turnover'].groupby('Symbol').mean().sort_values(ascending=False)
 
-	def _extract_indicators(self):
-		raw = self._raw_data
-		raw['close_turnover'] = raw['close_price'] * raw['close_vol']
-		raw['Absolute Imbalance'] = (raw['snap_bids'] - raw['snap_asks']) * raw['close_price']
-		raw['Relative Imbalance'] = ((raw['snap_bids'] - raw['snap_asks']) / ((raw['snap_bids'] + raw['snap_asks']) / 2))
-		raw['Turnover'] = raw['snap_price'] * raw['snap_vol']
-		raw['Deviation'] = (raw['snap_price'] - raw['close_price']) / raw['close_price'] * 10000
-		raw.set_index(['Date', 'Symbol', 'Lag'], inplace=True)
+		# Attributes
+		self._lw = 1.3
+		self._ms = 9
 
-	def plot_months(self, save=False):
+	def _extract_indicators(self) -> None:
+		data = self._raw_data.sort_index()
+		data['Close turnover'] = data['close_price'] * data['close_vol'] / 10 ** 6
+		data['Absolute Imbalance'] = (data['snap_bids'] - data['snap_asks']) * data['close_price'] / 10 ** 6
+		data['Relative Imbalance'] = ((data['snap_bids'] - data['snap_asks']) / (data['snap_bids'] + data['snap_asks']))
+		data['Turnover'] = data['snap_price'] * data['snap_vol'] / 10 ** 6
+		data['Deviation'] = (data['snap_price'] - data['close_price']) / data['close_price'] * 10 ** 4
+		data['Month'] = data['Date'].dt.strftime('%B')
+		data.set_index(['Date', 'Symbol', 'Lag'], inplace=True)
+
+
+		# Calculate WPDC
+		data['snap_return'] = (data['snap_price'] / data['snap_price'].shift(periods=1)) - 1
+		data.loc[data.index.get_level_values('Lag') == 0, 'snap_return'] = np.nan
+		start, end = data['snap_price'].xs(0, level='Lag'), data['snap_price'].xs(600, level='Lag')
+		close_df = pd.DataFrame({'close_return': (end / start) - 1})
+		close_df = close_df.join(close_df['close_return'].abs().groupby('Date').sum(), rsuffix='_abs_total')
+		data = data.join(close_df)
+
+		data['PDC'] = data['snap_return'] / data['close_return']
+		data['weights'] = abs(data['close_return'] / data['close_return_abs_total'])
+		data['WPDC'] = data['weights'] * data['PDC']
+		self._raw_data = data.join(data['WPDC'].groupby(['Date','Lag']).sum(), rsuffix='interval')
+
+	def plot_months(self, save: bool = False, show: bool = True) -> None:
+		lw = self._lw
+		ms = self._ms
+		raw = self._raw_data.copy(deep=True)
+		tmp = raw.groupby(['Lag', 'Date']).mean().reset_index()
+		tmp['Month'] = tmp['Date'].apply(lambda d: d.strftime('%B'))
+
 		def base_plot(linefunc, filename):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			ax.axhline(0, c='k', lw=1, ls='solid')
 			linefunc(ax)
 			ax.grid(which='major', axis='y')
 			ax.set_xlabel("Seconds since start of auction")
-			ax.legend(ncol=2, fontsize='small')
+			handles, labels = ax.get_legend_handles_labels()
+			ax.legend(handles=handles[1:], labels=labels[1:], ncol=3, fontsize='small')
 			ax.set_xlim([0, 600])
 			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
 			fig.tight_layout()
 			if save:
-				plt.savefig("{0}\\Intervals\\{1}".format(self._figdir, filename))
-			plt.show()
-
-		raw = self._raw_data.copy(deep=True)
-		tmp = raw.groupby(['Lag', 'Date']).mean().reset_index()
-		tmp['Date'] = tmp['Date'].apply(lambda d: d.strftime('%B'))
-		tmp.rename(columns={'snap_OIB': 'Relative Imbalance', 'Date': 'Month'}, inplace=True)
+				plt.savefig("{0}\\Intervals\\Monthly\\{1}".format(self._figdir, filename), transparent=True)
+			plt.show() if show else plt.close()
 
 		def volume_plot(ax):
-			sns.lineplot(data=tmp, x='Lag', y='Turnover', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
-			ax.set_title("Average hypothetical closing turnover of SLI titles by month")
-			ax.set_ylabel("Turnover [CHF]")
+			sns.lineplot(data=tmp, x='Lag', y='Turnover', hue='Month', ci=None,
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Average hypothetical closing turnover per SLI title per day")
+			ax.set_ylabel("Turnover [million CHF]")
+			ax.set_ylim(bottom=0)
 
 		def rel_oib_plot(ax):
-			sns.lineplot(data=tmp, x='Lag', y='Relative Imbalance', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
-			ax.axhline(0, c='k', lw=1.2)
-			ax.set_ylim([-0.006, 0.006])
-			ax.set_title("Average relative order imbalance of SLI titles by month")
-			ax.set_ylabel("Relative order imbalance [\%]")
-			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			sns.lineplot(data=tmp, x='Lag', y='Relative Imbalance', hue='Month', ci=None,
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Average relative order imbalance per SLI title per day")
+			ax.set_ylabel("Relative order imbalance")
+			ax.yaxis.set_major_locator(ticker.MultipleLocator(0.05))
 
 		def abs_oib_plot(ax):
-			ax.axhline(0, c='k', lw=1.2)
-			sns.lineplot(data=tmp, x='Lag', y='Absolute Imbalance', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
-			ax.set_title("Average order imbalance of SLI titles by month")
-			ax.set_ylabel("Order imbalance [CHF]")
+			sns.lineplot(data=tmp, x='Lag', y='Absolute Imbalance', hue='Month', ci=None, estimator='sum',
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Total market-wide absolute order imbalance per day")
+			ax.set_ylabel("Order imbalance [million CHF]")
 
-		def price_plot(ax):
-			ax.axhline(0, c='k', lw=1.2)
-			sns.lineplot(data=tmp, x='Lag', y='Deviation', hue='Month', ci=None, palette='cubehelix', lw=self._lw, ax=ax)
-			ax.set_title("Average price deviation SLI titles by month")
+		def price_average_plot(ax):
+			sns.lineplot(data=tmp, x='Lag', y='Deviation', hue='Month', ci=None,
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Average price deviation per SLI title per day")
 			ax.set_ylabel("Price deviation [bps]")
+
+		def price_median_plot(ax):
+			sns.lineplot(data=tmp, x='Lag', y='Deviation', hue='Month', ci=None, estimator='median',
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Median price deviation per SLI title per day")
+			ax.set_ylabel("Price deviation [bps]")
+
+		def wpdc_plot(ax):
+			fundata = tmp[tmp['close_return'] != 0].groupby(['Date','Lag']).first().reset_index()
+			sns.lineplot(data=fundata, x='Lag', y='WPDCinterval', hue='Month', ci=None, estimator='mean',
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Average WPDC per 30-second interval across SLI titles")
+			ax.set_ylabel("WPDC")
+
+		def median_wpdc_plot(ax):
+			fundata = tmp[tmp['close_return'] != 0].groupby(['Date','Lag']).first().reset_index()
+			sns.lineplot(data=fundata, x='Lag', y='WPDCinterval', hue='Month', ci=None, estimator='median',
+					   palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Median WPDC per 30-second interval across SLI titles")
+			ax.set_ylabel("WPDC")
 
 		base_plot(volume_plot, 'VolumePlotMonthly')
 		base_plot(rel_oib_plot, 'RelativeOIBMonthly')
 		base_plot(abs_oib_plot, 'AbsoluteOIBMonthly')
-		base_plot(price_plot, 'PriceDeviationMonthly')
+		base_plot(price_average_plot, 'PriceDeviationMonthly')
+		base_plot(price_median_plot, 'MedianPriceDeviationMonthly')
+		base_plot(wpdc_plot, 'WPDCMonthly')
+		base_plot(median_wpdc_plot, 'WPDCMedianMonthly')
 
-		return raw
+	def plot_stocks_lags_compare(self, nst=8, save: bool = False, show: bool = True) -> None:
+		lw = self._lw
+		ms = self._ms
+		stocks = self._avg_turnover.index[:nst].to_list()
+		data = self._raw_data.reset_index(inplace=False)
+		data = data[data['Symbol'].isin(stocks)]
 
-	def plot_stocks_individual(self, nstocks=5, save=False):
-		def base_plot(data, linefunc, stock, filename=None):
-			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-			linefunc(data, ax, stock)
-			ax.grid(which='major', axis='y')
-			ax.set_xlabel('')
-			ax.legend(ncol=5, fontsize='small')
-			ax.set_xlim(['2019-01-01', '2020-01-01'])
-			locator = dates.MonthLocator(interval=1)
-			formatter = dates.ConciseDateFormatter(locator, show_offset=False)
-			ax.xaxis.set_major_locator(locator)
-			ax.xaxis.set_major_formatter(formatter)
-			fig.tight_layout()
-			if save:
-				plt.savefig("{0}\\Intervals\\{1}_{2}".format(self._figdir, stock, filename))
-			plt.close()
-
-		stocks = self._avg_turnover.index[:nstocks].to_list()
-
-		def deviation_plot(data, ax, stock):
-			data = data[abs(data['Deviation']) < data['Deviation'].std() * 2]
-			sns.lineplot(data=data, x='Date', y='Deviation', hue='Lag', lw=1,
-					   ax=ax, ci=None, palette='cubehelix_r')
-			ax.set_ylabel("Deviation from closing price [bps]")
-			ax.set_title("Deviation of current price from closing price for {} (without outliers)".format(stock))
-
-		def relative_OIB_plot(data, ax, stock):
-			data = data[abs(data['Relative Imbalance']) < data['Relative Imbalance'].std() * 3]
-			sns.lineplot(data=data, x='Date', y='Relative Imbalance', hue='Lag', lw=1,
-					   ax=ax, ci=None, palette='cubehelix_r')
-			ax.set_ylabel("Relative imbalance")
-			ax.set_title("Relative order imbalance of current price from closing price for {} (without outliers".format(stock))
-			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
-
-		def absolute_OIB_plot(data, ax, stock):
-			# data['Absolute Imbalance'] = abs(data['Absolute Imbalance'])
-			sns.lineplot(data=data, x='Date', y='Absolute Imbalance', hue='Lag', lw=1,
-					   ax=ax, ci=None, palette='cubehelix_r')
-			ax.set_ylabel("Absolute imbalance [CHF]")
-			ax.set_title("Absolute order imbalance of current price from closing price for {}".format(stock))
-
-		# ax.set_yscale('log')
-
-		def turnover_plot(data, ax, stock):
-			sns.lineplot(data=data, x='Date', y='Turnover', hue='Lag', lw=1,
-					   ax=ax, ci=None, palette='cubehelix_r')
-			ax.set_ylabel("Turnover in [CHF]")
-			ax.set_title("Hypothetical turnover for {} by lag".format(stock))
-			ax.set_ylim(bottom=0)
-
-		def turnover_log_plot(data, ax, stock):
-			sns.lineplot(data=data, x='Date', y='Turnover', hue='Lag', lw=1,
-					   ax=ax, ci=None, palette='cubehelix_r')
-			ax.set_ylabel("Turnover in [CHF]")
-			ax.set_title("Hypothetical logarithmic turnover for {} by lag".format(stock))
-			ax.set_yscale('log')
-
-		for s in stocks:
-			tmp = self._raw_data.xs(s, level='Symbol').reset_index(inplace=False)
-			tmp['Lag'] = 'sec. ' + tmp['Lag'].astype(str)
-
-			base_plot(tmp, deviation_plot, s, 'Deviation')
-			base_plot(tmp, relative_OIB_plot, s, 'RelativeImbalance')
-			base_plot(tmp, absolute_OIB_plot, s, 'AbsoluteImbalance')
-			base_plot(tmp, turnover_plot, s, 'Turnover')
-			base_plot(tmp, turnover_log_plot, s, 'Turnover_log')
-
-		return tmp
-
-	def plot_stocks_compare(self, nstocks=5, save=False):
 		def base_plot(plotfunc, handle):
 			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			ax.axhline(y=0, lw=1, c='k', ls='solid')
 			plotfunc(ax)
 			ax.grid(which='major', axis='y')
 			ax.set_xlabel("Seconds since start of auction")
-			ax.legend(ncol=2, fontsize='small')
+			handles, labels = ax.get_legend_handles_labels()
+			ax.legend(handles=handles[1:], labels=labels[1:], ncol=2, fontsize='small')
 			ax.set_xlim([0, 600])
 			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
 			fig.tight_layout()
 			if save:
-				plt.savefig("{0}\\Intervals\\Comparison\\{1}".format(self._figdir, handle))
-			plt.show()
-
-		stocks = self._avg_turnover.index[:nstocks].to_list()
-		raw = self._raw_data.reset_index(inplace=False)
-		raw = raw[raw['Symbol'].isin(stocks)]
+				plt.savefig("{0}\\Intervals\\Comparison\\{1}".format(self._figdir, handle), transparent=True)
+			plt.show() if show else plt.close()
 
 		def turnover_plot(ax):
-			sns.lineplot(data=raw, x='Lag', y='Turnover', hue='Symbol', lw=self._lw,
+			sns.lineplot(data=data, x='Lag', y='Turnover', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
 					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
 			ax.set_ylim(bottom=0)
+			ax.set_ylabel("Turnover [million CHF]")
+			ax.set_title("Average hypothetical turnover throughout closing auction for {n} largest SLI titles".format(n=nst))
+			ax.set_ylim(bottom=0)
 
-		def relative_OIB_plot(ax):
+		def absolute_oib_plot(ax):
+			sns.lineplot(data=data, x='Lag', y='Absolute Imbalance', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
+			ax.set_title("Average absolute order imbalance throughout closing auction for {n} largest SLI titles".format(n=nst))
+			ax.set_ylabel("Absolute imbalance [million CHF]")
+
+		def relative_oib_plot(ax):
 			ax.axhline(y=0, lw=1, c='k', ls='dashed')
-			sns.lineplot(data=raw, x='Lag', y='Relative Imbalance', hue='Symbol', lw=self._lw,
-					   ax=ax, palette='rainbow', hue_order=stocks, ci=None)
+			sns.lineplot(data=data, x='Lag', y='Relative Imbalance', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			ax.set_title("Average relative order imbalance throughout closing auction for {n} largest SLI titles".format(n=nst))
 
 		def deviation_plot(ax):
-			ax.axhline(y=0, lw=1, c='k', ls='dashed')
-			sns.lineplot(data=raw, x='Lag', y='Deviation', hue='Symbol', lw=self._lw,
+			sns.lineplot(data=data, x='Lag', y='Deviation', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
 					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
 			ax.set_ylabel('Average deviation from closing price [bps]')
+			ax.set_title("Average deviation from closing price throughout closing auction for {n} largest SLI titles".format(n=nst))
 
-		def deviation_conf_plot(ax):
-			ax.axhline(y=0, lw=1, c='k', ls='dashed')
-			sns.lineplot(data=raw, x='Lag', y='Deviation', hue='Symbol', lw=self._lw,
-					   ax=ax, palette='cubehelix', hue_order=stocks, ci=95)
-			ax.set_ylabel('Average deviation from closing price [bps]')
+		def deviation_median_plot(ax):
+			sns.lineplot(data=data, x='Lag', y='Deviation', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None, estimator='median')
+			ax.set_ylabel('Median deviation from closing price [bps]')
+			ax.set_title("Median deviation from closing price throughout closing auction for {n} largest SLI titles".format(n=nst))
+
+		def wpdc_plot(ax):
+			tmp_data = data[(data['close_return'] != 0) & (data['Symbol'] != 'CFR')]
+			sns.lineplot(data=tmp_data, x='Lag', y='WPDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None, estimator='mean')
+			ax.set_ylabel('WPDC')
+			ax.set_title("Average WPDC throughout closing auction for {n} largest SLI titles".format(n=nst))
+
+		def median_wpdc_plot(ax):
+			tmp_data = data[(data['close_return'] != 0) & (data['Symbol'] != 'CFR')]
+			sns.lineplot(data=tmp_data, x='Lag', y='WPDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+					   ax=ax, palette='cubehelix', hue_order=stocks, ci=None, estimator='median')
+			ax.set_ylabel('WPDC')
+			ax.set_title("Median WPDC throughout closing auction for {n} largest SLI titles".format(n=nst))
 
 		base_plot(turnover_plot, 'Turnover')
-		base_plot(relative_OIB_plot, 'RelativeTurnover')
-		base_plot(deviation_plot, 'Deviation')
-		base_plot(deviation_conf_plot, 'DeviationConf')
+		base_plot(absolute_oib_plot, 'AbsoluteTurnover')
+		base_plot(relative_oib_plot, 'RelativeTurnover')
+		base_plot(deviation_plot, 'AverageDeviation')
+		base_plot(deviation_median_plot, 'MedianDeviation')
+		base_plot(wpdc_plot, 'WPDC')
+		base_plot(median_wpdc_plot, 'WPDCMedian')
 
-	def plot_stocks_within(self, nstocks=5, save=False):
+	def plot_stocks_within(self, nstocks=5, save: bool = False, show: bool = True) -> None:
 		"""
 		Very chaotic representation, but it indicates that many of the one-sided order imbalances are persistent.
 		This probably comes from large rebalancing.
 		"""
-
-		def base_plot(plotfunc, stock, handle):
-			tmp = raw[raw['Symbol'] == stock]
-			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
-			plotfunc(tmp, ax, stock)
-			ax.grid(which='major', axis='y')
+		dpi = 300
+		def base_plot(funcdata, plotfunc, stock, handle):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=dpi)
+			ax.axhline(0, c='k', lw=1.2)
+			plotfunc(funcdata, ax, stock)
+			ax.grid(which='major', axis='both')
 			ax.set_xlabel("Seconds since start of auction")
-			# ax.legend(ncol=2, fontsize='small')
+			handles, labels = ax.get_legend_handles_labels()
+			ax.legend(handles=handles[1:], labels=labels[1:], fontsize='small', ncol=6)
 			ax.set_xlim([0, 600])
-			# ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(60))
 			fig.tight_layout()
 			if save:
-				plt.savefig("{0}\\Intervals\\Within\\{1}_{2}".format(self._figdir, handle, stock))
-			plt.show()
+				plt.savefig("{0}\\Intervals\\Within\\{1}_{2}".format(self._figdir, handle, stock), transparent=True)
+			plt.show() if show else plt.close()
 
 		stocks = self._avg_turnover.index[:nstocks].to_list()
-		raw = self._raw_data.reset_index(inplace=False)
-		raw = raw[raw['Symbol'].isin(stocks)]
+		data = self._raw_data.reset_index(inplace=False)
 
 		def deviation_plot(data, ax, stock):
-			sns.lineplot(data=data, x='Lag', y='Deviation', ax=ax, hue='Date', legend=None,
-					   estimator=None, lw=0.5, palette='rainbow')
+			sns.lineplot(data=data, x='Lag', y='Deviation', ax=ax, hue='Month', legend='brief',
+					   estimator=None, lw=0.5, palette='rainbow', units='Date')
 			ax.set_ylim([-500, 500])
 			ax.set_ylabel("Deviation from closing price [bps]k")
-			ax.set_title("{0}: Deviation of current price to closing price through auction".format(stock))
+			ax.set_title("{0}: Deviation from closing price throughout auction (each line represents one trading day)".format(stock))
 
-		def relative_OIB_plot(data, ax, stock):
-			sns.lineplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, units='Date', legend=None,
-					   estimator=None, lw=0.5, palette='rainbow')
+		def relative_oib_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, units='Date',
+					   estimator=None, lw=0.5, palette='rainbow', hue='Month')
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
-			ax.set_title("{0}: Relative order imbalance throughout auction".format(stock))
+			ax.set_title("{0}: Relative order imbalance throughout auction (each line represents one trading day)".format(stock))
 			ax.set_ylabel("Relative Imbalance [\%]")
 
-		def absolute_OIB_plot(data, ax, stock):
-			sns.lineplot(data=data, x='Lag', y='Absolute Imbalance', ax=ax, hue='Date',
-					   estimator=None, lw=0.5, legend=None, palette='rainbow')
-			ax.set_title("{0}: Absolute order imbalance throughout auction".format(stock))
-			ax.set_ylabel("Absolute Imbalance [CHF]")
+		def absolute_oib_plot(data, ax, stock):
+			sns.lineplot(data=data, x='Lag', y='Absolute Imbalance', ax=ax, hue='Month',
+					   estimator=None, lw=0.5, palette='rainbow', units='Date')
+			ax.set_title("{0}: Absolute order imbalance throughout auction (each line represents one trading day)".format(stock))
+			ax.set_ylabel("Absolute Imbalance [million CHF]")
+
+		def wpdc_plot(data, ax, stock):
+			funcdata = data[data['close_return'] != 0]
+			sns.lineplot(data=funcdata, x='Lag', y='WPDC', ax=ax, hue='Month',
+					   estimator=None, lw=0.5, palette='rainbow', units='Date')
+			ax.set_title("{0}: WPDC throughout auction (each line represents one trading day)".format(stock))
+			ax.set_ylabel("WPDC")
 
 		for s in stocks:
-			base_plot(deviation_plot, s, 'Deviation')
-			base_plot(relative_OIB_plot, s, 'RelativeImbalance')
-			base_plot(absolute_OIB_plot, s, 'AbsoluteImbalance')
-
-	def plot_stocks_box(self, nstocks=5, save=False):
-		def base_plot_box(plotfunc, stock, handle):
-			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi, sharex=True, sharey=True)
-			tmp = raw.loc[raw['Symbol'] == stock, :]
-			plotfunc(tmp, ax, stock)
-			ax.grid(which='major', axis='y')
-			ax.set_xlabel("Seconds since start of auction")
-			fig.tight_layout()
-			if save:
-				plt.savefig("{0}\\Intervals\\Boxplots\\{1}_{2}".format(self._figdir, handle, stock))
-			plt.show()
-
-		stocks = self._avg_turnover.index[:nstocks]
-		raw = self._raw_data.reset_index(inplace=False)
-		raw = raw.loc[raw['Symbol'].isin(stocks.tolist()), :]
-		raw.loc[:, 'Lag'] = raw.loc[:, 'Lag'].astype(object)
-
-		def box_deviation_plot(data, ax, stock):
-			sns.boxplot(data=data, x='Lag', y='Deviation', ax=ax, color=def_color)
-			ax.set_ylim([-700, 700])
-			ax.set_ylabel("Deviation [bps]")
-			ax.set_title("{0}: Deviation from closing price by lag".format(stock))
-
-		def box_relative_OIB_plot(data, ax, stock):
-			sns.boxplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, color=def_color)
-			ax.set_ylim([-0.20, 0.20])
-			ax.set_ylabel("Relative imbalance [\%]")
-			ax.set_title("{0}: Deviation from closing price by lag".format(stock))
-			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
-
-		for s in stocks:
-			base_plot_box(box_deviation_plot, s, 'DeviationBox')
-			base_plot_box(box_relative_OIB_plot, s, 'RelativeImbalanceBox')
-
-
-########################################################################
-# file_bcs = os.getcwd() + "\\Data\\bluechips.csv"
-# file_rets = os.getcwd() + "\\Data\\end_of_day_returns_bluechips.csv"
-granularity = 'rough'
-file_data = os.getcwd() + "\\Exports\\Sensitivity_{}_TotalVolume_v3.csv".format(granularity)
-Sens = SensVisual(file_data, base='CrossedVolume')
-Sens.plot_removed_time(save=True, show=True)
+			tmp = data[data['Symbol'] == s].sort_values('Date', ascending=True)
+			base_plot(tmp, deviation_plot, s, 'Deviation')
+			base_plot(tmp, relative_oib_plot, s, 'RelativeImbalance')
+			base_plot(tmp, absolute_oib_plot, s, 'AbsoluteImbalance')
+			base_plot(tmp, wpdc_plot, s, 'WPDC')

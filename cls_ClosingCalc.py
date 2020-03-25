@@ -61,7 +61,7 @@ class Research:
 
 		if 0 in df[['asks', 'bids']].sum().values:  # Where one side is empty
 			return dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan,
-					  total_bids=np.nan, total_asks=np.nan)
+			            total_bids=np.nan, total_asks=np.nan)
 
 		else:
 			n_lim = df.shape[0]
@@ -80,10 +80,10 @@ class Research:
 
 			if min(cum_bids[i], cum_asks[i]) == 0:
 				output = dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan,
-						  total_bids=sum_bids, total_asks=sum_asks)
+				              total_bids=sum_bids, total_asks=sum_asks)
 			else:
 				output = dict(price=df.index[i], trade_vol=trade_vol, cum_bids=cum_bids[i], cum_asks=cum_asks[i],
-						    total_bids=sum_bids, total_asks=sum_asks)
+				              total_bids=sum_bids, total_asks=sum_asks)
 
 			return output
 
@@ -118,7 +118,7 @@ class Research:
 
 		else:
 			output = dict(abs_spread=round(minask - maxbid, 4), midquote=round((maxbid + minask) / 2, 4),
-					    rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
+			              rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
 			return output
 
 	def export_results(self, filename, filetype) -> None:
@@ -130,14 +130,19 @@ class Research:
 
 
 class SensitivityAnalysis(Research):
-	def __init__(self, file, base):
+	def __init__(self, file, base, perc):
 		super().__init__(file)
 		if base in {'SeparatePassive', 'SeparateOrders', 'FullPassive', 'FullLiquidity', 'CrossedVolume'}:
 			self._base = base
 		else:
 			raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
 
-	def _remove_orders(self, date, title, perc=0, side=None, market=None) -> pd.DataFrame:
+		self._mode_dict = dict(
+			bid_limit=('bid', None, perc), ask_limit=('ask', None, perc), all_limit=('both', None, perc),
+			bid_market=('bid', 'all', [1]), ask_market=('ask', 'all', [1]), all_market=('both', 'all', [1]),
+			bid_cont=('bid', 'cont', [1]), ask_cont=('ask', 'cont', [1]), all_cont=('both', 'cont', [1]))
+
+	def _remove_orders(self, date, title, perc=0, side=None, market=None) -> dict:
 		"""
 		This function removes a certain percentage of liquidity from the closing auction.
 		It is called for a every date-title combination individually
@@ -148,130 +153,127 @@ class SensitivityAnalysis(Research):
 		:param market: True if market orders are included and False otherwise
 		:return: A dateframe with new bid-ask book based on removing adjustments.
 		"""
-		imp_df = copy.deepcopy(self._snapbook.loc[(date, title), :])
+		imp_df = self._snapbook.loc[(date, title), :]
 
 		if perc == 0:
-			return imp_df[['end_close_vol_ask', 'end_close_vol_bid']]
-
-		bids = imp_df['end_close_vol_bid'].tolist()
-		asks = imp_df['end_close_vol_ask'].tolist()
+			return dict(asks=imp_df['end_close_vol_ask'], bids=imp_df['end_close_vol_bid'])
 
 		# Removal of Market Orders
-		if market == "remove_all":  # Removes all market orders in closing auction
+		if market == "all":  # Removes all market orders in closing auction
 			ret_df = imp_df.loc[:, ('end_close_vol_ask', 'end_close_vol_bid')]
 			try:
-				ret_df.loc[0, :] = 0
-				return ret_df
+				if side in ['bid', 'both']:
+					ret_df.loc[0, 'end_close_vol_bid'] = 0
+				if side in ['ask', 'both']:
+					ret_df.loc[0, 'end_close_vol_ask'] = 0
+				return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
+
 			except KeyError:
-				return ret_df
-		elif market == 'remove_cont':
+				return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
+
+		elif market == 'cont':
 			ret_df = imp_df.loc[:, ('end_close_vol_ask', 'end_close_vol_bid')]
 			try:
-				ret_df.loc[0, 'end_close_vol_ask'] -= imp_df.loc[0, 'SS_0_vol_ask']
-				ret_df.loc[0, 'end_close_vol_bid'] -= imp_df.loc[0, 'SS_0_vol_bid']
+				if side in ['bid', 'both']:
+					ret_df.loc[0, 'end_close_vol_bid'] -= imp_df.loc[0, 'SS_0_vol_bid']
+				if side in ['ask', 'both']:
+					ret_df.loc[0, 'end_close_vol_ask'] -= imp_df.loc[0, 'SS_0_vol_ask']
 				ret_df[ret_df < 0] = 0
-				return ret_df
+				return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
+
 			except KeyError:
-				return ret_df
+				return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
 
-		if self._base == 'SeparatePassive':  # Only considering limit orders for adjustments
-			rem_bid = sum(bids[1:]) * perc
-			rem_ask = sum(asks[1:]) * perc
-		elif self._base == 'SeparateOrders':
-			rem_bid = sum(bids) * perc
-			rem_ask = sum(asks) * perc
-		elif self._base == 'FullPassive':
-			rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc / 2
-			rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc / 2
-		elif self._base == 'FullLiquidity':
-			rem_bid = min((sum(bids) + sum(asks)) * perc / 2, sum(bids))
-			rem_ask = min((sum(bids) + sum(asks)) * perc / 2, sum(asks))
-		elif self._base == 'CrossedVolume':
-			close_volume = self._calc_uncross(bids=imp_df['end_close_vol_bid'], asks=imp_df['end_close_vol_ask'])['trade_vol']
-			rem_bid = close_volume * perc
-			rem_ask = close_volume * perc
 		else:
-			raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
+			bids = imp_df['end_close_vol_bid'].tolist()
+			asks = imp_df['end_close_vol_ask'].tolist()
 
-		if side in ['bid', 'all']:
-			b = len(bids) - 1
-			while rem_bid > 0:
-				if bids[0] != 0:
-					local_vol = bids[0]
-					bids[0] = local_vol - min(local_vol, rem_bid)
-					rem_bid -= min(rem_bid, local_vol)
-				else:
-					local_vol = bids[b]
-					bids[b] = local_vol - min(local_vol, rem_bid)
-					rem_bid -= min(rem_bid, local_vol)
-					b -= 1
+			if self._base == 'SeparatePassive':  # Only considering limit orders for adjustments
+				rem_bid = sum(bids[1:]) * perc
+				rem_ask = sum(asks[1:]) * perc
+			elif self._base == 'SeparateOrders':
+				rem_bid = sum(bids) * perc
+				rem_ask = sum(asks) * perc
+			elif self._base == 'FullPassive':
+				rem_bid = sum(bids[1:]) + sum(asks[1:]) * perc / 2
+				rem_ask = sum(bids[1:]) + sum(asks[1:]) * perc / 2
+			elif self._base == 'FullLiquidity':
+				rem_bid = min((sum(bids) + sum(asks)) * perc / 2, sum(bids))
+				rem_ask = min((sum(bids) + sum(asks)) * perc / 2, sum(asks))
+			elif self._base == 'CrossedVolume':
+				close_volume = self._calc_uncross(bids=imp_df['end_close_vol_bid'], asks=imp_df['end_close_vol_ask'])['trade_vol']
+				rem_bid = close_volume * perc
+				rem_ask = close_volume * perc
+			else:
+				raise KeyError("base not in {'SeparatePassive',''SeparateOrders'','FullPassive','FullLiquidity','CrossedVolume'}")
 
-		if side in ['ask', 'all']:
-			a = 1
-			while rem_ask > 0:
-				if asks[0] != 0:
-					local_vol = asks[0]
-					asks[0] = local_vol - min(local_vol, rem_ask)
-					rem_ask -= min(rem_ask, local_vol)
-				else:
-					local_vol = asks[a]
-					asks[a] = local_vol - min(local_vol, rem_ask)
-					rem_ask -= min(rem_ask, local_vol)
-					a += 1
+			if side in ['bid', 'both']:
+				b = len(bids) - 1
+				while rem_bid > 0:
+					if bids[0] != 0:
+						local_vol = bids[0]
+						bids[0] = local_vol - min(local_vol, rem_bid)
+						rem_bid -= min(rem_bid, local_vol)
+					else:
+						local_vol = bids[b]
+						bids[b] = local_vol - min(local_vol, rem_bid)
+						rem_bid -= min(rem_bid, local_vol)
+						b -= 1
 
-		ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
-		return ret_df
+			if side in ['ask', 'both']:
+				a = 1
+				while rem_ask > 0:
+					if asks[0] != 0:
+						local_vol = asks[0]
+						asks[0] = local_vol - min(local_vol, rem_ask)
+						rem_ask -= min(rem_ask, local_vol)
+					else:
+						local_vol = asks[a]
+						asks[a] = local_vol - min(local_vol, rem_ask)
+						rem_ask -= min(rem_ask, local_vol)
+						a += 1
 
-	def process(self, key, percents=tuple([1])) -> None:
+			ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=imp_df.index).T
+			return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
+
+	def process(self) -> None:
 		"""
 		This function is supposed to exeucte the required calculations and add it to an appropriate data format.
 		It calls other helper functions in order to determine the results of the analysis.
 		"""
-		if key == 'bid_limit':
-			side, mkt = 'bid', None
-		elif key == 'ask_limit':
-			side, mkt = 'ask', None
-		elif key == 'all_limit':
-			side, mkt = 'all', None
-		elif key == 'all_market':
-			side, mkt = 'all', 'remove_all'
-		elif key == "cont_market":
-			side, mkt = 'all', 'remove_cont'
 
-		else:
-			raise ValueError("key input not in ['bid_limit','ask_limit','all_limit','all_market','cont_market']")
+		for key in iter(self._mode_dict.keys()):
+			side, mkt, percents = self._mode_dict[key]
 
-		for date in tqdm(self._dates):
-			current_symbols = self.snapshots.loc[date, :].index.get_level_values(0).unique()
+			for date in tqdm(self._dates):
+				current_symbols = self.snapshots.loc[date, :].index.get_level_values(0).unique()
 
-			for symbol in current_symbols:
-				close_df = self._remove_orders(date=date, title=symbol, perc=0)
-				close_uncross = self._calc_uncross(bids=close_df['end_close_vol_bid'], asks=close_df['end_close_vol_ask'])
+				for symbol in current_symbols:
+					close_dict = self._remove_orders(date=date, title=symbol, perc=0)
+					close_uncross = self._calc_uncross(bids=close_dict['bids'], asks=close_dict['asks'])
 
-				for p in percents:
-					res = self._result_dict[key, date, symbol, p] = {}
+					for p in percents:
+						res = self._result_dict[key, date, symbol, p] = {}
 
-					remove_df = self._remove_orders(date=date, title=symbol, perc=p, side=side, market=mkt)
-					removed_liq = self._calc_uncross(bids=remove_df['end_close_vol_bid'], asks=remove_df['end_close_vol_ask'])
+						rem_dict = self._remove_orders(date=date, title=symbol, perc=p, side=side, market=mkt)
+						removed_liq = self._calc_uncross(bids=rem_dict['bids'], asks=rem_dict['asks'])
 
-					res['close_price'] = close_uncross['price']
-					res['close_vol'] = close_uncross['trade_vol']
-					res['close_cum_bids'] = close_uncross['cum_bids']
-					res['close_cum_asks'] = close_uncross['cum_asks']
-					res['close_bids'] = close_uncross['total_bids']
-					res['close_asks'] = close_uncross['total_asks']
-					# res['close_imbalance'] = close_uncross['imbalance']
+						res['close_price'] = close_uncross['price']
+						res['close_vol'] = close_uncross['trade_vol']
+						res['close_cum_bids'] = close_uncross['cum_bids']
+						res['close_cum_asks'] = close_uncross['cum_asks']
+						res['close_bids'] = close_uncross['total_bids']
+						res['close_asks'] = close_uncross['total_asks']
+						# res['close_imbalance'] = close_uncross['imbalance']
 
-					res['adj_price'] = removed_liq['price']
-					res['adj_vol'] = removed_liq['trade_vol']
-					res['adj_cum_bids'] = removed_liq['cum_bids']
-					res['adj_cum_asks'] = removed_liq['cum_asks']
-					res['adj_bids'] = removed_liq['total_bids']
-					res['adj_asks'] = removed_liq['total_asks']
+						res['adj_price'] = removed_liq['price']
+						res['adj_vol'] = removed_liq['trade_vol']
+						res['adj_cum_bids'] = removed_liq['cum_bids']
+						res['adj_cum_asks'] = removed_liq['cum_asks']
+						res['adj_bids'] = removed_liq['total_bids']
+						res['adj_asks'] = removed_liq['total_asks']
 
-				# print("{} - {} OK".format(symbol, p))
-
-		print(">> [{0}] finished <<".format(key))
+			print(">> [{0}] finished <<".format(key))
 
 	def results_to_df(self) -> pd.DataFrame:
 		"""

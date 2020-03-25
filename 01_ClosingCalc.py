@@ -13,21 +13,16 @@ granularity = 'rough'
 
 
 if mode == 'Sensitivity':
-	Sens = SensitivityAnalysis(file_snapshots, base=base)
 	print("Base: {}".format(base))
 	if granularity == 'rough':
-		percent = np.arange(0, 0.80, 0.05).round(2)
+		percent = np.arange(0, 0.88, 0.05).round(2)
 	elif granularity == 'fine':
 		percent = np.arange(0, 0.41, 0.01).round(2)
 	else:
 		raise ValueError("Wrong input for granularity.")
 
-	Sens.process(key='bid_limit', percents=percent)
-	Sens.process(key='ask_limit', percents=percent)
-	Sens.process(key='all_limit', percents=percent)
-	Sens.process(key='all_market')
-	Sens.process(key='cont_market')
-
+	Sens = SensitivityAnalysis(file_snapshots, base=base, perc=percent)
+	Sens.process()
 	Sens.export_results('Sensitivity_{}_{}_v3'.format(granularity, base), 'csv')
 
 	print("<<< {1} Sensitivity {0} complete >>>".format(granularity, base))
