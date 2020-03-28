@@ -39,34 +39,37 @@ df[:, :equivalence_dummy] = df[:, :date] .>= Date(2019, 7, 1)
 df2 = df[df[:, :return_open_close].!=0, :]
 df3 = df[df[:, :return_cont].!=0, :]
 
-#%%
 felm11 = reg(df, @formula(dislocation1 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy))
 felm12 = reg(df, @formula(dislocation1 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy + fe(symbol)))
-felm13 = reg(df, @formula(dislocation1 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
+felm13 = reg(df, @formula(dislocation1 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(date)))
+felm14 = reg(df, @formula(dislocation1 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
 
 felm21 = reg(df, @formula(dislocation2 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy))
 felm22 = reg(df, @formula(dislocation2 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy + fe(symbol)))
-felm23 = reg(df, @formula(dislocation2 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
+felm23 = reg(df, @formula(dislocation2 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(date)))
+felm24 = reg(df, @formula(dislocation2 ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
 
 felm31 = reg(df3, @formula(CC_ratio ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy))
 felm32 = reg(df3, @formula(CC_ratio ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy + fe(symbol)))
-felm33 = reg(df3, @formula(CC_ratio ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
+felm33 = reg(df3, @formula(CC_ratio ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(date)))
+felm34 = reg(df3, @formula(CC_ratio ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
 
 felm41 = reg(df2, @formula(WPDC_stockday ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy))
 felm42 = reg(df2, @formula(WPDC_stockday ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + equivalence_dummy + fe(symbol)))
-felm43 = reg(df2, @formula(WPDC_stockday ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
+felm43 = reg(df2, @formula(WPDC_stockday ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(date)))
+felm44 = reg(df2, @formula(WPDC_stockday ~ start_rel_oib + close_share + return_20 + return_cont + total_vol + fe(symbol) + fe(date)))
 
 
 labeldict = Dict(	"dislocation1" => "Dislocation 1", "dislocation2" => "Dislocation 2",
-					"CC_ratio" => "Return ratio close/conkt.", "WPDC_stockday" => "Close WPDC",
+					"CC_ratio" => "Return ratio close/cont.", "WPDC_stockday" => "Close WPDC_{d,s,i}",
 					"symbol" => "Fixed effect: Symbol","date" => "Fixed effect: Date")
 
-regtable( felm11, felm12, felm13, felm21, felm22, felm23;
+regtable( felm11, felm12, felm13, felm14, felm21, felm22, felm23, felm24;
 		regression_statistics=[:nobs, :r2, :adjr2, :f, :p, :dof],
 		below_statistic=:tstat, print_estimator_section=false,
 		renderSettings=latexOutput(), labels=labeldict)
 
-regtable( felm31, felm32, felm33, felm41, felm42, felm43;
+regtable( felm31, felm32, felm33, felm34, felm41, felm42, felm43, felm44;
 		regression_statistics = [:nobs, :r2, :adjr2, :f, :p, :dof],
           below_statistic=:tstat, print_estimator_section=false,
           renderSettings=latexOutput(), labels=labeldict)

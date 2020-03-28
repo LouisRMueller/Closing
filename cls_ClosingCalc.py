@@ -140,7 +140,8 @@ class SensitivityAnalysis(Research):
 		self._mode_dict = dict(
 			bid_limit=('bid', None, perc), ask_limit=('ask', None, perc), all_limit=('both', None, perc),
 			bid_market=('bid', 'all', [1]), ask_market=('ask', 'all', [1]), all_market=('both', 'all', [1]),
-			bid_cont=('bid', 'cont', [1]), ask_cont=('ask', 'cont', [1]), all_cont=('both', 'cont', [1]))
+			bid_cont=('bid', 'cont', [1]), ask_cont=('ask', 'cont', [1]), all_cont=('both', 'cont', [1])
+		)
 
 	def _remove_orders(self, date, title, perc=0, side=None, market=None) -> dict:
 		"""

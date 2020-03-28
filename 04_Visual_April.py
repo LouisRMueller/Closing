@@ -22,15 +22,15 @@ if mode == 'Sensitivity':
 elif mode == 'Discovery':
 	file_data = os.getcwd() + "\\Exports\\Price_Discovery_v3.csv"
 	Disc = DiscoVisual(file_data, file_returns)
-	Disc.plot_oib_returns(save=True, show=True)
-	Disc.plots_wpdc(save=True, show=True)
-	# Disc.plot_stocks_time_compare(save=True, show=False)
+	Disc.plot_oib_returns(save=True, show=False)
+	Disc.plots_wpdc(save=True, show=False)
+	Disc.plot_stocks_time_compare(save=True, show=False)
 
 elif mode == 'Intervals':
 	file_data = os.getcwd() + "\\Exports\\Intervals_v3.csv"
 	Inter = IntervalVisual(file_data)
-	Inter.plot_stocks_lags_compare(save=True, show=False)
-	Inter.plot_months(save=True, show=False)
-	Inter.plot_stocks_within(save=True, show=False)
+	Inter.plot_months(save=True, show=True)
+	# Inter.plot_stocks_lags_compare(save=True, show=True)
+	# Inter.plot_stocks_within(save=True, show=False)
 
 print('--- FINISHED ---')
