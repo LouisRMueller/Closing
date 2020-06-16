@@ -28,7 +28,7 @@ class Visualization:
 		self._figsize = (22 / 2.54, 13 / 2.54)
 		self._cwd = os.getcwd() + "\\03 Presentation April"
 		self._figdir = self._cwd + "\\Figures"
-		self._dpi = 300
+		self._dpi = 450
 		
 		print("--- SuperClass Initiated ---")
 	
@@ -129,13 +129,13 @@ class SensVisual(Visualization):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation price', hue='Volume quantile', estimator='mean',
 			             ax=ax, lw=1.3, ci=None, err_kws=dict(alpha=0.2), palette='Reds')
 			ax.set_ylabel("Deviation of closing price [bps]")
-			ax.set_title("Average absolute effect of removal of {m} on closing price".format(m=self._mkt_modes[mode]))
+			ax.set_title("Average effect of removal of {m} on closing price".format(m=self._mkt_modes[mode]))
 		
 		def agg_volume_mkt_fun(funcdata, ax):
 			sns.lineplot(data=funcdata, x='Date', y='Deviation turnover', hue='Volume quantile', estimator='mean',
 			             ax=ax, lw=1.3, ci=None, err_kws=dict(alpha=0.2), palette='Blues')
 			ax.set_ylabel("Deviation of closing volume [\%]")
-			ax.set_title("Average absolute effect of removal of {m} on closing volume".format(m=self._mkt_modes[mode]))
+			ax.set_title("Average effect of removal of {m} on closing volume".format(m=self._mkt_modes[mode]))
 			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			ax.set_ylim(top=0, bottom=-1)
 		
@@ -240,6 +240,7 @@ class DiscoVisual(Visualization):
 		super().__init__(datapath)
 		self._raw_data.set_index(['Date', 'Symbol'], inplace=True)
 		self._returns = pd.read_csv(returnpath, index_col=['Date', 'Symbol'], parse_dates=['Date'])
+		
 		self._calculate_factors()
 		self._define_quantiles()
 		
@@ -254,7 +255,7 @@ class DiscoVisual(Visualization):
 		rets = self._returns
 		
 		data['Close turnover'] = data['actual_close_price'] * data['close_vol'] / 10 ** 6
-		data['Closing Return'] = (data['actual_close_price'] - data['pre_midquote']) / data['pre_midquote']
+		data['Closing Return'] = (data['actual_close_price'] - data['pre_midquote']) / data['pre_midquote'] * 10 ** 4
 		data['Volume Imbalance'] = (data['start_bids'] - data['start_asks']) * data['close_price'] / 10 ** 6
 		data['Relative Imbalance'] = (data['start_bids'] - data['start_asks']) / (data['start_bids'] + data['start_asks'])
 		
@@ -275,9 +276,9 @@ class DiscoVisual(Visualization):
 		self._returns = rets.join(quants)
 	
 	def plot_oib_returns(self, save: bool = False, show: bool = True) -> None:
-		data = self._raw_data.reset_index(inplace=False)
+		data = self._raw_data
 		returns = self._returns
-		wpdc_oib_df = data[['Relative Imbalance', 'Close turnover']].join(returns).reset_index()
+		wpdc_oib_df = data[['Relative Imbalance', 'Volume Imbalance', 'Closing Return', 'Close turnover']].join(returns).reset_index()
 		cd = self._color_dict
 		
 		def base_plot(funcdata, linefunc, name):
@@ -289,13 +290,13 @@ class DiscoVisual(Visualization):
 			ax.set_axisbelow(True)
 			ax.grid(which='major', axis='both')
 			if linefunc != wpdc_oib_stockday_plot:
-				ax.set_ylabel('Return [\%]')
-				ax.set_ylim([-0.025, 0.025])
-				ax.yaxis.set_major_locator(ticker.MultipleLocator(0.005))
-				ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+				ax.set_ylabel('Closing return [bps]')
+				ax.set_ylim([-250, 250])
+				ax.yaxis.set_major_locator(ticker.MultipleLocator(50))
+			# ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			fig.tight_layout()
 			if save:
-				plt.savefig(self._figdir + "\\PriceDiscovery\\{n}_{m}".format(n=name, m=mode))
+				plt.savefig(self._figdir + "\\PriceDiscovery\\{n}_{m}".format(n=name, m=mode), transparent=True)
 			plt.show() if show else plt.close()
 		
 		def volume_oib_returns(funcdata, ax):
@@ -335,8 +336,8 @@ class DiscoVisual(Visualization):
 			ax.set_ylim([-0.15, 0.15])
 		
 		for mode in {'most liquid', 'neutral', 'least liquid', 'all'}:
-			base_plot(data, volume_oib_returns, 'VolumeOIB_Returns')
-			base_plot(data, relative_oib_returns, 'RelativeOIB_Returns')
+			base_plot(wpdc_oib_df, volume_oib_returns, 'VolumeOIB_Returns')
+			base_plot(wpdc_oib_df, relative_oib_returns, 'RelativeOIB_Returns')
 			base_plot(wpdc_oib_df, wpdc_oib_stockday_plot, 'WPDCStockdayImbalance')
 	
 	def plots_wpdc(self, save: bool = False, show: bool = True):
@@ -355,7 +356,7 @@ class DiscoVisual(Visualization):
 			ax.set_axisbelow(True)
 			fig.tight_layout()
 			if save:
-				plt.savefig("{0}\\PriceDiscovery\\{1}".format(self._figdir, filename))
+				plt.savefig("{0}\\PriceDiscovery\\{1}".format(self._figdir, filename), transparent=True)
 			plt.show() if show else plt.close()
 		
 		def wpdc_time_plot(funcdata, ax):
@@ -423,7 +424,7 @@ class DiscoVisual(Visualization):
 			ax.xaxis.set_major_formatter(form)
 			fig.tight_layout()
 			if save:
-				plt.savefig("{0}\\PriceDiscovery\\Stocks_{1}".format(self._figdir, handle))
+				plt.savefig("{0}\\PriceDiscovery\\Stocks_{1}".format(self._figdir, handle), transparent=True)
 			plt.show() if show else plt.close()
 		
 		def turnover_plot(ax):
@@ -449,9 +450,9 @@ class DiscoVisual(Visualization):
 			sns.lineplot(data=data, x='Date', y='Closing Return', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
 			             ax=ax, palette='cubehelix', hue_order=stocks, ci=None)
 			ax.set_title("Closing auction return over time for the {n} largest SLI titles".format(n=nstocks))
-			ax.set_ylabel('Return during closing auction [\%]')
-			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
-			ax.set_ylim([-.01, .01])
+			ax.set_ylabel('Return during closing auction [bps]')
+			# ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			ax.set_ylim([-100, 100])
 		
 		base_plot(turnover_plot, 'Turnover')
 		base_plot(volume_oib_plot, 'AbsoluteImbalance')
@@ -547,7 +548,7 @@ class IntervalVisual(Visualization):
 			ax.set_title("Median price deviation per SLI title per day")
 			ax.set_ylabel("Price deviation [bps]")
 			ax.set_ylim([-80, 100])
-
+		
 		def wpdc_plot(ax):
 			fundata = tmp[tmp['close_return'] != 0].groupby(['Date', 'Lag']).first().reset_index()
 			sns.lineplot(data=fundata, x='Lag', y='WPDCinterval', hue='Month', ci=None, estimator='mean',
@@ -555,7 +556,7 @@ class IntervalVisual(Visualization):
 			ax.set_title("Average WPDC per 30-second interval across SLI titles")
 			ax.set_ylabel("Average $WPDC_{d,i}$")
 			ax.set_ylim([-2, 3])
-
+		
 		def median_wpdc_plot(ax):
 			fundata = tmp[tmp['close_return'] != 0].groupby(['Date', 'Lag']).first().reset_index()
 			sns.lineplot(data=fundata, x='Lag', y='WPDCinterval', hue='Month', ci=None, estimator='median',
@@ -563,7 +564,7 @@ class IntervalVisual(Visualization):
 			ax.set_title("Median WPDC per 30-second interval across SLI titles")
 			ax.set_ylabel("Median $WPDC_{d,i}$")
 			ax.set_ylim([-2, 3])
-
+		
 		base_plot(volume_plot, 'VolumePlotMonthly')
 		base_plot(rel_oib_plot, 'RelativeOIBMonthly')
 		base_plot(abs_oib_plot, 'AbsoluteOIBMonthly')
@@ -628,7 +629,7 @@ class IntervalVisual(Visualization):
 			ax.set_ylabel('Median deviation from closing price [bps]')
 			ax.set_title("Median deviation from closing price throughout closing auction for {n} largest SLI titles".format(n=nst))
 			ax.set_ylim([-60, 60])
-	
+		
 		def wpdc_plot(ax):
 			tmp_data = data[(data['close_return'] != 0) & (data['Symbol'] != 'CFR')]
 			sns.lineplot(data=tmp_data, x='Lag', y='WPDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
@@ -667,9 +668,9 @@ class IntervalVisual(Visualization):
 			ax.grid(which='major', axis='both')
 			ax.set_xlabel("Seconds since start of auction")
 			handles, labels = ax.get_legend_handles_labels()
-			ax.legend(handles=handles[1:], labels=labels[1:], fontsize='small', ncol=6)
+			ax.legend(handles=handles[1:], labels=labels[1:], fontsize='small', ncol=6, loc='upper right')
 			ax.set_xlim([0, 600])
-			ax.xaxis.set_major_locator(ticker.MultipleLocator(60))
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
 			fig.tight_layout()
 			if save:
 				plt.savefig("{0}\\Intervals\\Within\\{1}_{2}".format(self._figdir, handle, stock), transparent=True)
@@ -682,28 +683,32 @@ class IntervalVisual(Visualization):
 			sns.lineplot(data=data, x='Lag', y='Deviation', ax=ax, hue='Month', legend='brief',
 			             estimator=None, lw=0.5, palette='rainbow', units='Date')
 			ax.set_ylim([-500, 500])
-			ax.set_ylabel("Deviation from closing price [bps]k")
+			ax.set_ylabel("Deviation from closing price [bps]")
 			ax.set_title("{0}: Deviation from closing price throughout auction (each line represents one trading day)".format(stock))
+			ax.yaxis.set_major_locator(ticker.MultipleLocator(100))
 		
 		def relative_oib_plot(data, ax, stock):
 			sns.lineplot(data=data, x='Lag', y='Relative Imbalance', ax=ax, units='Date',
-			             estimator=None, lw=0.5, palette='rainbow', hue='Month')
-			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+			             estimator=None, lw=0.35, palette='rainbow', hue='Month')
+			# ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 			ax.set_title("{0}: Relative order imbalance throughout auction (each line represents one trading day)".format(stock))
-			ax.set_ylabel("Relative Imbalance [\%]")
+			ax.set_ylabel("Relative Imbalance")
+			ax.set_ylim([-0.8, 0.8])
 		
 		def volume_oib_plot(data, ax, stock):
 			sns.lineplot(data=data, x='Lag', y='Volume Imbalance', ax=ax, hue='Month',
-			             estimator=None, lw=0.5, palette='rainbow', units='Date')
+			             estimator=None, lw=0.35, palette='rainbow', units='Date')
 			ax.set_title("{0}: Volume order imbalance throughout auction (each line represents one trading day)".format(stock))
 			ax.set_ylabel("Volume Imbalance [million CHF]")
+			ax.set_ylim([-200, 300])
 		
 		def wpdc_plot(data, ax, stock):
 			funcdata = data[data['close_return'] != 0]
 			sns.lineplot(data=funcdata, x='Lag', y='WPDC', ax=ax, hue='Month',
 			             estimator=None, lw=0.5, palette='rainbow', units='Date')
 			ax.set_title("{0}: WPDC throughout auction (each line represents one trading day)".format(stock))
-			ax.set_ylabel("WPDC")
+			ax.set_ylabel("$WPDC_{d,s,i}$")
+			ax.set_ylim([-1, 1])
 		
 		for s in stocks:
 			tmp = data[data['Symbol'] == s].sort_values('Date', ascending=True)
@@ -711,3 +716,72 @@ class IntervalVisual(Visualization):
 			base_plot(tmp, relative_oib_plot, s, 'RelativeImbalance')
 			base_plot(tmp, volume_oib_plot, s, 'AbsoluteImbalance')
 			base_plot(tmp, wpdc_plot, s, 'WPDC')
+
+
+class ExtraVisual():
+	def __init__(self, pricepath: str, volpath: str):
+		self._figsize = (22 / 2.54, 13 / 2.54)
+		self._stocklist = ['ABBN', 'CFR', 'LHN', 'NESN', 'NOVN', 'ROG', 'SREN', 'UBSG', 'ZURN']
+		self._cwd = os.getcwd() + "\\03 Presentation April\\Extras"
+		
+		self._prices = pd.read_csv(pricepath, parse_dates=['onbook_date'])
+		self._prices.rename(columns={'onbook_date': 'Date', 'price_org_ccy': 'Price'}, inplace=True)
+		self._prices = self._prices[self._prices['symbol'].isin(self._stocklist)]
+		
+		self._vols = pd.read_csv(volpath, parse_dates=['onbook_date'])
+		self._vols.rename(columns={'onbook_date': 'Date', 'bs_code': 'Side', 'old_volume': 'Volume'}, inplace=True)
+		self._vols = self._vols.set_index(['Date', 'symbol', 'Side']).unstack(level='Side')
+		self._vols.loc[:, ('Volume','S')] = self._vols.loc[:, ('Volume','S')] * (-1)
+		self._vols.loc[:, ('Volume','Difference')] = self._vols.sum(axis=1)
+		self._vols = self._vols.stack(level=1)
+	
+	def plot_extras(self, save: bool = False, show: bool = True) -> None:
+		def pricefunc():
+			fig, ax = plt.subplots(3, 3, figsize=self._figsize, dpi=450, sharex=True)
+			for loc, stock in zip(itertools.product([0, 1, 2], [0, 1, 2]), self._stocklist):
+				sns.lineplot(x='Date', y='Price', data=self._prices[self._prices['symbol'] == stock],
+				             ci=None, ax=ax[loc[0], loc[1]])
+				ax[loc[0], loc[1]].set_title(stock)
+				ax[loc[0], loc[1]].set_xlabel("")
+				ax[loc[0], loc[1]].set_ylabel("")
+				ax[loc[0], loc[1]].set_ylim(bottom=0)
+				ax[loc[0], loc[1]].grid(which='major', axis='both')
+				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019,12,31), lw=1.5, c='k', ls='dashed')
+			ax[2, 2].set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 5, 1)])
+			loca = dates.MonthLocator(bymonth=[1, 4, 7, 10, 13])
+			form = dates.ConciseDateFormatter(loca, show_offset=False)
+			ax[2, 2].xaxis.set_major_locator(loca)
+			ax[2, 2].xaxis.set_major_formatter(form)
+			fig.suptitle("\\textbf{Closing prices of major SLI titles in CHF}", size=12)
+			fig.tight_layout(rect=[0, 0, 1, 0.96])
+			if save:
+				plt.savefig(self._cwd + "\\Prices.png", transparent=True)
+			fig.show() if show else fig.close()
+		
+		def oibfunc(sharey: bool):
+			fig, ax = plt.subplots(3, 3, figsize=self._figsize, dpi=450, sharex=True, sharey=sharey)
+			for loc, stock in zip(itertools.product([0, 1, 2], [0, 1, 2]), self._stocklist):
+				data = self._vols.xs(stock, level='symbol').reset_index()
+				sns.lineplot(ax=ax[loc[0], loc[1]], x='Date',y='Volume',hue='Side', data=data)
+				ax[loc[0], loc[1]].set_title(stock)
+				ax[loc[0], loc[1]].set_xlabel("")
+				ax[loc[0], loc[1]].set_ylabel("")
+				ax[loc[0], loc[1]].grid(which='major', axis='both')
+				ax[loc[0], loc[1]].legend().remove()
+				ax[loc[0], loc[1]].axhline(y=0, lw=1, c='k')
+				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019,12,31), lw=1.5, c='k', ls='dashed')
+			
+			ax[2, 2].set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 5, 1)])
+			fig.suptitle("\\textbf{Bid- [Red], Ask- [Blue] and Total [Green] Volume \"Overhang\" in CHF}", size=12)
+			loca = dates.MonthLocator(bymonth=[1, 4, 7, 10, 13])
+			form = dates.ConciseDateFormatter(loca, show_offset=False)
+			ax[2, 2].xaxis.set_major_locator(loca)
+			ax[2, 2].xaxis.set_major_formatter(form)
+			fig.tight_layout(rect=[0, 0, 1, 0.96])
+			if save:
+				plt.savefig(self._cwd + "\\Volumes_{}.png".format(sharey), transparent=True)
+			fig.show() if show else fig.close()
+		
+		pricefunc()
+		oibfunc(True)
+		oibfunc(False)

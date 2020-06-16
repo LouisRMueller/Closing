@@ -2,8 +2,8 @@ from cls_ClosingCalc import *
 from cls_Visualization_December import *
 from fun_VerificationPlots import *
 
-pd.set_option('display.width', 180)
-pd.set_option("display.max_columns", 8)
+pd.set_option('display.width', 200)
+pd.set_option("display.max_columns", 18)
 
 #%%
 
@@ -15,11 +15,9 @@ percent = np.arange(0, 0.3, 0.05)
 ########################################################################
 
 
-Sens = SensitivityAnalysis(file_snapshots)
+Sens = SensitivityAnalysis(file_snapshots, base='CrossedVolume', perc=percent)
 
-bid_dump = Sens.sensitivity_processing(key='bid_limit', percents=percent)
-ask_dump = Sens.sensitivity_processing(key='ask_limit', percents=percent)
-all_dump = Sens.sensitivity_processing(key='all_limit', percents=percent)
+test = Sens.process()
 
 tmp = bid_dump['2019-03-15']['UBSG'][0]
 
