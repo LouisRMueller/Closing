@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-pd.set_option('display.width', 200)
+pd.set_option('display.width', 240)
 pd.set_option("display.max_columns", 16)
 
 # %%
@@ -18,7 +18,13 @@ for base in {'CrossedVolume', 'FullLiquidity', 'SeparateOrders'}:
 	exp.to_csv(os.getcwd() + "\\05 Delivery June\\Adam_Sens_fine_{}_aggregated.csv".format(base))
 
 # %%
+
+# Intervals for Nestlé
 raw = pd.read_csv(os.getcwd() + "\\05 Delivery June\\Intervals.csv")
 raw.groupby(['Lag', 'Symbol']).mean().to_csv(os.getcwd() + "\\05 Delivery June\\Invervals_stocks_Average.csv")
 raw.groupby(['Lag', 'Symbol']).median().to_csv(os.getcwd() + "\\05 Delivery June\\Invervals_stocks_Median.csv")
-raw.loc[raw['Symbol'] == 'NESN', ['Lag', 'Date' , 'Symbol', 'Month', 'Deviation']].to_csv(os.getcwd() + "\\05 Delivery June\\NESN_Intervals.csv")
+raw.loc[raw['Symbol'] == 'NESN', ['Lag', 'Date', 'Symbol', 'Month', 'Deviation']].to_csv(
+	os.getcwd() + "\\05 Delivery June\\NESN_Intervals.csv")
+
+#%%
+

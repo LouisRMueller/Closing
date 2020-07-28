@@ -3,6 +3,7 @@ from pandas.plotting import register_matplotlib_converters
 import numpy as np
 import os
 import itertools
+import calendar
 
 from matplotlib import pyplot as plt
 from matplotlib import dates
@@ -41,7 +42,7 @@ class SensVisual(Visualization):
 		super().__init__(datapath)
 		self._manipulate_data()
 		self._raw_data.set_index(['Mode', 'Date', 'Symbol', 'Percent'], inplace=True)
-		self._raw_data.drop(index=['ALC'], level='Symbol', inplace=True)
+		# self._raw_data.drop(index=['ALC'], level='Symbol', inplace=True)
 		self._define_quantiles()
 		
 		# Attributes
@@ -233,6 +234,60 @@ class SensVisual(Visualization):
 		mode = 'market orders from continuous phase'
 		base_plot(data.loc[['bid_cont', 'ask_cont', 'all_cont'], :], quant_price_mkt_func, 'cont_price')
 		base_plot(data.loc[['bid_cont', 'ask_cont', 'all_cont'], :], quant_vol_mkt_func, 'cont_volume')
+	
+	def plot_removal_by_stock(self, stock: str, save: bool = False, show: bool = False):
+		limit = 0.35
+		vol_lim = 0.8
+		b = self._base
+		data = self._raw_data[['Deviation price', 'Deviation turnover']]
+		symbols = self._avg_turnover[:15].index
+		
+		def base_plot(funcdata, linefunc, label=None):
+			fig, ax = plt.subplots(1, 1, figsize=self._figsize, dpi=self._dpi)
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1)
+			linefunc(funcdata, ax)
+			ax.legend(fontsize='small')
+			ax.set_ylim(bottom=0)
+			ax.set_axisbelow(True)
+			plt.xticks(rotation='vertical')
+			fig.tight_layout()
+			# if save:
+			# 	if 'market' in mode:
+			# 		plt.savefig(self._figdir + "\\Sensitivity\\MarketLiquidity\\quantile_removal_{n}".format(n=label),
+			# 		            transparent=True)
+			# 	else:
+			# 		pass
+			# 		plt.savefig(self._figdir + "\\Sensitivity\\{b}\\quantile_removal_{n}_{m}".format(n=label, b=b),
+			# 		            transparent=True)
+			plt.show() if show else plt.close()
+		
+		def stockplot_box(funcdata, ax):
+			tmp = funcdata[funcdata['Symbol'].isin(symbols)]
+			sns.boxplot(data=tmp[tmp['Percent'] == 0.1], ax=ax, x='Symbol', y='Deviation price',
+			            hue='Mode', showfliers=False, whis=[2.5, 97.5], palette='cubehelix', linewidth=0.8, order=symbols)
+			ax.set_ylabel("Price deviation [bps]")
+			ax.set_title(
+				"[{b}]: Effect of removing 10\% of liquidity by stock (+/- 95\% of observations)".format(b=self._base_d[b], s=stock))
+			ax.set_xlabel("")
+		
+		def stockplot_cross(funcdata, ax):
+			tmp = funcdata[funcdata['Symbol'].isin(symbols)]
+			sns.barplot(data=tmp[tmp['Percent'] == 0.1],
+			            ax=ax, x='Symbol', y='Deviation price', order=symbols,
+			            hue='Mode', capsize=0.2, palette='cubehelix', ci='sd', errwidth=0.8, dodge=True)
+			ax.set_ylabel("Price deviation [bps]")
+			ax.set_title(
+				"[{b}]: Effect of removing 10\% of liquidity by stock (+/- 1 standard deviation)".format(b=self._base_d[b], s=stock))
+			ax.set_xlabel("")
+		
+		df = data.loc[['bid_limit', 'ask_limit'], :].reset_index()
+		df = df[df['Percent'] > 0]
+		df['Deviation price'] = df['Deviation price'].abs()
+		df['PercentStr'] = (df['Percent'] * 100).astype(int).astype(str) + '\%'
+		df.replace(self._lmt_modes, inplace=True)
+		base_plot(df, stockplot_box)
+		base_plot(df, stockplot_cross)
 
 
 class DiscoVisual(Visualization):
@@ -493,7 +548,7 @@ class IntervalVisual(Visualization):
 		data['WPDC'] = data['weights'] * data['PDC']
 		self._raw_data = data.join(data['WPDC'].groupby(['Date', 'Lag']).sum(), rsuffix='interval')
 	
-	def plot_months(self, save: bool = False, show: bool = True) -> None:
+	def plot_months_lags(self, save: bool = False, show: bool = True) -> None:
 		lw = self._lw
 		ms = self._ms
 		raw = self._raw_data.copy(deep=True)
@@ -573,11 +628,12 @@ class IntervalVisual(Visualization):
 		base_plot(wpdc_plot, 'WPDCMonthly')
 		base_plot(median_wpdc_plot, 'WPDCMedianMonthly')
 	
-	def plot_stocks_lags_compare(self, nst=8, save: bool = False, show: bool = True) -> None:
+	def plot_stocks_lags(self, nst=8, save: bool = False, show: bool = True) -> None:
 		lw = self._lw
 		ms = self._ms
 		stocks = self._avg_turnover.index[:nst].to_list()
 		data = self._raw_data.reset_index(inplace=False)
+		
 		data = data[data['Symbol'].isin(stocks)]
 		
 		def base_plot(plotfunc, handle):
@@ -646,13 +702,26 @@ class IntervalVisual(Visualization):
 			ax.set_title("Median WPDC throughout closing auction for {n} largest SLI titles".format(n=nst))
 			ax.set_ylim([-0.01, 0.07])
 		
+		def prov_plot(ax):
+			tmp_data = data[(data['close_return'] != 0)]
+			sns.lineplot(data=tmp_data, x='Lag', y='PDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+			             ax=ax, palette='cubehelix', ci=None, estimator='mean')
+			ax.set_ylabel('Average $WPDC_{s,i} (=WPDC_{d,s,i})$')
+			ax.set_title("Average WPDC throughout closing auction for large SLI titles during {n} 2019".format(n=calendar.month_name[s]))
+			# ax.set_ylim([-0.01, 0.07])
+		
 		base_plot(turnover_plot, 'Turnover')
 		base_plot(volume_oib_plot, 'AbsoluteTurnover')
 		base_plot(relative_oib_plot, 'RelativeTurnover')
 		base_plot(deviation_plot, 'AverageDeviation')
 		base_plot(deviation_median_plot, 'MedianDeviation')
-		base_plot(wpdc_plot, 'WPDC')
-		base_plot(median_wpdc_plot, 'WPDCMedian')
+		
+		# copy = data.copy()
+		# for s in np.arange(1,13):
+		# 	data = copy[copy['Symbol'].isin(['NESN', 'ROG', 'NOVN', 'UBSG', 'ZURN', 'CFR']) & (copy['Date'].dt.month == s)]
+		# 	base_plot(prov_plot, 'WPDC')
+	
+	# base_plot(median_wpdc_plot, 'WPDCMedian')
 	
 	def plot_stocks_within(self, nstocks=5, save: bool = False, show: bool = True) -> None:
 		"""
@@ -731,8 +800,8 @@ class ExtraVisual():
 		self._vols = pd.read_csv(volpath, parse_dates=['onbook_date'])
 		self._vols.rename(columns={'onbook_date': 'Date', 'bs_code': 'Side', 'old_volume': 'Volume'}, inplace=True)
 		self._vols = self._vols.set_index(['Date', 'symbol', 'Side']).unstack(level='Side')
-		self._vols.loc[:, ('Volume','S')] = self._vols.loc[:, ('Volume','S')] * (-1)
-		self._vols.loc[:, ('Volume','Difference')] = self._vols.sum(axis=1)
+		self._vols.loc[:, ('Volume', 'S')] = self._vols.loc[:, ('Volume', 'S')] * (-1)
+		self._vols.loc[:, ('Volume', 'Difference')] = self._vols.sum(axis=1)
 		self._vols = self._vols.stack(level=1)
 	
 	def plot_extras(self, save: bool = False, show: bool = True) -> None:
@@ -746,7 +815,7 @@ class ExtraVisual():
 				ax[loc[0], loc[1]].set_ylabel("")
 				ax[loc[0], loc[1]].set_ylim(bottom=0)
 				ax[loc[0], loc[1]].grid(which='major', axis='both')
-				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019,12,31), lw=1.5, c='k', ls='dashed')
+				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019, 12, 31), lw=1.5, c='k', ls='dashed')
 			ax[2, 2].set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 5, 1)])
 			loca = dates.MonthLocator(bymonth=[1, 4, 7, 10, 13])
 			form = dates.ConciseDateFormatter(loca, show_offset=False)
@@ -762,14 +831,14 @@ class ExtraVisual():
 			fig, ax = plt.subplots(3, 3, figsize=self._figsize, dpi=450, sharex=True, sharey=sharey)
 			for loc, stock in zip(itertools.product([0, 1, 2], [0, 1, 2]), self._stocklist):
 				data = self._vols.xs(stock, level='symbol').reset_index()
-				sns.lineplot(ax=ax[loc[0], loc[1]], x='Date',y='Volume',hue='Side', data=data)
+				sns.lineplot(ax=ax[loc[0], loc[1]], x='Date', y='Volume', hue='Side', data=data)
 				ax[loc[0], loc[1]].set_title(stock)
 				ax[loc[0], loc[1]].set_xlabel("")
 				ax[loc[0], loc[1]].set_ylabel("")
 				ax[loc[0], loc[1]].grid(which='major', axis='both')
 				ax[loc[0], loc[1]].legend().remove()
 				ax[loc[0], loc[1]].axhline(y=0, lw=1, c='k')
-				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019,12,31), lw=1.5, c='k', ls='dashed')
+				ax[loc[0], loc[1]].axvline(x=pd.datetime(2019, 12, 31), lw=1.5, c='k', ls='dashed')
 			
 			ax[2, 2].set_xlim([pd.datetime(2019, 1, 1), pd.datetime(2020, 5, 1)])
 			fig.suptitle("\\textbf{Bid- [Red], Ask- [Blue] and Total [Green] Volume \"Overhang\" in CHF}", size=12)

@@ -19,8 +19,9 @@ Sens = SensitivityAnalysis(file_snapshots, base='CrossedVolume', perc=percent)
 
 test = Sens.process()
 
-tmp = bid_dump['2019-03-15']['UBSG'][0]
+raise ValueError
 
+tmp = bid_dump['2019-03-15']['UBSG'][0]
 
 for T in ['ABBN', 'CSGN','NESN','NOVN','ROG','UBSG']:
 	plot_closing_orders(bid_dump, T, 'bids only')

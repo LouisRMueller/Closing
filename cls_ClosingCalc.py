@@ -71,7 +71,7 @@ class Research:
 			neg_bids.appendleft(0)
 			
 			cum_bids = mark_buy + sum(limit_bids) - np.cumsum(neg_bids)
-			cum_asks = mark_sell + np.cumsum(limit_asks)
+			cum_asks = mark_sell + np.cumsum(limit_asks) # = M(P)
 			
 			imbalances = cum_bids - cum_asks
 			i = np.argmin(abs(imbalances))
@@ -245,15 +245,16 @@ class SensitivityAnalysis(Research):
 		dump = {}
 		
 		# for key in iter(self._mode_dict.keys()):
-		for key in {'bid_market', 'ask_market', 'all_market','bid_cont','ask_cont','all_cont'}:
+		for key in {'bid_limit','ask_limit','all_limit'}:
+		# for key in {'bid_market', 'ask_market', 'all_market','bid_cont','ask_cont','all_cont'}:
 			side, mkt, percents = self._mode_dict[key]
 			dump[key] = {}
 			
 			for date in tqdm(self._dates):
 				current_symbols = self.snapshots.loc[date, :].index.get_level_values(0).unique()
 				
-				for symbol in current_symbols:
-				# for symbol in {'NESN'}:
+				# for symbol in current_symbols:
+				for symbol in {'NESN'}:
 					close_dict = self._remove_orders(date=date, title=symbol, perc=0)
 					close_uncross = self._calc_uncross(bids=close_dict['bids'], asks=close_dict['asks'])
 					# dump[key][symbol] = {}
