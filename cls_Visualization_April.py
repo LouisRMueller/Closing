@@ -1,15 +1,13 @@
-import pandas as pd
-from pandas.plotting import register_matplotlib_converters
-import numpy as np
-import os
 import itertools
-import calendar
+import os
 
-from matplotlib import pyplot as plt
-from matplotlib import dates
-from matplotlib import ticker
+import numpy as np
+import pandas as pd
 import seaborn as sns
-import copy
+from matplotlib import dates
+from matplotlib import pyplot as plt
+from matplotlib import ticker
+from pandas.plotting import register_matplotlib_converters
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
@@ -24,6 +22,9 @@ def_color = sns.color_palette(def_palette, 1)[0]
 
 
 class Visualization:
+	_panel2 = (18 / 2.5, 20 / 2.5)
+	_panel3 = (18 / 2.5, 24 / 2.5)
+	
 	def __init__(self, datapath):
 		self._raw_data = pd.read_csv(datapath, parse_dates=['Date'])
 		self._figsize = (22 / 2.54, 13 / 2.54)
@@ -32,7 +33,7 @@ class Visualization:
 		self._dpi = 450
 		
 		print("--- SuperClass Initiated ---")
-	
+		
 	def return_data(self):
 		return self._raw_data
 
@@ -65,7 +66,7 @@ class SensVisual(Visualization):
 		data = self._raw_data
 		data['Percent'] = data['Percent'].round(2)
 		data['Closing turnover'] = data['close_price'] * data['close_vol']
-		data['Deviation price'] = (data['adj_price'] - data['close_price']) / data['close_price'] * 10000
+		data['Deviation price'] = abs(data['adj_price'] - data['close_price']) / data['close_price'] * 10000
 		data['Deviation turnover'] = (data['adj_vol'] - data['close_vol']) / data['close_vol']
 		
 		# Absolute deviations for symmetric removals
@@ -77,7 +78,8 @@ class SensVisual(Visualization):
 	def _define_quantiles(self):
 		data = self._raw_data.sort_index()
 		quants = data['Closing turnover'].groupby(['Mode', 'Date', 'Symbol']).first()
-		quants = quants.groupby('Date').transform(lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']))
+		quants = quants.groupby('Date').transform(
+			lambda x: pd.qcut(x, q=3, labels=['least liquid', 'neutral', 'most liquid']).astype(str))
 		quants.rename('Volume quantile', inplace=True)
 		
 		self._raw_data = data.join(quants)
@@ -288,6 +290,79 @@ class SensVisual(Visualization):
 		df.replace(self._lmt_modes, inplace=True)
 		base_plot(df, stockplot_box)
 		base_plot(df, stockplot_cross)
+	
+	def plots_report(self, save: bool = False, show: bool = True) -> None:
+		figdir = f"{os.getcwd()}\\06 Figures\\"
+		limit = 0.35
+		vol_lim = 0.8
+		b = self._base
+		data = self._raw_data[['Deviation price', 'Deviation turnover', 'Volume quantile']]
+		
+		def limit_dataprep(mode):
+			tmp = data.loc[mode, :].reset_index(inplace=False)
+			tmp = tmp[tmp['Percent'] > 0]
+			tmp['Deviation price'] = tmp['Deviation price'].abs()
+			tmp['PercentStr'] = (tmp['Percent'] * 100).astype(int).astype(str) + '\%'
+			return tmp
+		
+		def quant_price_func(funcdata, ax):
+			sns.boxplot(data=funcdata[funcdata['Percent'] <= limit], ax=ax, x='PercentStr', y='Deviation price',
+			            hue='Volume quantile', showfliers=False, whis=[2.5, 97.5], palette='cubehelix', linewidth=1)
+			ax.set_ylabel("Absolute price deviation [bps]")
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1)
+			ax.legend(fontsize='small', loc='upper left')
+			ax.set_axisbelow(True)
+			
+			ax.set_xlabel("Removed Liquidity [\%]")
+		
+		def quant_price_mkt_func(funcdata, ax):
+			tmp = funcdata.reset_index()
+			# tmp.sort_values('Mode', inplace=True)
+			tmp.replace(self._mkt_modes, inplace=True)
+			sns.boxplot(data=tmp, ax=ax, x='Mode', y='Deviation price',
+			            hue='Volume quantile', showfliers=False, whis=[2.5, 97.5], palette='cubehelix', linewidth=1)
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1)
+			ax.set_axisbelow(True)
+			ax.legend(fontsize='small', loc='upper left')
+			ax.set_ylabel("Price deviation [bps]")
+			ax.set_xlabel("")
+		
+		# LIMIT ORDER PLOTS
+		if b in {'FullLiquidity', 'CrossedVolume'}:
+			fig, (ax1, ax2) = plt.subplots(2, 1, figsize=self._panel2)
+			ax1.get_shared_y_axes().join(ax1, ax2)
+			quant_price_func(limit_dataprep('bid_limit'), ax1)
+			ax1.set_title("{Panel A}: Removal of bid limit orders")
+			quant_price_func(limit_dataprep('ask_limit'), ax2)
+			ax2.set_title("{Panel B}: Removal of ask limit orders")
+		else:
+			fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=self._panel3)
+			ax1.get_shared_y_axes().join(ax1, ax2)
+			quant_price_func(limit_dataprep('bid_limit'), ax1)
+			ax1.set_title("{Panel A}: Removal of bid limit orders")
+			quant_price_func(limit_dataprep('ask_limit'), ax2)
+			ax2.set_title("{Panel B}: Removal of ask limit orders")
+			quant_price_func(limit_dataprep('all_limit'), ax3)
+			ax3.set_title("{Panel C}: Removal of bid and ask limit orders")
+		
+		fig.tight_layout()
+		if save:
+			plt.savefig(f"{figdir}\\Sens_limit_{b}.pdf")
+		plt.show() if show else plt.close()
+		
+		# MARKET ORDER PLOTS
+		fig, (ax1, ax2) = plt.subplots(2, 1, figsize=self._panel2)
+		quant_price_mkt_func(data.loc[['bid_market', 'ask_market', 'all_market'], :], ax1)
+		ax1.set_title("{Panel A}: Removal of all market orders")
+		quant_price_mkt_func(data.loc[['bid_cont', 'ask_cont', 'all_cont'], :], ax2)
+		ax2.set_title("{Panel B}: Removal of all market orders from continuous phase")
+		
+		fig.tight_layout()
+		if save:
+			plt.savefig(f"{figdir}\\Sens_mkt.pdf")
+		plt.show() if show else plt.close()
 
 
 class DiscoVisual(Visualization):
@@ -317,15 +392,17 @@ class DiscoVisual(Visualization):
 		# Calculate WPDC
 		rets = rets.join(rets['return_open_close'].abs().groupby('Date').sum(), rsuffix='_abs_total', on='Date')
 		rets['PDC'] = rets['return_close'] / rets['return_open_close']
+		rets = rets[rets['return_open_close'] != 0]
+		rets['TPDC'] = rets['PDC'].groupby('Symbol').transform(lambda x: np.mean(x) / (np.std(x) / np.sqrt(len(x))))
 		rets['WPDC'] = rets['PDC'] * abs(rets['return_open_close'] / rets['return_open_close_abs_total'])
-		self._returns = rets.join(rets['WPDC'].groupby('Date').sum(), rsuffix='day', on='Date')
+		self._returns = rets.join(rets['WPDC'].groupby('Date').sum(), rsuffix='day', on='Date', how='inner')
 	
 	def _define_quantiles(self):
 		data = self._raw_data.sort_index()
 		rets = self._returns.sort_index()
 		
 		quants = data['Close turnover'].groupby('Date').transform(
-			lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']))
+			lambda x: pd.qcut(x, 3, labels=['least liquid', 'neutral', 'most liquid']).astype(str))
 		quants.rename('Volume quantile', inplace=True)
 		self._raw_data = data.join(quants)
 		self._returns = rets.join(quants)
@@ -513,6 +590,81 @@ class DiscoVisual(Visualization):
 		base_plot(volume_oib_plot, 'AbsoluteImbalance')
 		base_plot(relative_oib_plot, 'RelativeImbalance')
 		base_plot(deviation_plot, 'Deviation')
+	
+	def plots_report(self, save: bool = False, show: bool = True):
+		figdir = f"{os.getcwd()}\\06 Figures"
+		data = self._raw_data
+		returns = self._returns
+		wpdc_oib_df = data[['Relative Imbalance', 'Close turnover']].join(returns).reset_index()
+		
+		def wpdc_oib_all_plot(funcdata, ax):
+			tmp = funcdata[funcdata['return_open_close'] != 0].reset_index(inplace=False)
+			# tmp['Close turnover'] = np.log10(tmp['Close turnover'])
+			tmp = tmp.sort_values('Close turnover', ascending=True)
+			sns.scatterplot(data=tmp, x='Relative Imbalance', y='WPDC', ax=ax, size='Close turnover',
+			                hue='Close turnover', ec='k', palette='cubehelix_r', sizes=(10, 400), zorder=2)
+			# sns.scatterplot(data=tmp, x='Relative Imbalance', y='WPDC', ax=ax, hue='Close turnover', ec='k',
+			#                 palette='cubehelix_r', zorder=2)
+			ax.set_title(r"Panel A: $WPDC^{{CL}}_{{d,s}}$ and order imbalance ($N = D \times S = 7470$)")
+			ax.set_xlabel("$IMBAL$")
+			ax.set_ylabel("$WPDC^{CL}_{d,s}$")
+			ax.set_ylim((-0.1, 0.1))
+			ax.set_xlim((-0.8, 0.8))
+			ax.grid(which='major', axis='both')
+			ax.axvline(0, c='k', lw=1, zorder=1)
+			ax.axhline(0, c='k', lw=1, zorder=1)
+			ax.set_axisbelow(True)
+			ax.legend(fontsize='small', loc='lower right', title='Turnover [mn. CHF]', ncol=2)
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=1))
+	
+		def wpdc_oib_day_plot(funcdata, ax):
+			tmp = funcdata[funcdata['return_open_close'] != 0]
+			# tmp.loc[:, 'Date'] = "-" + (tmp['Date'].dt.dayofyear).astype(str)
+			tmp = tmp.groupby('Date').agg({'Close turnover': sum, 'WPDC': sum, 'Relative Imbalance': np.mean}).reset_index()
+			tmp.sort_values('Close turnover', ascending=True, inplace=True)
+			
+			sns.scatterplot(data=tmp, x='Relative Imbalance', y='WPDC', ax=ax, size='Close turnover', ec='k',
+			                sizes=(5, 500), legend='brief', hue='Close turnover', palette='cubehelix_r', zorder=2)
+			ax.set_ylim(bottom=-0.3, top=0.3)
+			ax.set_xlim((-0.25, 0.25))
+			ax.axvline(0, c='k', lw=1, zorder=1)
+			ax.axhline(0, c='k', lw=1, zorder=1)
+			ax.grid(which='major', axis='both')
+			ax.set_title(f"Panel B: $WPDC^{{CL}}_{{d}}$ and average order imbalance by day ($D = {tmp.shape[0]}$)")
+			ax.set_xlabel("$IMBAL$")
+			ax.set_ylabel("$WPDC^{CL}_{d}$")
+			ax.set_axisbelow(True)
+			ax.legend(loc='lower right', title='Turnover [mn. CHF]', ncol=2, fontsize='small')
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=1))
+		
+		def wpdc_oib_stock_plot(funcdata, ax):
+			tmp = funcdata[funcdata['return_open_close'] != 0]
+			tmp = tmp.groupby('Symbol').mean().reset_index()
+			sns.scatterplot(data=tmp, x='Relative Imbalance', y='TPDC', ax=ax, size='Symbol', hue='Symbol', ec='k', palette='cubehelix',
+			                hue_order=self._avg_turnover.index, sizes=(10, 500), size_order=self._avg_turnover.index, zorder=2)
+			ax.set_title(f"Panel C: $TPDC^{{CL}}_{{s}}$ and average order imbalance by stock ($S = {tmp.shape[0]}$)")
+			ax.axhspan(-1.96, 1.96, alpha=0.2, color='grey')
+			ax.set_xlabel("$IMBAL$")
+			ax.set_ylabel("$TPDC^{CL}_{s}$")
+			ax.set_ylim((-3, 3))
+			ax.set_xlim((-0.6, 0.6))
+			ax.grid(which='major', axis='both')
+			ax.axvline(0, c='k', lw=1, zorder=1)
+			ax.axhline(0, c='k', lw=1, zorder=1)
+			ax.set_axisbelow(True)
+			ax.legend(fontsize='x-small', loc='upper right', ncol=2).remove()
+		
+		fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=self._panel3)
+		
+		wpdc_oib_all_plot(wpdc_oib_df, ax1)
+		wpdc_oib_day_plot(wpdc_oib_df, ax2)
+		wpdc_oib_stock_plot(wpdc_oib_df, ax3)
+		# ax.legend(ncol=2, fontsize='small', loc='lower right')
+		# ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+		fig.tight_layout()
+		if save:
+			plt.savefig(f"{figdir}\\Discovery_Scatter.pdf")
+		fig.show() if show else plt.close()
 
 
 class IntervalVisual(Visualization):
@@ -544,9 +696,10 @@ class IntervalVisual(Visualization):
 		data = data.join(close_df)
 		
 		data['PDC'] = data['snap_return'] / data['close_return']
+		data.loc[data.index.get_level_values(2) == 0, 'PDC'] = 0
 		data['weights'] = abs(data['close_return'] / data['close_return_abs_total'])
 		data['WPDC'] = data['weights'] * data['PDC']
-		self._raw_data = data.join(data['WPDC'].groupby(['Date', 'Lag']).sum(), rsuffix='interval')
+		self._raw_data = data.join(data['WPDC'].groupby(['Date', 'Lag']).sum(), rsuffix='interval', how='inner')
 	
 	def plot_months_lags(self, save: bool = False, show: bool = True) -> None:
 		lw = self._lw
@@ -702,28 +855,13 @@ class IntervalVisual(Visualization):
 			ax.set_title("Median WPDC throughout closing auction for {n} largest SLI titles".format(n=nst))
 			ax.set_ylim([-0.01, 0.07])
 		
-		def prov_plot(ax):
-			tmp_data = data[(data['close_return'] != 0)]
-			sns.lineplot(data=tmp_data, x='Lag', y='PDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
-			             ax=ax, palette='cubehelix', ci=None, estimator='mean')
-			ax.set_ylabel('Average $WPDC_{s,i} (=WPDC_{d,s,i})$')
-			ax.set_title("Average WPDC throughout closing auction for large SLI titles during {n} 2019".format(n=calendar.month_name[s]))
-			# ax.set_ylim([-0.01, 0.07])
-		
 		base_plot(turnover_plot, 'Turnover')
 		base_plot(volume_oib_plot, 'AbsoluteTurnover')
 		base_plot(relative_oib_plot, 'RelativeTurnover')
 		base_plot(deviation_plot, 'AverageDeviation')
 		base_plot(deviation_median_plot, 'MedianDeviation')
-		
-		# copy = data.copy()
-		# for s in np.arange(1,13):
-		# 	data = copy[copy['Symbol'].isin(['NESN', 'ROG', 'NOVN', 'UBSG', 'ZURN', 'CFR']) & (copy['Date'].dt.month == s)]
-		# 	base_plot(prov_plot, 'WPDC')
 	
-	# base_plot(median_wpdc_plot, 'WPDCMedian')
-	
-	def plot_stocks_within(self, nstocks=5, save: bool = False, show: bool = True) -> None:
+	def plot_stocks_within(self, nstocks=10, save: bool = False, show: bool = True) -> None:
 		"""
 		Very chaotic representation, but it indicates that many of the one-sided order imbalances are persistent.
 		This probably comes from large rebalancing.
@@ -785,6 +923,84 @@ class IntervalVisual(Visualization):
 			base_plot(tmp, relative_oib_plot, s, 'RelativeImbalance')
 			base_plot(tmp, volume_oib_plot, s, 'AbsoluteImbalance')
 			base_plot(tmp, wpdc_plot, s, 'WPDC')
+	
+	def plots_report(self, nst=8, save: bool = False, show: bool = True) -> None:
+		figdir = f"{os.getcwd()}\\06 Figures"
+		lw = self._lw
+		ms = self._ms
+		stocks = self._avg_turnover.index[:nst].to_list()
+		
+		data = self._raw_data.reset_index(inplace=False)
+		stockdata = data[data['Symbol'].isin(stocks)]
+		
+		monthdata = self._raw_data.groupby(['Lag', 'Date']).sum().reset_index()
+		monthdata['Month'] = monthdata['Date'].apply(lambda d: d.strftime('%B'))
+		
+		def price_median_stocks(ax):
+			sns.lineplot(data=stockdata, x='Lag', y='Deviation', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+			             ax=ax, palette='cubehelix', hue_order=stocks, ci=None, estimator='median')
+			ax.set_ylabel('Price Deviation [bps]')
+			ax.set_title("{Panel A}: Median price deviation by stock and interval")
+			ax.legend(fontsize='small', ncol=round(nst / 2), loc='upper right')
+		
+		def price_median_months(ax):
+			sns.lineplot(data=monthdata, x='Lag', y='Deviation', hue='Month', ci=None, estimator='median',
+			             palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("{Panel B}: Median price deviation by month and interval")
+			ax.set_ylabel("Price deviation [bps]")
+			ax.legend(fontsize='small', ncol=6, loc='upper right')
+		
+		# fig, axes = plt.subplots(2, 1, figsize=self._panel2, sharey=True)
+		# price_median_stocks(axes[0])
+		# price_median_months(axes[1])
+		# for ax in axes:
+		# 	ax.grid(which='major', axis='y')
+		# 	ax.axhline(0, c='k', lw=1, zorder=1)
+		# 	ax.set_xlim((0, 600))
+		# 	ax.set_xlabel("Seconds since auction start")
+		# 	ax.set_ylim((-50, 50))
+		# 	ax.set_axisbelow(True)
+		# 	ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+		# 	ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
+		#
+		# fig.tight_layout()
+		# if save:
+		# 	plt.savefig(f"{figdir}\\Interval_Deviations.pdf")
+		# plt.show() if show else plt.close()
+		
+		def wpdc_stocks(ax):
+			funcdata = stockdata[(stockdata['close_return'] != 0) & (stockdata['Symbol'] != 'CFR')]
+			sns.lineplot(data=funcdata, x='Lag', y='WPDC', hue='Symbol', lw=lw, marker='.', ms=ms, mew=0,
+			             ax=ax, palette='cubehelix', hue_order=stocks, ci=None, estimator='mean')
+			ax.set_ylabel('$WPDC^{IV}_{d,s,i}$')
+			ax.set_title("Panel A: Average $WPDC^{IV}_{d,s,i}$ by stock and interval")
+			ax.legend(fontsize='small', ncol=round(nst / 2), loc='upper right')
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+		
+		def wpdc_months(ax):
+			fundata = monthdata[monthdata['close_return'] != 0]
+			sns.lineplot(data=fundata, x='Lag', y='WPDC', hue='Month', ci=None, estimator='median',
+			             palette='cubehelix_r', lw=lw, ax=ax, marker='.', ms=ms, mew=0)
+			ax.set_title("Panel B: Median $WPDC^{IV}_{d,i}$ by month and interval")
+			ax.set_ylabel("$WPDC^{IV}_{d,i}$")
+			ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=0))
+			ax.legend(fontsize='small', ncol=4, loc='upper right')
+		
+		fig, axes = plt.subplots(2, 1, figsize=self._panel2)
+		wpdc_stocks(axes[0])
+		wpdc_months(axes[1])
+		for ax in axes:
+			ax.grid(which='major', axis='y')
+			ax.axhline(0, c='k', lw=1, zorder=1)
+			ax.set_xlim((0, 600))
+			ax.set_xlabel("Seconds since auction start")
+			ax.set_axisbelow(True)
+			ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+		
+		fig.tight_layout()
+		if save:
+			plt.savefig(f"{figdir}\\Interval_WPDC.pdf")
+		plt.show() if show else plt.close()
 
 
 class ExtraVisual():
