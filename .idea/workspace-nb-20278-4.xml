@@ -1,0 +1,1077 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="65759e61-9a27-4324-afe5-08b6e121e486" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/R_User_Library.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/R_User_Library.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_ClosingCalc.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_ClosingCalc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Visual_April.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Visual_April.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cls_ClosingCalc.py" beforeDir="false" afterPath="$PROJECT_DIR$/cls_ClosingCalc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cls_Visualization_April.py" beforeDir="false" afterPath="$PROJECT_DIR$/cls_Visualization_April.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Closing" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Rebase.Settings">
+    <option name="ONTO" value="refs/remotes/origin/master" />
+  </component>
+  <component name="Git.Settings">
+    <favorite-branches>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="local_master" />
+                <branch-info repo="$PROJECT_DIR$" source="local" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </favorite-branches>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="local_master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GithubProjectSettings">
+    <option name="CREATE_PULL_REQUEST_DEFAULT_BRANCH" value="master" />
+    <option name="CREATE_PULL_REQUEST_DEFAULT_REPO_USER" value="MuellerLouis" />
+    <option name="CREATE_PULL_REQUEST_DEFAULT_REPO_NAME" value="Closing" />
+  </component>
+  <component name="IgnoredFileRootStore">
+    <option name="generatedRoots">
+      <set>
+        <option value="D:\OneDrive - Universität St.Gallen\iorcf\Closing\.idea" />
+      </set>
+    </option>
+  </component>
+  <component name="JupyterTrust" id="859aa118-9d04-4393-b32a-e45730e2cea5" />
+  <component name="ProjectId" id="1SY9hJNvQIA3Nztz72k3U2U371w" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="full.screen.before.presentation.mode" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.standard" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.standard" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.standard" value="" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings is-module-sdk="true">
+        <option name="useSoftWraps" value="true" />
+        <option name="myUseModuleSdk" value="true" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\OneDrive - Universität St.Gallen\iorcf\Closing\Documents" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.04_Visual_April">
+    <configuration name="PriceDiscovery_Panel" type="JULIA_RUN_CONFIG_ID" factoryName="Julia" temporary="true">
+      <setting name="workingDir" value="$PROJECT_DIR$" />
+      <setting name="targetFile" value="$PROJECT_DIR$/PriceDiscovery_Panel.jl" />
+      <setting name="additionalOptions" value="" />
+      <setting name="programArgs" value="" />
+      <setting name="juliaExecutive" value="C:\Users\muell\AppData\Local\Julia-1.3.1\bin\julia.exe" />
+      <setting name="jitCompiler" value="yes" />
+      <setting name="deprecationWarning" value="yes" />
+      <setting name="codeCoverage" value="none" />
+      <setting name="trackAllocation" value="none" />
+      <setting name="systemImage" value="" />
+      <setting name="systemImageOption" value="false" />
+      <setting name="inlineOption" value="false" />
+      <setting name="checkBoundsOption" value="false" />
+      <setting name="colorOption" value="true" />
+      <setting name="mathModeOption" value="false" />
+      <setting name="handleSignalOption" value="false" />
+      <setting name="startupFileOption" value="true" />
+      <setting name="historyOption" value="false" />
+      <setting name="launchReplOption" value="false" />
+      <setting name="optimizationLevel" value="3" />
+      <method v="2" />
+    </configuration>
+    <configuration name="01_ClosingCalc" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/01_ClosingCalc.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="04_Visual_April" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/04_Visual_April.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="cls_ClosingCalc" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cls_ClosingCalc.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="cls_Visualization_April" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cls_Visualization_April.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.04_Visual_April" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="StructureViewFactory">
+    <option name="AUTOSCROLL_MODE" value="false" />
+    <option name="ACTIVE_ACTIONS" value=",SHOW_INHERITED" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="65759e61-9a27-4324-afe5-08b6e121e486" name="Default Changelist" comment="" />
+      <created>1571729780902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1571729780902</updated>
+      <workItem from="1571729785807" duration="7252000" />
+      <workItem from="1571748692690" duration="4027000" />
+      <workItem from="1571752772079" duration="569000" />
+      <workItem from="1571772250192" duration="4891000" />
+      <workItem from="1571817015134" duration="5052000" />
+      <workItem from="1571828439580" duration="7804000" />
+      <workItem from="1571843907893" duration="1657000" />
+      <workItem from="1573455336034" duration="99000" />
+      <workItem from="1573455577510" duration="311000" />
+      <workItem from="1573455927734" duration="797000" />
+      <workItem from="1573480645424" duration="1148000" />
+      <workItem from="1573544469933" duration="25854000" />
+      <workItem from="1573628239420" duration="2483000" />
+      <workItem from="1573630765198" duration="228000" />
+      <workItem from="1573631020223" duration="322000" />
+      <workItem from="1573631366538" duration="18788000" />
+      <workItem from="1573713806060" duration="435000" />
+      <workItem from="1573714285481" duration="599000" />
+      <workItem from="1573716083519" duration="406000" />
+      <workItem from="1573740701572" duration="28768000" />
+      <workItem from="1574061130320" duration="283000" />
+      <workItem from="1574061439755" duration="1685000" />
+      <workItem from="1574063874785" duration="497000" />
+      <workItem from="1574064975747" duration="60000" />
+      <workItem from="1574065069198" duration="953000" />
+      <workItem from="1574273688459" duration="22000" />
+      <workItem from="1574273773801" duration="32000" />
+      <workItem from="1574274013199" duration="1652000" />
+      <workItem from="1574680279930" duration="3622000" />
+      <workItem from="1574683929156" duration="4421000" />
+      <workItem from="1574777202665" duration="1076000" />
+      <workItem from="1574892187983" duration="46000" />
+      <workItem from="1574921884720" duration="91000" />
+      <workItem from="1574921991809" duration="2801000" />
+      <workItem from="1574929258800" duration="11651000" />
+      <workItem from="1574947808355" duration="2001000" />
+      <workItem from="1575013536804" duration="13380000" />
+      <workItem from="1575040327744" duration="7500000" />
+      <workItem from="1575104691411" duration="1883000" />
+      <workItem from="1575273110695" duration="117000" />
+      <workItem from="1575273252386" duration="5564000" />
+      <workItem from="1575303669734" duration="6861000" />
+      <workItem from="1575366013858" duration="186000" />
+      <workItem from="1575366555503" duration="15788000" />
+      <workItem from="1575383541325" duration="8128000" />
+      <workItem from="1575447126323" duration="5527000" />
+      <workItem from="1575452785886" duration="99000" />
+      <workItem from="1575452895280" duration="2594000" />
+      <workItem from="1575534697635" duration="789000" />
+      <workItem from="1575535514305" duration="12406000" />
+      <workItem from="1575559438498" duration="153000" />
+      <workItem from="1575559613350" duration="13342000" />
+      <workItem from="1575635460937" duration="642000" />
+      <workItem from="1575793955454" duration="5752000" />
+      <workItem from="1575877093917" duration="3966000" />
+      <workItem from="1575890742700" duration="10878000" />
+      <workItem from="1575904089861" duration="14081000" />
+      <workItem from="1575966033124" duration="7414000" />
+      <workItem from="1576749490781" duration="598000" />
+      <workItem from="1578298258142" duration="8195000" />
+      <workItem from="1578384733307" duration="785000" />
+      <workItem from="1578394066601" duration="709000" />
+      <workItem from="1578395074836" duration="7976000" />
+      <workItem from="1578409828512" duration="3859000" />
+      <workItem from="1578414659483" duration="15997000" />
+      <workItem from="1578503779678" duration="610000" />
+      <workItem from="1578556479288" duration="11436000" />
+      <workItem from="1578584507153" duration="5461000" />
+      <workItem from="1578596141603" duration="1768000" />
+      <workItem from="1578643489506" duration="2411000" />
+      <workItem from="1578653137690" duration="1843000" />
+      <workItem from="1578667290272" duration="6662000" />
+      <workItem from="1578685580618" duration="599000" />
+      <workItem from="1578914442953" duration="1684000" />
+      <workItem from="1578929647569" duration="4537000" />
+      <workItem from="1579018368974" duration="617000" />
+      <workItem from="1579019510484" duration="1200000" />
+      <workItem from="1579254314594" duration="1248000" />
+      <workItem from="1579275244710" duration="1270000" />
+      <workItem from="1580201665739" duration="1775000" />
+      <workItem from="1580297527266" duration="2032000" />
+      <workItem from="1580311666886" duration="4927000" />
+      <workItem from="1580938806577" duration="634000" />
+      <workItem from="1581256137190" duration="1772000" />
+      <workItem from="1581258980385" duration="1377000" />
+      <workItem from="1581337281654" duration="1447000" />
+      <workItem from="1581520565820" duration="624000" />
+      <workItem from="1581584151083" duration="12297000" />
+      <workItem from="1581608490197" duration="16982000" />
+      <workItem from="1581630463561" duration="2908000" />
+      <workItem from="1581671220119" duration="23000" />
+      <workItem from="1581671262177" duration="56000" />
+      <workItem from="1581775491154" duration="714000" />
+      <workItem from="1581790928474" duration="1393000" />
+      <workItem from="1581935138319" duration="247000" />
+      <workItem from="1581935408120" duration="1405000" />
+      <workItem from="1581949967469" duration="9990000" />
+      <workItem from="1582216501547" duration="5808000" />
+      <workItem from="1582222508547" duration="2793000" />
+      <workItem from="1582371371493" duration="2075000" />
+      <workItem from="1582373486257" duration="3161000" />
+      <workItem from="1582533939382" duration="3222000" />
+      <workItem from="1582543810685" duration="265000" />
+      <workItem from="1582544138016" duration="2968000" />
+      <workItem from="1582740777601" duration="339000" />
+      <workItem from="1582796047864" duration="3219000" />
+      <workItem from="1582814444849" duration="598000" />
+      <workItem from="1582885983495" duration="2343000" />
+      <workItem from="1583174632039" duration="493000" />
+      <workItem from="1583175139660" duration="862000" />
+      <workItem from="1583227191417" duration="7000" />
+      <workItem from="1583227221346" duration="7041000" />
+      <workItem from="1583251492568" duration="286000" />
+      <workItem from="1583251792481" duration="218000" />
+      <workItem from="1583252023006" duration="53000" />
+      <workItem from="1583252092755" duration="2081000" />
+      <workItem from="1583254191412" duration="18710000" />
+      <workItem from="1583274761587" duration="1233000" />
+      <workItem from="1583309307194" duration="36000" />
+      <workItem from="1583309367573" duration="24616000" />
+      <workItem from="1583346689748" duration="625000" />
+      <workItem from="1583347606598" duration="4638000" />
+      <workItem from="1583401239660" duration="3551000" />
+      <workItem from="1583475748918" duration="1206000" />
+      <workItem from="1583765645109" duration="552000" />
+      <workItem from="1583839682988" duration="5554000" />
+      <workItem from="1583852093149" duration="1676000" />
+      <workItem from="1584267548689" duration="1065000" />
+      <workItem from="1584383513904" duration="401000" />
+      <workItem from="1584452876379" duration="13872000" />
+      <workItem from="1584471099951" duration="111000" />
+      <workItem from="1584528659724" duration="8055000" />
+      <workItem from="1584543350817" duration="15362000" />
+      <workItem from="1584559794499" duration="21000" />
+      <workItem from="1584559853237" duration="3052000" />
+      <workItem from="1584609438818" duration="1692000" />
+      <workItem from="1584618568451" duration="623000" />
+      <workItem from="1584622525791" duration="20385000" />
+      <workItem from="1584714699008" duration="8287000" />
+      <workItem from="1584880354843" duration="41472000" />
+      <workItem from="1585000891629" duration="282000" />
+      <workItem from="1585038631262" duration="1627000" />
+      <workItem from="1585045525807" duration="120000" />
+      <workItem from="1585050156908" duration="419000" />
+      <workItem from="1585050671297" duration="303000" />
+      <workItem from="1585051009519" duration="1133000" />
+      <workItem from="1585053590026" duration="992000" />
+      <workItem from="1585061915292" duration="32000" />
+      <workItem from="1585061979641" duration="180000" />
+      <workItem from="1585062199087" duration="238000" />
+      <workItem from="1585062462221" duration="230000" />
+      <workItem from="1585062718208" duration="677000" />
+      <workItem from="1585063430916" duration="83000" />
+      <workItem from="1585063540978" duration="318000" />
+      <workItem from="1585063890468" duration="219000" />
+      <workItem from="1585064135874" duration="3457000" />
+      <workItem from="1585068345405" duration="1866000" />
+      <workItem from="1585070765158" duration="3774000" />
+      <workItem from="1585074614294" duration="2073000" />
+      <workItem from="1585076723591" duration="1032000" />
+      <workItem from="1585077791180" duration="99000" />
+      <workItem from="1585077909616" duration="98000" />
+      <workItem from="1585123400171" duration="1075000" />
+      <workItem from="1585134367128" duration="92000" />
+      <workItem from="1585137157829" duration="2437000" />
+      <workItem from="1585140489923" duration="1005000" />
+      <workItem from="1585145115251" duration="876000" />
+      <workItem from="1585149835072" duration="1797000" />
+      <workItem from="1585152628326" duration="321000" />
+      <workItem from="1585152967218" duration="5350000" />
+      <workItem from="1585158695204" duration="10000" />
+      <workItem from="1585158747260" duration="1478000" />
+      <workItem from="1585218804877" duration="49000" />
+      <workItem from="1585219191340" duration="1158000" />
+      <workItem from="1585223010258" duration="869000" />
+      <workItem from="1585228283781" duration="349000" />
+      <workItem from="1585228788496" duration="51000" />
+      <workItem from="1585231907384" duration="53000" />
+      <workItem from="1585233796223" duration="1215000" />
+      <workItem from="1585237469922" duration="626000" />
+      <workItem from="1585238979417" duration="202000" />
+      <workItem from="1585239213867" duration="636000" />
+      <workItem from="1585240523869" duration="51000" />
+      <workItem from="1585240602380" duration="629000" />
+      <workItem from="1585242463171" duration="465000" />
+    </task>
+    <task id="LOCAL-00015" summary="Fixed path issue 02_DataAnalysis">
+      <created>1574695738010</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1574695738010</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Update to algorithm.">
+      <created>1574777978467</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1574777978467</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Update to algorithm.">
+      <created>1574778161585</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1574778161585</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Update to algorithm.">
+      <created>1574778546045</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1574778546045</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Update to algorithm.">
+      <created>1574788446247</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1574788446247</updated>
+    </task>
+    <task id="LOCAL-00020" summary="First plots created.">
+      <created>1574843934954</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1574843934954</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Progress">
+      <created>1574881486549</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1574881486549</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Progress">
+      <created>1574891584493</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1574891584493</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Progress">
+      <created>1574929439164</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1574929439164</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Sensitivity_fine plots finished.">
+      <created>1574940713035</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1574940713035</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Sensitivity_fine plots finished.">
+      <created>1574940808179</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1574940808179</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Start with Discovery plots.">
+      <created>1575018105837</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1575018105837</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Price Discovery Aggregated finished.">
+      <created>1575038502727</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1575038502727</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Price Discovery Aggregated finished.">
+      <created>1575294326726</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1575294326726</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Price Discovery Aggregated finished.">
+      <created>1575306979762</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1575306979762</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Progress made.">
+      <created>1575383483995</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1575383483995</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Charts finished. Market order removal still missing.">
+      <created>1575390139142</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1575390139142</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Charts finished. Market order removal still missing.">
+      <created>1575555701846</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1575555701846</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Charts finished. Market order removal still missing.">
+      <created>1575558134254</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1575558134254</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Charts finished. Market order removal still missing.">
+      <created>1575558299734</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1575558299734</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Charts finished. Market order removal still missing.">
+      <created>1575561602869</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1575561602869</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Charts finished. Market order removal still missing.">
+      <created>1575872331850</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1575872331850</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Last update.">
+      <created>1575890105939</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1575890105939</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Last update.">
+      <created>1575900645993</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1575900645993</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Last update.">
+      <created>1575967000698</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1575967000698</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Latest update.">
+      <created>1578394315165</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1578394315165</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Latest update.">
+      <created>1578402904721</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1578402904722</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Latest update.">
+      <created>1578406128787</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1578406128787</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Latest update.">
+      <created>1578415785821</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1578415785821</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Latest update.">
+      <created>1578434197139</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1578434197139</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Latest update.">
+      <created>1578557096414</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1578557096414</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Latest update.">
+      <created>1578583438516</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1578583438516</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Latest update.">
+      <created>1578653782539</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1578653782539</updated>
+    </task>
+    <task id="LOCAL-00048" summary="Latest update.">
+      <created>1580312223666</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1580312223668</updated>
+    </task>
+    <task id="LOCAL-00049" summary="Latest update.">
+      <created>1581602294427</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1581602294427</updated>
+    </task>
+    <task id="LOCAL-00050" summary="Latest update.">
+      <created>1581603648709</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1581603648709</updated>
+    </task>
+    <task id="LOCAL-00051" summary="Latest update.">
+      <created>1581607454465</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1581607454465</updated>
+    </task>
+    <task id="LOCAL-00052" summary="New Design.">
+      <created>1581630098536</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1581630098536</updated>
+    </task>
+    <task id="LOCAL-00053" summary="All features included for April Presentation.">
+      <created>1581783081471</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1581783081472</updated>
+    </task>
+    <task id="LOCAL-00054" summary="Output bids/asks when uncrossing order books.">
+      <created>1582030351785</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1582030351786</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Implemented adjustments from Fabian.">
+      <created>1582222310301</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1582222310302</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Version running well, minor bugfix.">
+      <created>1582371987267</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1582371987268</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Version running well, minor bugfix.">
+      <created>1582543886918</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1582543886918</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Updated OIB calculation (relative).">
+      <created>1582803204099</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1582803204100</updated>
+    </task>
+    <task id="LOCAL-00059" summary="Updated Price Discovery Calculation and cleansing.">
+      <created>1583848711379</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1583848711379</updated>
+    </task>
+    <task id="LOCAL-00060" summary="Update Bases (removal algorithm incorrect still)">
+      <created>1584547731044</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1584547731045</updated>
+    </task>
+    <task id="LOCAL-00061" summary="Update Bases (removal algorithm corrected)">
+      <created>1584556980161</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1584556980161</updated>
+    </task>
+    <task id="LOCAL-00062" summary="Update output in _calc_uncross() method">
+      <created>1584693898262</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1584693898262</updated>
+    </task>
+    <task id="LOCAL-00063" summary="Implemented separate market-order removals.">
+      <created>1585158298319</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1585158298319</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.configurationType" implementationName="JULIA_RUN_CONFIG_ID" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Large files added to git." />
+    <MESSAGE value="Large files deleted again." />
+    <MESSAGE value="Huawei push prep" />
+    <MESSAGE value="Fixed path issue 02_DataAnalysis" />
+    <MESSAGE value="Update to algorithm." />
+    <MESSAGE value="First plots created." />
+    <MESSAGE value="Progress" />
+    <MESSAGE value="Sensitivity_fine plots finished." />
+    <MESSAGE value="Start with Discovery plots." />
+    <MESSAGE value="Price Discovery Aggregated finished." />
+    <MESSAGE value="Progress made." />
+    <MESSAGE value="Charts finished. Market order removal still missing." />
+    <MESSAGE value="Last update." />
+    <MESSAGE value="Latest update." />
+    <MESSAGE value="New Design." />
+    <MESSAGE value="All features included for April Presentation." />
+    <MESSAGE value="Output bids/asks when uncrossing order books." />
+    <MESSAGE value="Implemented adjustments from Fabian." />
+    <MESSAGE value="Version running well, minor bugfix." />
+    <MESSAGE value="Updated OIB calculation (relative)." />
+    <MESSAGE value="Updated Price Discovery Calculation and cleansing." />
+    <MESSAGE value="Update Bases (removal algorithm incorrect still)" />
+    <MESSAGE value="Update Bases (removal algorithm corrected)" />
+    <MESSAGE value="Update output in _calc_uncross() method" />
+    <MESSAGE value="Implemented separate market-order removals." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented separate market-order removals." />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="2239" y="120" key="#01_ClosingCalc" timestamp="1582222529156">
+      <screen x="1680" y="0" width="1680" height="1010" />
+    </state>
+    <state x="2239" y="120" key="#01_ClosingCalc/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1582222529156" />
+    <state x="658" y="254" key="#Inspections" timestamp="1585062347321">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="658" y="254" key="#Inspections/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585062347321" />
+    <state x="658" y="254" key="#Inspections/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581618483156" />
+    <state x="873" y="379" key="#Plugins" timestamp="1585045644701">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="873" y="379" key="#Plugins/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585045644701" />
+    <state x="736" y="356" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1585076247367">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="736" y="356" key="#com.intellij.execution.impl.EditConfigurationsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585076247367" />
+    <state x="1099" y="392" key="#com.intellij.openapi.keymap.impl.ui.EditKeymapsDialog" timestamp="1585075308039">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1099" y="392" key="#com.intellij.openapi.keymap.impl.ui.EditKeymapsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585075308039" />
+    <state x="792" y="333" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1584471057879">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="792" y="333" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584471057879" />
+    <state x="2200" y="240" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1578384659715" />
+    <state x="752" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1584545203327">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="752" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584545203327" />
+    <state x="709" y="141" key="CommitChangelistDialog2" timestamp="1585158296217">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="709" y="141" key="CommitChangelistDialog2/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585158296217" />
+    <state x="2145" y="102" key="CommitChangelistDialog2/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583848708577" />
+    <state x="474" y="111" key="CommitChangelistDialog2/0.0.1714.1103@0.0.1714.1103" timestamp="1582371986146" />
+    <state x="708" y="141" key="CommitChangelistDialog2/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1582803202485" />
+    <state x="100" y="100" width="2360" height="1240" key="DiffContextDialog" timestamp="1584547699721">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="100" y="100" width="2360" height="1240" key="DiffContextDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584547699721" />
+    <state x="945" y="338" key="FileChooserDialogImpl" timestamp="1585157953827">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="945" y="338" key="FileChooserDialogImpl/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585157953827" />
+    <state x="2300" y="244" key="FileChooserDialogImpl/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1582373606263" />
+    <state x="633" y="266" key="FileChooserDialogImpl/0.0.1714.1103@0.0.1714.1103" timestamp="1581791214091" />
+    <state x="945" y="338" key="FileChooserDialogImpl/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1582796207316" />
+    <state width="2516" height="539" key="GridCell.Tab.0.bottom" timestamp="1585231773402">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.0.bottom/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773402" />
+    <state width="1636" height="357" key="GridCell.Tab.0.bottom/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.0.bottom/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.0.bottom/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.0.center" timestamp="1585231773400">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.0.center/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773400" />
+    <state width="1636" height="357" key="GridCell.Tab.0.center/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.0.center/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283585" />
+    <state width="1664" height="301" key="GridCell.Tab.0.center/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.0.left" timestamp="1585231773400">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.0.left/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773400" />
+    <state width="1636" height="357" key="GridCell.Tab.0.left/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.0.left/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283585" />
+    <state width="1664" height="301" key="GridCell.Tab.0.left/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.0.right" timestamp="1585231773402">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.0.right/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773402" />
+    <state width="1636" height="357" key="GridCell.Tab.0.right/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.0.right/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.0.right/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.1.bottom" timestamp="1585231773403">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.1.bottom/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773403" />
+    <state width="1636" height="357" key="GridCell.Tab.1.bottom/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.1.bottom/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.1.bottom/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112276" />
+    <state width="2516" height="539" key="GridCell.Tab.1.center" timestamp="1585231773403">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.1.center/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773403" />
+    <state width="1636" height="357" key="GridCell.Tab.1.center/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.1.center/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.1.center/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.1.left" timestamp="1585231773402">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.1.left/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773402" />
+    <state width="1636" height="357" key="GridCell.Tab.1.left/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.1.left/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.1.left/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112275" />
+    <state width="2516" height="539" key="GridCell.Tab.1.right" timestamp="1585231773403">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2516" height="539" key="GridCell.Tab.1.right/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231773403" />
+    <state width="1636" height="357" key="GridCell.Tab.1.right/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583335947506" />
+    <state width="1670" height="343" key="GridCell.Tab.1.right/0.0.1714.1103@0.0.1714.1103" timestamp="1584739283586" />
+    <state width="1664" height="301" key="GridCell.Tab.1.right/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1581630112276" />
+    <state x="484" y="320" key="IDE.errors.dialog" timestamp="1585242698262">
+      <screen x="0" y="0" width="1680" height="1010" />
+    </state>
+    <state x="737" y="443" key="IDE.errors.dialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585231925482" />
+    <state x="484" y="320" key="IDE.errors.dialog/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585242698262" />
+    <state x="295" y="252" width="916" height="708" key="SettingsEditor" timestamp="1585240571927">
+      <screen x="0" y="0" width="1680" height="1010" />
+    </state>
+    <state x="449" y="349" width="996" height="729" key="SettingsEditor/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585228464780" />
+    <state x="295" y="252" width="916" height="708" key="SettingsEditor/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585240571927" />
+    <state x="1989" y="293" key="SettingsEditor/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583852129724" />
+    <state x="541" y="219" key="SettingsEditor/0.0.1714.1103@0.0.1714.1103" timestamp="1582372648283" />
+    <state x="1106" y="376" key="SettingsEditor/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1582796225420" />
+    <state x="2112" y="237" key="Vcs.Push.Dialog.v2" timestamp="1583848716780">
+      <screen x="1680" y="0" width="1680" height="1010" />
+    </state>
+    <state x="2112" y="237" key="Vcs.Push.Dialog.v2/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583848716780" />
+    <state x="441" y="259" key="Vcs.Push.Dialog.v2/0.0.1714.1103@0.0.1714.1103" timestamp="1582371993149" />
+    <state x="659" y="329" key="Vcs.Push.Dialog.v2/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1582803206416" />
+    <state width="1293" height="712" key="XDebugger.FullValuePopup" timestamp="1578413677909">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="848" height="513" key="XDebugger.FullValuePopup/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1578401254967" />
+    <state width="1293" height="712" key="XDebugger.FullValuePopup/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1578413677909" />
+    <state x="1036" y="545" key="cloudConfig.PluginsDialog" timestamp="1585228383586">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1036" y="545" key="cloudConfig.PluginsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585228383586" />
+    <state x="907" y="484" key="cloudConfig.SelfSettingsDialog" timestamp="1585228600829">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="907" y="484" key="cloudConfig.SelfSettingsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585228600829" />
+    <state x="2275" y="349" key="cloudConfig.SelfSettingsDialog/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1585228555911" />
+    <state x="907" y="484" key="cloudConfig.SelfSettingsDialog/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1579292704796" />
+    <state x="2038" y="231" key="com.intellij.execution.console.ConsoleHistoryController$MyBrowseAction$1" timestamp="1583846563091">
+      <screen x="1680" y="0" width="1680" height="1010" />
+    </state>
+    <state x="2038" y="231" key="com.intellij.execution.console.ConsoleHistoryController$MyBrowseAction$1/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583846563091" />
+    <state x="648" y="381" key="com.intellij.ide.util.TipDialog" timestamp="1585242657122">
+      <screen x="0" y="0" width="1680" height="1010" />
+    </state>
+    <state x="988" y="528" key="com.intellij.ide.util.TipDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585228299243" />
+    <state x="648" y="381" key="com.intellij.ide.util.TipDialog/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585242657122" />
+    <state x="928" y="370" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1584970197189">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="928" y="370" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584970197189" />
+    <state x="989" y="584" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1584547709236">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="989" y="584" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584547709236" />
+    <state x="649" y="421" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1578653010105" />
+    <state x="2329" y="421" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1581600484297" />
+    <state x="989" y="584" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1579019482145" />
+    <state x="973" y="325" width="613" height="789" key="find.popup" timestamp="1583254071196">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="973" y="325" width="613" height="789" key="find.popup/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1583254071196" />
+    <state x="922" y="427" width="700" height="530" key="recent.locations.popup" timestamp="1585077296685">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="922" y="427" width="700" height="530" key="recent.locations.popup/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585077296685" />
+    <state x="885" y="234" key="refactoring.ChangeSignatureDialog" timestamp="1584903009142">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="885" y="234" key="refactoring.ChangeSignatureDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1584903009142" />
+    <state x="2261" y="169" key="refactoring.ChangeSignatureDialog/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583311574635" />
+    <state x="766" y="301" width="672" height="160" key="search.everywhere.popup" timestamp="1585157968005">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="766" y="301" width="672" height="160" key="search.everywhere.popup/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585157968005" />
+    <state x="2183" y="217" width="672" height="678" key="search.everywhere.popup/0.0.1680.1010/1680.0.1680.1010@1680.0.1680.1010" timestamp="1583852268961" />
+    <state x="513" y="237" width="686" height="741" key="search.everywhere.popup/0.0.1714.1103@0.0.1714.1103" timestamp="1582371803975" />
+    <state x="766" y="301" width="1024" height="940" key="search.everywhere.popup/3840.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1578473079611" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="side" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Closing$04_Visual_April.coverage" NAME="04_Visual_April Coverage Results" MODIFIED="1585231630651" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

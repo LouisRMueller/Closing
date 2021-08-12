@@ -234,6 +234,7 @@ class SensAnalysis(DataAnalysis):
 			plt.savefig(os.getcwd() + "\\02 Slides January\\Figures\\Sensitivity_{}_{}".format(mode, n))
 			fig.show()
 			plt.close()
+			
 
 	def plt_rmv_market_orders(self):
 		"""Rough Sensitivity Data"""

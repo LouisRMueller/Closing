@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7e2a90d2-9731-4091-8cb6-637b3cb56f32" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/R_User_Library.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/R_User_Library.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_ClosingCalc.py" beforeDir="false" afterPath="$PROJECT_DIR$/01_ClosingCalc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/02_DataAnalysisDec.py" beforeDir="false" afterPath="$PROJECT_DIR$/02_DataAnalysisDec.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/03_Verifications.py" beforeDir="false" afterPath="$PROJECT_DIR$/03_Verifications.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_Visual_April.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_Visual_April.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PriceDiscovery_Panel.jl" beforeDir="false" afterPath="$PROJECT_DIR$/PriceDiscovery_Panel.jl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cls_ClosingCalc.py" beforeDir="false" afterPath="$PROJECT_DIR$/cls_ClosingCalc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cls_DataAnalysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/cls_Visualization_December.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cls_Visualization_April.py" beforeDir="false" afterPath="$PROJECT_DIR$/cls_Visualization_April.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Closing" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/hello.r" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectId" id="1ZfvQxT6eW7AGrC4iEoY1gZujiF" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$/.julia" />
+    <property name="settings.editor.selected.configurable" value="Julia.Configuration" />
+  </component>
+  <component name="RunManager" selected="Python.04_Visual_April">
+    <configuration name="04_Visual_April" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/04_Visual_April.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="cls_Visualization_April" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Closing" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cls_Visualization_April.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.04_Visual_April" />
+        <item itemvalue="Python.cls_Visualization_April" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7e2a90d2-9731-4091-8cb6-637b3cb56f32" name="Default Changelist" comment="" />
+      <created>1585242952664</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1585242952664</updated>
+      <workItem from="1585242958081" duration="902000" />
+      <workItem from="1585244399804" duration="145000" />
+      <workItem from="1585244569951" duration="272000" />
+      <workItem from="1585244865416" duration="1807000" />
+      <workItem from="1585250474658" duration="2007000" />
+      <workItem from="1585321487015" duration="853000" />
+      <workItem from="1585322374261" duration="45000" />
+      <workItem from="1585322446655" duration="414000" />
+      <workItem from="1585322908053" duration="54000" />
+      <workItem from="1585323770090" duration="1341000" />
+      <workItem from="1585392545099" duration="938000" />
+      <workItem from="1585393503260" duration="23000" />
+      <workItem from="1585393547435" duration="7383000" />
+      <workItem from="1585413388479" duration="361000" />
+      <workItem from="1585413834495" duration="122000" />
+      <workItem from="1585413975764" duration="258000" />
+      <workItem from="1585414425365" duration="129000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="896" y="317" key="CommitChangelistDialog2" timestamp="1585394935392">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="896" y="317" key="CommitChangelistDialog2/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585394935392" />
+    <state x="1207" y="184" key="FileChooserDialogImpl" timestamp="1585303957739">
+      <screen x="0" y="0" width="1680" height="1010" />
+    </state>
+    <state x="1207" y="184" key="FileChooserDialogImpl/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585303957739" />
+    <state width="1258" height="250" key="GridCell.Tab.0.bottom" timestamp="1585410756821">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="250" key="GridCell.Tab.0.bottom/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585410756821" />
+    <state width="1258" height="539" key="GridCell.Tab.0.bottom/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="250" key="GridCell.Tab.0.center" timestamp="1585410756821">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="250" key="GridCell.Tab.0.center/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585410756821" />
+    <state width="1258" height="539" key="GridCell.Tab.0.center/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="250" key="GridCell.Tab.0.left" timestamp="1585410756821">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="250" key="GridCell.Tab.0.left/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585410756821" />
+    <state width="1258" height="539" key="GridCell.Tab.0.left/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="250" key="GridCell.Tab.0.right" timestamp="1585410756821">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="250" key="GridCell.Tab.0.right/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585410756821" />
+    <state width="1258" height="539" key="GridCell.Tab.0.right/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="519" key="GridCell.Tab.1.bottom" timestamp="1585395252645">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="519" key="GridCell.Tab.1.bottom/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585395252645" />
+    <state width="1258" height="539" key="GridCell.Tab.1.bottom/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="519" key="GridCell.Tab.1.center" timestamp="1585395252645">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="519" key="GridCell.Tab.1.center/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585395252645" />
+    <state width="1258" height="539" key="GridCell.Tab.1.center/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="519" key="GridCell.Tab.1.left" timestamp="1585395252645">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="519" key="GridCell.Tab.1.left/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585395252645" />
+    <state width="1258" height="539" key="GridCell.Tab.1.left/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state width="1258" height="519" key="GridCell.Tab.1.right" timestamp="1585395252645">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1258" height="519" key="GridCell.Tab.1.right/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585395252645" />
+    <state width="1258" height="539" key="GridCell.Tab.1.right/0.0.1714.1103@0.0.1714.1103" timestamp="1585257524469" />
+    <state x="788" y="406" key="SettingsEditor" timestamp="1585414509775">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="788" y="406" key="SettingsEditor/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585414509775" />
+    <state x="517" y="293" key="SettingsEditor/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585322584528" />
+    <state x="1036" y="565" key="cloudConfig.PluginsDialog" timestamp="1585414535364">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1036" y="565" key="cloudConfig.PluginsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585414535364" />
+    <state x="1036" y="565" key="cloudConfig.SelfSettingsDialog" timestamp="1585414118139">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1036" y="565" key="cloudConfig.SelfSettingsDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585414118139" />
+    <state x="815" y="456" key="com.intellij.ide.util.TipDialog" timestamp="1585414475087">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="815" y="456" key="com.intellij.ide.util.TipDialog/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585414475087" />
+    <state x="535" y="329" key="com.intellij.ide.util.TipDialog/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585243102886" />
+    <state x="766" y="301" width="1024" height="940" key="search.everywhere.popup" timestamp="1585413917372">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="766" y="301" width="1024" height="940" key="search.everywhere.popup/-3000.157.1714.1109/0.0.2560.1400@0.0.2560.1400" timestamp="1585413917372" />
+    <state x="503" y="217" width="672" height="678" key="search.everywhere.popup/0.0.1680.1010/1680.0.1680.1010@0.0.1680.1010" timestamp="1585322823077" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/cls_Visualization_April.py</url>
+          <line>374</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Closing$cls_Visualization_April.coverage" NAME="cls_Visualization_April Coverage Results" MODIFIED="1585392978051" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Closing$04_Visual_April.coverage" NAME="04_Visual_April Coverage Results" MODIFIED="1585410756810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

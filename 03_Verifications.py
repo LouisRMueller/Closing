@@ -1,4 +1,4 @@
-from cls_ClosingCalc import *
+from Concurrent_ClosingCalcs import *
 from cls_Visualization_December import *
 from fun_VerificationPlots import *
 
@@ -17,18 +17,11 @@ percent = np.arange(0, 0.3, 0.05)
 
 Sens = SensitivityAnalysis(file_snapshots, base='CrossedVolume', perc=percent)
 
-test = Sens.process()
+priceData = Sens.process()['all_limit'][0]
+closingInfo = Sens._result_dict[('ask_limit', '2019-03-15', 'NESN', 0.0)]
 
-raise ValueError
+Sens.plotClosingUncross()
 
-tmp = bid_dump['2019-03-15']['UBSG'][0]
-
-for T in ['ABBN', 'CSGN','NESN','NOVN','ROG','UBSG']:
-	plot_closing_orders(bid_dump, T, 'bids only')
-	plot_closing_orders(ask_dump, T, 'asks only')
-	plot_closing_orders(all_dump, T, 'bids + asks')
-
-Sens.export_results('Verification_v2', 'csv')
 
 #%%
 

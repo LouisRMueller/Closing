@@ -1,3 +1,5 @@
+%! suppress = TooLargeSection
+%! suppress = LineBreak
 %! Author = LoMueller
 %! Date = 03.08.2020
 
@@ -60,10 +62,13 @@
 \newacro{SI}{systematic internaliser}
 \newacro{SLI}{Swiss Leadership Index}
 
-\title{Liquidity-related Price Sensitivities in Closing Auctions}
+\title{Liquidity-related Price Sensitivities of Closing Auctions in Equity Markets\thanks{This work has been motivated by an ongoing research cooperation between \acf{SIX} and the Institute for Operations Research and Computational Finance (ior/cf-HSG) at the University of St.Gallen. We conducted research on several aspects of market microstructure. Most prominently discussed were topics of closing auctions and exchange performance in context of the European trading landscape. We would hereby like to thank SIX for their valuable inputs and for supplying detailed and granular order-level data of the Swiss stock exchange.}}
 
-\author{Karl Frauendorfer\thanks{University of St. Gallen, Institute for Operations Research and Computational Finance (ior/cf-HSG)}
-\and Louis Müller\footnotemark[1]}
+\author{Karl Frauendorfer
+%\thanks{University of St. Gallen, Institute for Operations Research and Computational Finance (ior/cf-HSG), Switzerland.}
+\and Louis Müller
+%\footnotemark[2]
+}
 
 \date{\today}
 
@@ -72,24 +77,30 @@
 	
 	\begin{titlepage}
 		
-		\maketitle
 		\centering
-		\vspace{1cm}
 		
-		\emph{Discussion Paper}
 		
-		\vspace{1cm}
+		\maketitle
+
+%		\vspace{1cm}
+		\emph{Working Paper} \\
+		
+		\vspace{1.5cm}
+		\textsc{ \normalsize Institute for Operations Research and Computational Finance \\ School of Finance \\ University of St. Gallen }
+		
+		
+		\vfill
 		
 		\begin{abstract}
-			In current markets where closing auctions capture an increasing share of overall volume, price accuracy is paramount. Competition for order flow may be harmful for the price discovery process throughout the auction. In this paper, we show that closing prices are very sensitive towards removals of small percentages of liquidity This is true for both limit- and market orders individually. We also show that closing auctions contribute significantly to open-to-close price discovery, i.e. 13--24\% on the three most heavily traded auction days. By looking at auctions at a more granular level, we show that almost all of the price discovery happens within the first two minutes of the auction. The three largest stocks of the 30 \acs{SLI} constituents contribute around 16\% of the overall price discovery within the first 30 seconds of the auction.
+			In current equity markets where closing auctions capture an increasing share of overall volume, price accuracy is paramount. Competition for order flow may be harmful for the price discovery process throughout the auction. In this paper, we analyse closing auctions of Swiss equities and show that closing prices are very sensitive towards removals of small percentages of liquidity. This is true for both limit- and market orders individually. We also show that closing auctions contribute significantly to open-to-close price discovery, i.e.\ 13--24\% on the three most heavily traded auction days. By looking at auctions at a more granular level, we show that almost all of the price discovery happens within the first two minutes of the auction. The three largest stocks of the sample contribute around 16\% of the overall price discovery during the closing auction within the first 30 seconds.
 		\end{abstract}
-		
-		\vspace{0.5cm}
-		
-		\renewcommand{\abstractname}{Acknowledgement}
-		\begin{abstract}
-			Based on a cooperation between \acf{SIX} and the Institute for Operations Research and Computational Finance (ior/cf-HSG) at the University of St.Gallen, we conducted research on several aspects of market microstructure. Most prominently discussed were topics of closing auctions and exchange performance in context of the European trading landscape. We would hereby like to thank SIX for their valuable inputs and for supplying detailed and granular order-level data of the Swiss stock exchange.
-		\end{abstract}
+
+%		\vspace{0.5cm}
+
+%		\renewcommand{\abstractname}{Acknowledgement}
+%		\begin{abstract}
+%			
+%		\end{abstract}
 		
 		\thispagestyle{empty}
 	\end{titlepage}
@@ -104,17 +115,17 @@
 	Throughout exchanges in Europe, increases in trading volumes at the close have been observed consistently. On Euronext Paris for instance, CAC40 stocks have been trading more than 40\% of their volume during closing auctions in the year 2019~\parencite{Raillon2020}. This observation can be explained by four main developments:
 	
 	\begin{enumerate}[(1)]
-		\item \textbf{Passive investing} (e.g. through ETFs) has seen large inflows in recent years. Closing prices provide a precise benchmark on how these funds must re-balance their positions. Moreover, index funds engage in huge block trades require the liquidity during the closing auction.
-		\item \textbf{Best-execution requirements}, that were introduced under the Markets in Financial Instruments Directive (MiFID) II (effective early 2018), force brokers to trade in the best interest of their clients, i.e. with the lowest trade-costs. Since closing prices are determined in one market exclusively, brokers do not have to compare quotes across different venues. Instead, they can be more certain to get the best price on behalf of their clients.
+		\item \textbf{Passive investing} (e.g.\ through ETFs) has seen large inflows in recent years. Closing prices provide a precise benchmark on how these funds must re-balance their positions. Moreover, index funds engaging in huge block trades require the liquidity during the closing auction.
+		\item \textbf{Best-execution requirements}, that were introduced under the Markets in Financial Instruments Directive (MiFID) II (effective early 2018), force brokers to trade in the best interest of their clients, i.e.\ with the lowest trade-costs. Since closing prices are determined in one market exclusively, brokers do not have to compare quotes across different venues. Instead, they can be more certain to get the best price on behalf of their clients.
 		\item \textbf{Adverse selection} is an important consideration for traders during the day. In this context, it refers to the situation where some market participants have private information and are therefore making a profit at the expense of less informed traders. This is particularly problematic during the continuous trading phase with high market fragmentation. In this case, it is possible that the same security has different prices on other platforms for very short periods of time~\parencite{BudishCramtonShim2015}. Predatory \ac{HFT} strategies based on speed can thrive in those conditions~\parencite{BiaisFoucaultMoinas2015}.
-		\item \textbf{Execution algorithms} are learning that there are better execution opportunities during closing, since there is less adverse-selection (according to (3)). This in turn emphasizes end-of-day trading even stronger, eventually triggering a positive feedback-loop with liquidity clustering in those auctions \parencite{Pagano1989Volume}.
+		\item \textbf{Execution algorithms} are learning that there are better execution opportunities during closing, since there is less adverse-selection (according to (3)). This in turn emphasizes end-of-day trading even stronger, eventually triggering a positive feedback-loop with liquidity clustering in those auctions~\parencite{Pagano1989Volume}.
 	\end{enumerate}
 	
-	Such increasing importance of closing auctions with respect to intraday trading also raises certain questions. First and foremost, when more volume shifts into these auctions price discovery becomes more important, particularly because the closing price marks the \emph{reference price} to many market participants~\parencite{KandelRindiBosetti2012}. At the same time, it becomes more attractive for other venues to capture a chunk of that volume. There are two types of venues that currently take advantage of the situation. First, there are \acp{SI} who collect orders and subsequently offset the imbalance on the main exchange. Second, there are investment banks who may take speculative positions on the main exchange after having insight into their order flow prior to the auction. Despite such behaviour representing healthy competition between trading venues, there may be adverse consequences associated with it. For instance, the universal \emph{reference price} for all other market closings is determined solely on the respective primary exchange. However, accurate price discovery crucially depends on the accumulation of all the participating volume, which in turn reveals the aggregation of all information to the entire market~\parencite{Madhavan1992}.
+	Such increasing importance of closing auctions with respect to intraday trading also raises certain questions. First and foremost, when more volume shifts into these auctions price discovery becomes more important, particularly because the closing price marks the \emph{reference price} to many market participants~\parencite{KandelRindiBosetti2012}. At the same time, it becomes more attractive for other venues to capture a chunk of that volume. There are two types of venues that provide alternative trading mechanisms to trade at the closing price. First, there are \acp{SI} who trade their own inventory and may take speculative positions on the main exchange after having insight into their order flow prior to the auction. These \acp{SI} are often an integrated part of investment banks and allow for less costly execution compared to the main exchange. Second, there are \acp{MTF} acting as competing trading platforms, who seek to take market share from the main exchange.  Despite such behaviour representing healthy competition between trading venues, there may be adverse consequences associated with it. For instance, the universal \emph{reference price} for all other market closings is determined solely on the respective primary exchange. However, accurate price discovery crucially depends on the accumulation of all the participating volume, which in turn reveals the aggregation of all information to the entire market~\parencite{Madhavan1992}.
 	
 	The question about market fragmentation and price discovery has been a very important one in academic literature in recent years. Despite several contradicting findings in some papers, the overall consensus views market fragmentation as positive for market quality if investors have simultaneous access to all venues and are interested in trading liquid large-cap stocks. Some relevant papers on this topic include \textcite{GomberSagadeTheissenWeberWestheide2017}, \textcite{HaslagRinggenberg2016}, \textcite{PaganoPengSchwartz2013}, \textcite{AitkenChenFoley2017}, \textcite{DegryseDeJongVanKervel2015}, \textcite{OharaYe2011}. Despite the overall favourable view with respect to fragmentation, all of these papers look at continuous trading in isolation. which does not directly apply to closing auctions. As \textcite{Madhavan1992} pointed out, call auctions have entirely different trading mechanisms and therefore attract a different type of investor to participate.
 	
-	To shed light on the question of market quality at closing, one needs to first understand and study the composition of closing order books. This paper analyses equity markets through granular order and trade data from \ac{SIX}. The analysis is based on the entire year of 2019 with 249 trading days. Included are all 30 constituents of the \ac{SLI} on the last day of the sample period. Therefore, our sample of equities only contains highly liquid Blue Chips. In order to facilitate any of our analyses, we first had to reconstruct the closing order book recursively based on all incoming orders throughout the day. The same was done for throughout the closing auction, which last 10 minutes on \ac{SIX}. More specifically, we reconstructed snapshots of the full order books at the following timestamps: (1) At the end of continuous trading, (2) at the beginning of closing auction, (3) in 30 second intervals throughout the auction (resulting in 20 intervals) and (4) at the very end of the auction (just before the close). Based on these reconstructions of closing order books, we have derived three core pieces of analysis:
+	To shed light on the question of market quality at closing, one needs to first understand and study the composition of closing order books. This paper analyses equity markets through granular order and trade data provided by \acf{SIX}. The analysis is based on the entire year of 2019 with 249 trading days. Included are all 30 constituents of the \ac{SLI} on the last day of the sample period. Therefore, our sample of equities only contains highly liquid Blue Chips. In order to facilitate any of our analyses, we first had to reconstruct the closing order book recursively based on all incoming orders throughout the day. The same was done for throughout the closing auction, which last 10 minutes on \acf{SIX}. More specifically, we reconstructed snapshots of the full order books at the following timestamps: (1) At the end of continuous trading, (2) at the beginning of closing auction, (3) in 30 second intervals throughout the auction (resulting in 20 intervals) and (4) at the very end of the auction (just before the close). Based on these reconstructions of closing order books, we have derived three core pieces of analysis:
 	\begin{enumerate}[(i)]
 		\item Sensitivity analysis of order books.
 		\item Price dislocations and discovery at close.
@@ -137,10 +148,10 @@
 		\item  The stocks are split into three terciles based on trading volume. These quantiles are re-assigned on a daily basis, hence allowing for stocks to change quantiles over time after becoming comparatively more or less frequently traded.
 	\end{enumerate}
 	
-	After establishing these rules, we remove a certain percentage (5--35\%) of liquidity from the order book. We present three different ways to compute the percentage base:
+	After establishing these rules, we simulate the impact of removal a certain percentage (i.e. 5--35\%) of liquidity from the order book. We present three different ways to compute the percentage base:
 	
 	\paragraph{Separate liquidity basis}
-	The removal of liquidity is based on the combination of market- and limit orders \emph{individually} for both sides of the book. This represents the entire volume in the market of people either willing to buy or sell, regardless of the price. Under this algorithm, the total volumes (i.e. the percentage bases) are calculated separately for each side of the book. Consequently, the an outflow of a given percentage of liquidity removes unequal CHF amounts, taking into account arising order imbalance. Moreover, it is possible that after the removal of liquidity there are no crossing limit orders left to find an uncrossing price.
+	The removal of liquidity is based on the combination of market- and limit orders \emph{individually} for both sides of the book. This represents the entire volume in the market of trading participants either willing to buy or sell, regardless of the price. Under this algorithm, the total volumes (i.e. the percentage bases) are calculated separately for each side of the book. Consequently, the outflow of a given percentage of liquidity removes unequal amounts in currency terms, taking into account arising order imbalance. Moreover, it is possible that after the removal of liquidity there are no crossing limit orders left to find an uncrossing price.
 	
 	\paragraph{Symmetric liquidity basis}
 	The removal of liquidity is based on the \emph{average} of market and limit orders for both sides of the book. In contrast to the previous algorithm, both sides of the book are assigned the same percentage base. Therefore, we ignore order imbalances under this algorithm, by always removing the same CHF amount from both sides of the book. As before, it is possible that this algorithm removes all limit orders necessary to form a crossing price.
@@ -152,13 +163,13 @@
 	
 	\subsection{Results of liquidity removal} \label{subsec:results-of-liquidity-removal}
 	
-	To begin with, \cref{fig:SensLimSeparate} shows all the distributional results for the \emph{separate liquidity} case. In this case, liquidity percentages are removed individually from both sides of the book. It can be seen that the ask side is more sensitive towards liquidity removal, particularly for \ac{SLI} titles with comparatively lower transaction volume. However, this is in contrast to the bid side which is more sensitive towards liquidity removal. This phenomenon has two explanations. First, based on the way liquidity removal is calculated it may be that more liquidity is on the ask- than the bid side. Second, liquidity tends to be further away from the optimal uncrossing price on the bid side, making it more sensitive towards outflow from top-of-book liquidity. The symmetric removal of liquidity from both sides reveals that bid orders are slightly more sensitive than ask orders.
+	To begin with, \cref{fig:SensLimSeparate} shows all the distributional results for the \emph{separate liquidity} case. In this case, liquidity percentages are removed individually from both sides of the book. It can be seen that the ask side is more sensitive towards liquidity removal, particularly for stocks with comparatively lower transaction volume. This phenomenon has two explanations. First, based on the way liquidity removal is calculated, it is possible that there is more liquidity is on the ask- than the bid side. Second, liquidity tends to be further away from the optimal uncrossing price on the bid side, making it more sensitive towards outflow from top-of-book liquidity. The symmetric removal of liquidity from both sides reveals that bid orders are slightly more sensitive than ask orders.
 	
 	
 	\begin{figure}[tp]
 		\centering
 		\includegraphics[trim= 3mm 3mm 3mm 3mm, clip=True,width=1\textwidth]{06 Figures/Sens_limit_SeparateOrders.pdf}
-		\caption{Distribution of absolute price impact caused by liquidity removal via \textit{separate liquidity algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the absolute price deviation in basis points. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) orders. Both panels share the same scaling of the vertical axis. For Panel C, liquidity was removed symmetrically. The three liquidity terciles are re-assigned daily and are based on trading volume.}
+		\caption{Distribution of absolute price impact caused by liquidity removal via \textit{separate liquidity algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the absolute price deviation in basis points. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) limit orders. Both panels share the same scaling of the vertical axis. For Panel C, liquidity was removed symmetrically. The three liquidity terciles are re-assigned daily and are based on trading volume.}
 		\label{fig:SensLimSeparate}
 	\end{figure}
 	
@@ -172,7 +183,7 @@
 	\begin{figure}[tp]
 		\centering
 		\includegraphics[trim= 3mm 3mm 3mm 3mm, clip=True,width=1\textwidth]{06 Figures/Sens_limit_CrossedVolume.pdf}
-		\caption{Distribution of absolute price impact caused by liquidity removal via \textit{execution volume algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the absolute price deviation in basis points. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) orders. Both panels share the same scaling of the vertical axis. The three liquidity terciles are re-assigned daily and are based on trading volume.}
+		\caption{Distribution of absolute price impact caused by liquidity removal via \textit{execution volume algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the absolute price deviation in basis points. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) orders. Both panels share the same scaling of the vertical axis. The three liquidity terciles are re-assigned daily and are based on trading volume.}	
 		\label{fig:SensLimVolume}
 	\end{figure}
 	
@@ -183,7 +194,7 @@
 	\begin{figure}[tp]
 		\centering
 		\includegraphics[trim= 3mm 3mm 3mm 3mm, clip=True,width=1\textwidth]{06 Figures/Sens_mkt.pdf}
-		\caption{Distribution of absolute price impact caused by removal of market orders. All of the depicted scenarios remove the entirety of relevant market orders in the book. Panel A shows the sensitivities when all market orders are removed. Panel B only considers market orders that have been submitted before the beginning of the closing auction.}
+		\caption{Distribution of absolute price impact caused by removal of market orders. All of the depicted scenarios remove the entirety of relevant market orders in the book. Panel A shows the sensitivities when all market orders are removed. Panel B only removes market orders that have been submitted before the beginning of the closing auction.}
 		\label{fig:SensMkt}
 	\end{figure}
 	
@@ -194,13 +205,13 @@
 	
 	In order to determine whether fragmentation of closing auctions has detrimental effects on price discovery, we quantified the process of price discovery throughout the closing auction. To achieve this, we first need to define several measures that are relevant for the later presentation of results.
 	
-	First, a measure of order imbalance is required to assess whether anyone having private information about the incoming order flow would receive a signal to subsequently trade on. In academic literature, there has been some evidence that order imbalance can lead price movements. Examples of this include \textcite{ChordiaRollSubrahmanyam2008,ChordiaRollSubrahmanyam2005}. It is yet unclear, however, how order imbalances at various points during the closing auction influence the outcome. For our purposes, order imbalances ($IMBAL$) at the start of the auction are computed following \textcite{HoldenJacobsen2014} for each stock $s$ on day $d$, where:
+	In the first part of this section, a measure of order imbalance is required to assess whether anyone having private information about the incoming order flow would receive a signal to subsequently trade on. In academic literature, there has been some evidence that order imbalance can lead price movements. Examples of this include \textcite{ChordiaRollSubrahmanyam2008,ChordiaRollSubrahmanyam2005}. It is yet unclear, however, how order imbalances at various points during the closing auction influence the outcome. For our purposes, order imbalances ($IMBAL$) at the start of the auction are computed following \textcite{HoldenJacobsen2014} for each stock $s$ on day $d$, where:
 	\[ IMBAL_{d,s} = \frac{VOL^{bid}_{d,s} - VOL^{ask}_{d,s}}{VOL^{bid}_{d,s} + VOL^{ask}_{d,s}}. \]
 	Based on this formula, the result is bounded by $IMBAL \in (-1,1)$. The volumes $VOL$ are computed based on the number of order in the closing order book times the closing price \emph{at the beginning of the auction}. This way, we visualize certain patterns on the predictability of closing returns prior to the auction.
 	
 	\subsection{Contribution to the Trading Day} \label{subsec:OverallDiscovery}
 	
-	The second part of this section is concerned with price discovery, which is approximated using the \ac{WPDC} measure, used by \textcite{BarclayWarner1993}, \textcite{BarclayHendershott2003}. Generally speaking, this measure considers two trading periods, one longer and one shorter, where the latter a strict sub-period of the former. In our application in this paper, we first compute how much the closing auction contributes to the overall trading day in terms of price discovery. For this purpose, we define $ret_{d,s}$ as the logarithmic open-to-close return on day $d$ in stock $s$. Similarly, the logarithmic closing return is defined as $ret^{CL}_{d,s}$. The ratio between both we define as
+	This part is concerned with price discovery, which is approximated using the \ac{WPDC} measure, used by \textcite{BarclayWarner1993}, \textcite{BarclayHendershott2003}. Generally speaking, this measure considers two trading periods, one longer and one shorter, where the latter a strict sub-period of the former. In our application in this paper, we first compute how much the closing auction contributes to the overall trading day in terms of price discovery. For this purpose, we define $ret_{d,s}$ as the logarithmic open-to-close return on day $d$ in stock $s$. Similarly, the logarithmic closing return is defined as $ret^{CL}_{d,s}$. The ratio between both we define as
 	\begin{equation*}
 		PDC^{CL}_{d,s} = \frac{ret^{CL}_{d,s}}{ret_{d,s}}
 	\end{equation*}
@@ -232,7 +243,7 @@
 		\label{fig:Discovery}
 	\end{figure}
 	
-	Panel A represents all stock day observations of the dataset. At first sight there does not seem to be a strong pattern between both of these measures. However, most of the observations with turnover of more than CHF 400 million. in the closing alone have a positive $WPDC^{CL}_{d,s}$ as defined in \cref{eq:wpdc_base}. This indicates that observations with large trading volume tend to move into the same direction as the overall return during the day and not in the opposite direction. This implies that the closing auctions for these stock-days have a positive contribution to price discovery.
+	Panel A represents all stock day observations of the dataset. At first sight there does not seem to be a strong pattern between both of these measures. However, most of the observations with turnover of more than CHF 400 million in the closing alone have a positive $WPDC^{CL}_{d,s}$ as defined in \cref{eq:wpdc_base}. This indicates that observations with large trading volume tend to move into the same direction as the overall return during the day and not in the opposite direction. This implies that the closing auctions for these stock-days have a positive contribution to price discovery.
 	
 	Panel B shows the aggregated $WPDC^{CL}_d$ on a daily basis by accumulating the weighted average as shown in \cref{eq:wpdc_day}. In this panel, we can clearly see that the days with the largest closing turnovers (i.e. the quarterly future expiration dates) have clearly positive momentum within the trading day. On these days, the closing auction contributed 18.4\% (March), 24.4\% (June), 13.2\% (October) and 7.2\% (December) to the open-to-close price discovery across stocks. Most of the observations with negative WPDC are related to low aggregated turnover.
 	
@@ -242,7 +253,7 @@
 	
 	The analysis about the WPDC has been extended by a more granular approach to closing auctions. So far, \cref{subsec:OverallDiscovery} only looked at closing auctions as a whole with respect to the trading day. In this section, we are splitting the closing auction into 20 equally-spaced 30-second intervals to cover the entirety of the 10-minute auction.
 	
-	\Cref{fig:InterDevs} represents the median price deviations for some large cap SLI stocks (Panel A) as well as for each month in the sample (Panel B). Price deviations are defined as the difference between the hypothetical closing price at the end of each interval and the realized closing price at the end of the auction. The fact that the \emph{median} is deviating quite significantly (both positively and negatively) throughout the auction shows that there is substantial price discovery going on throughout the auction. This is particularly visible in Panel B, which contains all 30 stocks including small cap titles. Large cap titles seem to be more stable throughout the closing auction with maximum median deviations of 20bps. Naturally, all of the curves are expected to converge to zero over the course of the auction.
+	\Cref{fig:InterDevs} represents the median price deviations for the 8 largest stocks in our sample (Panel A) as well as for each individual month in the sample (Panel B). Price deviations are defined as the difference between the hypothetical closing price at the end of each interval and the realized closing price at the end of the auction. The fact that the \emph{median} is deviating quite significantly (both positively and negatively) throughout the auction shows that there is substantial price discovery going on throughout the auction. This is particularly visible in Panel B, which contains all 30 stocks of the sample. The largest 8 stocks are more stable throughout the closing auction with maximum median deviations of 20bps. Naturally, all of the curves are expected to converge to zero over the course of the auction.
 	
 	\begin{figure}[!t]
 		\centering
@@ -278,15 +289,15 @@
 	
 	\section{Conclusions and Outlook} \label{sec:outlook}
 	
-	With the increasing relevance of closing auctions, it is clear that the price discovery process must be accounted for when considering additional fragmentation at the close. We have shown that closing prices can be quite sensitive with respect to outflowing liquidity. Particularly, the one-sided removal of only 25\% of the execution volume from each side of the market entails a median dislocation of 20bps for all liquidity terciles. Similarly, a removal of all market orders displaces the closing price by around 50 basis points for both bid- and ask market orders. Interestingly, the most liquid stocks seem to be the most sensitive towards an outflow of liquidity based on execution volume. In a next step, we analyzed the price discovery on both the level of the full auction as well as over the course of the auction. For approximation purposes, we implemented several distinguished measures of \acf{WPDC} in conjunction with order imbalances prior to the auction. On days with large closing volume, closing auctions tend to reinforce intraday returns and are therefore beneficial to price discovery. In particular, the three most traded closing auctions (which happen to be the future expiration dates in March, June and September) contribute between 13 and 24\% to open-to-close price discovery. Finally, we showed how the price discovery process is varying throughout the auction by extracting 30-second intervals. The evidence shows that the majority of price discovery takes place within the first two minutes of the auction. After this point, prices stabilize until the end of the auction and barely move anymore. Moreover, the three largest constituents of the 30 \ac{SLI} stocks contribute on average 5--6\% each to the total price discovery during the auction across all stocks.
+	With the increasing relevance of closing auctions, it is clear that the price discovery process must be accounted for when considering additional fragmentation at the close. We have shown that closing prices can be quite sensitive with respect to outflowing liquidity. Particularly, the simulation of one-sided removal of only 25\% of the execution volume from each side of the market entails a median dislocation of 20bps for all liquidity terciles. Similarly, a removal of all market orders displaces the closing price by around 50 basis points for both bid- and ask market orders. Interestingly, the most liquid stocks seem to be the most sensitive towards an outflow of liquidity based on execution volume. In a next step, we analyzed the price discovery on both the level of the full auction as well as over the course of the auction. For approximation purposes, we implemented several distinguished measures of \acf{WPDC} in conjunction with order imbalances prior to the auction. On days with large closing volume, closing auctions tend to reinforce intraday returns and are therefore beneficial to price discovery. In particular, the three most traded closing auctions (which happen to be the future expiration dates in March, June and September) contribute between 13 and 24\% to open-to-close price discovery. Finally, we showed how the price discovery process is varying throughout the auction by extracting 30-second intervals. The evidence shows that the majority of price discovery takes place within the first two minutes of the auction. After this point, prices are still adjusting, but in a noisy way without benefit to price discovery. Moreover, the three largest constituents of the 30 \ac{SLI} stocks contribute on average 5--6\% each to the total price discovery during the auction across all stocks.
 	
-	These observations indicate two features of closing auctions. First, the auction price is sensitive towards even small removals of liquidity. Second, most price discovery happens in the first two minutes of the auction. Both of these observations clearly speak in favour of consolidation of order flow for auctions. For instance, if a third-party platform diverts liquidity from the closing auction on the main exchange, prices may become increasingly volatile, as the closing price is determined over a smaller set of orders. Similarly, by diverting the order flow from the beginning of the auction, an investment bank may take positions towards the end of the auction due to exclusive visibility on its order flow. All of these opportunities would jeopardize overall market quality.
+	These observations indicate two features of closing auctions. First, the auction price is sensitive towards even small removals of liquidity. Second, most price discovery happens in the first two minutes of the auction. Both of these observations imply certain risks of fragmentation of closing auction liquidity across venues. For instance, if a third-party platform diverts liquidity from the closing auction on the main exchange, prices may become increasingly volatile, as the closing price is determined over a smaller set of orders. Similarly, by diverting the order flow from the beginning of the auction, an investment bank may take positions towards the end of the auction due to exclusive visibility on its order flow. All of these opportunities would jeopardize overall market quality.
 	
-	Despite our findings speaking in favour of market consolidation at close, there is much potential for further research into this topic. We mainly see two areas that may be further explored in the future. The first is about the predictive power of closing order flow before the start of the auction. It has well been documented in academic literature, that order flow carries information about future price movements (e.g. in~\textcite{ChordiaRollSubrahmanyam2005,ChordiaRollSubrahmanyam2008}). This predictive power is usually only over very short time horizons in the intraday market. However, this phenomenon has not yet been adequately researched for closing auctions. An approach like this would quantify the degree to which private information about the order flow may be profitable in economic terms.
+	Despite our findings showing certain risks of closing auction fragmentation, there is much potential for further research into this topic. We mainly see two areas that may be further explored in the future. The first is about the predictive power of closing order flow before the start of the auction. It has well been documented in academic literature, that order flow carries information about future price movements (e.g. in~\textcite{ChordiaRollSubrahmanyam2005,ChordiaRollSubrahmanyam2008}). This predictive power is usually only over very short time horizons in the intraday market. However, this phenomenon has not yet been adequately researched for closing auctions. An approach like this would quantify the degree to which private information about the order flow may be profitable in economic terms.
 	
 	The second area deals with the question of what drives participation in closing auction primarily. It can be argued that some investors make a deliberate choice about when to enter or exit their positions, be it human- or machine-driven. Many investors nowadays make use of trading algorithms that autonomously decide when market conditions are most favourable for execution. There has been the notion that trading algorithms cluster together to trade with each other to match their executions during maximum liquidity. If it is true that market participants generally opt for the closing auction on tumultuous trading days to avoid any type of execution risk, the accuracy of closing prices becomes increasingly important for them. There is an argument to be made that if investors view those auctions as some sort of \emph{safe haven} for execution, jeopardizing it through fragmentation would be harmful overall. Conclusively, it is important to rigorously understand what drives investors' decisions about whether to enter closing auctions or trade before in order to make an argument for maximum visibility and consolidation in those auctions.
 	
-	\clearpage
+%	\clearpage
 	
 	\printbibliography[heading=bibintoc]
 

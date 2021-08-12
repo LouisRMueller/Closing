@@ -1,4 +1,4 @@
-from cls_ClosingCalc import *
+from Concurrent_ClosingCalcs import *
 
 pd.set_option('display.width', 180)
 pd.set_option("display.max_columns", 14)
@@ -8,20 +8,20 @@ file_snapshots = os.getcwd() + "\\Data\\orders_close_closing_main_v3.csv"
 file_prices = os.getcwd() + "\\Data\\closing_prices.csv"
 base = 'FullLiquidity'  # Limiting to  {'SeparateOrders','FullLiquidity','CrossedVolume'}
 mode = 'Sensitivity'
-granularity = 'fine'
+granularity = 'rough'
 ########################################################################
 
 
 if mode == 'Sensitivity':
 	print("Base: {}".format(base))
 	if granularity == 'rough':
-		percent = np.arange(0, 0.88, 0.05).round(2)
+		percent = np.arange(0, 1.01, 0.05).round(2)
 	elif granularity == 'fine':
 		percent = np.arange(0, 0.36, 0.01).round(2)
 	else:
 		raise ValueError("Wrong input for granularity.")
 
-	Sens = SensitivityAnalysis(file_snapshots, base=base, perc=percent)
+	Sens = SensitivityAnalysis(file_snapshots, date='2018-01-03')
 	Sens.process()
 	Sens.export_results('Sens_{}_{}_market'.format(granularity, base), 'csv')
 
