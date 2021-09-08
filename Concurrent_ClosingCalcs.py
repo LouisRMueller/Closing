@@ -12,9 +12,9 @@ import seaborn as sns
 import psycopg2
 import concurrent.futures
 
-START = '2018-01-03'
+START = '2018-02-14'
 END = '2021-07-31'
-NUM_RUNNERS = 4
+NUM_RUNNERS = 8
 
 
 class Research:
@@ -70,16 +70,16 @@ class SensitivityAnalysis(Research):
         index = pd.MultiIndex.from_product([[self.date], self.today_symbols, percentages], names=['date', 'symbol', 'removal'])
         collector = pd.DataFrame(columns=pd.MultiIndex.from_product([modes, sides]), index=index)
         # for symbol in ['ABBN', 'NOVN']:
-        for symbol in tqdm(self.today_symbols):
+        for symbol in self.today_symbols:
             frame = add_market_orders_if_none(self.all_orders.loc[(self.date, symbol)])
-            close_volume = calculate_uncross(bids=frame['bids'], asks=frame['asks'])['trade_vol']
+            close_volume = calculate_uncross(values=frame)['trade_vol']
             if np.isnan(close_volume):
                 continue
 
             for perc in percentages:
                 for mode, side in collector.columns:
-                    close_dict = remove_orders(frame=frame, mode=mode, side=side, perc=perc)
-                    close_uncross = calculate_uncross(bids=close_dict['bids'], asks=close_dict['asks'])
+                    adj_frame = remove_orders_numba(values=frame, mode=mode, side=side, perc=perc)
+                    close_uncross = calculate_uncross(adj_frame)
                     collector.loc[(self.date, symbol, perc), (mode, side)] = close_uncross['price']
 
         self.collector = collector
@@ -127,12 +127,12 @@ class SensitivityAnalysis(Research):
         cursor.close()
 
 
-profiler(SensitivityAnalysis)
+# profiler(SensitivityAnalysis)
 
-# if __name__ == '__main__':
-#     orderedDays = Research().import_stockdays(startDate=START, endDate=END)
-#     with concurrent.futures.ProcessPoolExecutor(max_workers=NUM_RUNNERS) as executor:
-#         executor.map(SensitivityAnalysis, orderedDays)
+if __name__ == '__main__':
+    orderedDays = Research().import_stockdays(startDate=START, endDate=END)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=NUM_RUNNERS) as executor:
+        executor.map(SensitivityAnalysis, orderedDays)
 
 # if __name__ == '__main__':
 #     orderedDays = Research().import_stockdays(startDate=START, endDate=END)

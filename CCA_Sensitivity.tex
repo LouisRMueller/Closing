@@ -1,0 +1,436 @@
+%! suppress = FileNotFound
+%! suppress = TooLargeSection
+%! suppress = LineBreak
+%! Author = LoMueller
+%! Date = 03.08.2020
+
+\documentclass[11pt,a4paper]{article}
+
+% GENERAL PACKAGES
+\usepackage[top=2.7cm, bottom=2.7cm, left=2.5cm, right=2.5cm]{geometry}
+\linespread{1.4}
+\usepackage{setspace}
+\usepackage{enumerate}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[all]{nowidow}
+\usepackage[bottom]{footmisc} \interfootnotelinepenalty=10000
+\usepackage{xurl}
+\usepackage{comment}
+%\usepackage[acronym]{glossaries}
+
+% REFERENCES
+\usepackage{float} % load before hyperref
+\usepackage[printonlyused, nohyperlinks, withpage]{acronym}
+\usepackage[backend=biber, style=apa]{biblatex}
+\usepackage{csquotes}
+\addbibresource{Dissertation.bib}
+\usepackage[colorlinks, citecolor=red, linkcolor=red, urlcolor=blue, linktocpage]{hyperref} % ocgcolorlinks
+\usepackage[noabbrev]{cleveref}
+\usepackage{longtable}
+
+% FIGURES / TABLES
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\graphicspath{{figures/}} % Path to all images
+\usepackage[labelfont=bf,labelsep=colon,font={scriptsize,singlespacing, sf}]{caption}
+%\usepackage[labelfont=bf,labelsep=colon,font={footnotesize,singlespacing}]{caption}
+\usepackage[labelformat=simple,labelsep=colon,font={large}]{subcaption}
+\usepackage{xcolor}
+
+
+%\newcolumntype{L}[1]{>{\raggedright\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+%\newcolumntype{C}[1]{>{\centering\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+%\newcolumntype{R}[1]{>{\raggedleft\let\newline\\arraybackslash\hspace{0pt}}m{#1}}
+%\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+%\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+%\usepackage{pdflscape}
+%\usepackage{array}
+
+
+%\newacro{SIX}{SIX Securities \& Exchanges}
+\newacro{SIX}{SIX Swiss Exchange}
+\newacro{ior/cf}{Institute for Operations Research anc Computational Finance}
+\newacro{WPDC}{Weighted Price Discovery Contribution}
+\newacro{ECN}{electronic communication network}
+\newacro{MTF}{multilateral trading facilitie}
+\newacro{HFT}{high-frequency trading}
+\newacro{SI}{systematic internaliser}
+\newacro{SLI}{Swiss Leadership Index}
+\newacro{KDE}{kernel density estimation}
+
+\title{Sensitivity and Composition of Closing Order Books\thanks{This work has been motivated by an ongoing research cooperation between \acf{SIX} and the Institute for Operations Research and Computational Finance (ior/cf-HSG) at the University of St.Gallen. We conducted research on several aspects of market microstructure. Most prominently discussed were topics of closing auctions and exchange performance in context of the European trading landscape. We would hereby like to thank SIX for their valuable inputs and for supplying detailed and granular order-level data of the Swiss stock exchange.}}
+
+\author{Karl Frauendorfer\thanks{University of St. Gallen, Switzerland}
+%\thanks{University of St. Gallen, Institute for Operations Research and Computational Finance (ior/cf-HSG), Switzerland.}
+\and Louis Müller\thanks{University of St. Gallen, Switzerland: louis.mueller@unisg.ch}
+%\footnotemark[2]
+}
+
+\date{\today}
+
+
+\begin{document}
+
+    \begin{titlepage}
+
+        \centering
+
+
+        \maketitle
+
+        \vfill
+
+        \emph{Working Paper} \\
+
+%        \textsc{ \normalsize Institute for Operations Research and Computational Finance \\ School of Finance \\ University of St. Gallen }
+
+        \vfill
+
+        \begin{abstract}
+            In current equity markets where closing auctions capture an increasing share of overall volume, price accuracy is paramount. Competition for order flow may be harmful for the price discovery process throughout the auction. In this paper, we analyse closing auctions of Swiss equities and show that closing prices are very sensitive towards removals of small percentages of liquidity. This is true for both limit- and market orders individually. We also show that closing auctions contribute significantly to open-to-close price discovery, i.e.\ 13--24\% on the three most heavily traded auction days. By looking at auctions at a more granular level, we show that almost all of the price discovery happens within the first two minutes of the auction. The three largest stocks of the sample contribute around 16\% of the overall price discovery during the closing auction within the first 30 seconds.\\[8mm]
+            \noindent \textbf{Keywords:} Closing auctions, price discovery, price efficiency, order imbalances\\
+            \noindent \textbf{JEL Codes:} G12, G14\\
+
+        \end{abstract}
+
+%		\vspace{0.5cm}
+
+%		\renewcommand{\abstractname}{Acknowledgement}
+%		\begin{abstract}
+%			
+%		\end{abstract}
+
+        \thispagestyle{empty}
+    \end{titlepage}
+
+%
+    \clearpage
+    \pagenumbering{arabic}
+
+
+    \section{Introduction} \label{sec:introduction}
+
+    Throughout exchanges in Europe, increases in trading volumes at the close have been observed consistently. On Euronext Paris for instance, CAC40 stocks have been trading more than 40\% of their volume during closing auctions in the year 2019~\parencite{Raillon2020}. This observation can be explained by four main developments:
+
+    \begin{enumerate}[(1)]
+        \item \textbf{Passive investing} (e.g.\ through ETFs) has seen large inflows in recent years. Closing prices provide a precise benchmark on how these funds must re-balance their positions. Moreover, index funds engaging in huge block trades require the liquidity during the closing auction.
+        \item \textbf{Best-execution requirements}, that were introduced under the Markets in Financial Instruments Directive (MiFID) II (effective early 2018), force brokers to trade in the best interest of their clients, i.e.\ with the lowest trade-costs. Since closing prices are determined in one market exclusively, brokers do not have to compare quotes across different venues. Instead, they can be more certain to get the best price on behalf of their clients.
+        \item \textbf{Adverse selection} is an important consideration for traders during the day. In this context, it refers to the situation where some market participants have private information and are therefore making a profit at the expense of less informed traders. This is particularly problematic during the continuous trading phase with high market fragmentation. In this case, it is possible that the same security has different prices on other platforms for very short periods of time~\parencite{BudishCramtonShim2015}. Predatory \ac{HFT} strategies based on speed can thrive in those conditions~\parencite{BiaisFoucaultMoinas2015}.
+        \item \textbf{Execution algorithms} are learning that there are better execution opportunities during closing, since there is less adverse-selection (according to (3)). This in turn emphasizes end-of-day trading even stronger, eventually triggering a positive feedback-loop with liquidity clustering in those auctions~\parencite{Pagano1989Volume}.
+    \end{enumerate}
+
+    Such increasing importance of closing auctions with respect to intraday trading also raises certain questions. First and foremost, when more volume shifts into these auctions price discovery becomes more important, particularly because the closing price marks the \emph{reference price} to many market participants~\parencite{KandelRindiBosetti2012}. At the same time, it becomes more attractive for other venues to capture a chunk of that volume. There are two types of venues that provide alternative trading mechanisms to trade at the closing price. First, there are \acp{SI} who trade their own inventory and may take speculative positions on the main exchange after having insight into their order flow prior to the auction. These \acp{SI} are often an integrated part of investment banks and allow for less costly execution compared to the main exchange. Second, there are \acp{MTF} acting as competing trading platforms, who seek to take market share from the main exchange. Despite such behaviour representing healthy competition between trading venues, there may be adverse consequences associated with it. For instance, the universal \emph{reference price} for all other market closings is determined solely on the respective primary exchange. However, accurate price discovery crucially depends on the accumulation of all the participating volume, which in turn reveals the aggregation of all information to the entire market~\parencite{Madhavan1992}.
+
+    The question about market fragmentation and price discovery has been a very important one in academic literature in recent years. Despite several contradicting findings in some papers, the overall consensus views market fragmentation as positive for market quality if investors have simultaneous access to all venues and are interested in trading liquid large-cap stocks. Some relevant papers on this topic include \textcite{GomberSagadeTheissenWeberWestheide2017}, \textcite{HaslagRinggenberg2016}, \textcite{PaganoPengSchwartz2013}, \textcite{AitkenChenFoley2017}, \textcite{DegryseDeJongVanKervel2015}, \textcite{OharaYe2011}. Despite the overall favourable view with respect to fragmentation, all of these papers look at continuous trading in isolation. which does not directly apply to closing auctions. As \textcite{Madhavan1992} pointed out, call auctions have entirely different trading mechanisms and therefore attract a different type of investor to participate.
+
+    To shed light on the question of market quality at closing, one needs to first understand and study the composition of closing order books. This paper analyses equity markets through granular order and trade data provided by \acf{SIX}. The analysis is based on the entire year of 2019 with 249 trading days. Included are all 30 constituents of the \ac{SLI} on the last day of the sample period. Therefore, our sample of equities only contains highly liquid Blue Chips. In order to facilitate any of our analyses, we first had to reconstruct the closing order book recursively based on all incoming orders throughout the day. The same was done for throughout the closing auction, which last 10 minutes on \acf{SIX}. More specifically, we reconstructed snapshots of the full order books at the following timestamps: (1) At the end of continuous trading, (2) at the beginning of closing auction, (3) in 30 second intervals throughout the auction (resulting in 20 intervals) and (4) at the very end of the auction (just before the close). Based on these reconstructions of closing order books, we have derived three core pieces of analysis:
+    \begin{enumerate}[(i)]
+        \item Sensitivity analysis of order books.
+        \item Price dislocations and discovery at close.
+        \item Price discovery over the course of the auction.
+    \end{enumerate}
+
+    This note presents our descriptive results and is structured as follows: In \cref{sec:ClosingBooks}, we will show how sensitive certain stocks behave in terms of the removal of liquidity from the top of the book. Subsequently, \cref{subsec:ClosingReturns} will broadly scrutinize the dislocations of closing prices from the end-of-day trading prices and scrutinizes the price discovery process over the course of the closing auction. Finally, \cref{sec:Conclusion} presents the conclusion and an outlook of potential further research in the realm of closing auctions.
+
+
+    \section{Literature} \label{sec:Literature}
+
+    Topics to include:
+    \begin{itemize}
+        \item Order Books
+        \item Order types
+        \item Depth
+    \end{itemize}
+
+
+    \section{Data} \label{sec:Data}
+    \begin{itemize}
+        \item Data for 3.5 years (January 1, 2018 until June 30, 2021). The data is obtained by \acf{SIX}.
+        \item Sample includes the 100 largest stocks by average closing volume during the sample period. All of the stocks must contribute at least 250 successful closing auctions which relates to at least one full year on the exchange.
+        \item The data is clustered into four size quantiles based on closing auction volume. On a day where all of the stocks are successfully clearing, this implies 25 stocks per quantile per day. The size quantiles are re-assigned on a daily basis.
+        \item Filter data with more than 10\% overnight return as there is most likely new information (i.e.\ earnings release, macro news) that affected the price outside of trading hours.
+    \end{itemize}
+
+
+    \section{Closing Order Books} \label{sec:ClosingBooks}
+
+    In order to better understand the behaviour of order books under the outflow of liquidity, this section focusses on the simulation of outflows from the top of the order book. In this context, a given percentage of liquidity is removed starting with the most attractive orders from the viewpoint of the opposite side. In any case, the percentage must be calculated with respect to a given base value, which varies based on the algorithm applied. Consequently, all algorithms remove liquidity in a deterministic manner from the order book, always starting from the top. For the purpose of this work, there are three main algorithms applied in order to determine this base. The first two of them focus on the full- and partial order books including both limit- and market orders, whereas the third is only considering the latter.
+
+    \subsection{Sensitivities and composition}
+
+    % TODO: Add Caveats: (1) Closing order books are highly endogenous
+    % TODO: Add Caveats: (2) Liquidity removal only from TOB for reproducability
+
+    There are two important points to be made before getting into the analysis. First, the simulated outflow of liquidity does assume a static order book. In reality, this may only be the case to a limited extent as other market participants have the ability to react to a price dislocation caused by such an outflow. As \textcite{Parlour1998} models order books, there is a very high degree of endogeneity with respect to investors' decisions. More specifically, order submission strategies are dynamically adjusted in relation to the state of the order book and expectations other investors' private information. Similarly, \textcite{PascualVeredas2009} develop a similar model in which all investors are fully aware of all the public information in relation to the state of the order book. Second, the outflows do not occur randomly but from the top of the book. Therefore, this analysis presents the worst-case scenario with respect to price dislocation. In contrast, if liquidity would be removed further down in the order book, for instance high(low) asks(bids), the price may not be affected at all since the concerned orders would not be cleared anyways.
+
+    The first algorithm presented here is called \textit{liquidity-based algorithm}. Under this logic, the amount of liquidity is based on the average of the full order book on each side and thus including all market- and limit orders. The averaging of both sides of the book allows for a common base for the removal of both sides of the book. That means that an outflow of the same percentage from the same base always implies the same amount of volume in currency-terms. This algorithm is relevant because it captures volume beyond the clearing price on both sides. Particularly when there are large amounts of orders in the book that are far away from the clearing price and therefore unlikely to be executed. Such orders are not beneficial in terms of price discovery and consequently, a removal thereof has no impact on closing prices. Under this algorithm, it is quite possible that the resulting book does not produce a viable clearing price anymore, as bid and ask may not have any overlapping orders remaining. Indeed, this starts to become an issue after removing around 40\% of the liquidity for many of the stocks in the sample. In this analysis, the observations are disregarded as soon as clearing is made impossible. In practice, several studies have found issues of call auctions of smaller stocks with less investor interest, since order books may freqently not clear due to the composition of the order book. Examples of this include \textcite{EllulShinTonks2005,Ibikunle2015} among others.
+
+    \begin{figure}[!t]
+        \centering
+        \includegraphics[width=1\textwidth]{liquidity_removal}
+        \caption{Distribution of absolute price impact caused by liquidity removal via \textit{liquidity-based algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the price deviation in basis points. The data is presented in the form of boxplots, where the shaded area represents the inter-quartile range which is divided by a dark line representing the distribution median. The whisks represent the 95\% prediction interval of the distribution. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) limit orders. The results are presented for each of the size quartiles, which are computed based on continuous trading volume and re-assigned on a daily basis.}
+        \label{fig:LiquidityBasedAlgorithm}
+    \end{figure}
+
+    The results of this first algorithm can be seen in \cref{fig:LiquidityBasedAlgorithm} for simulated percentage removals of {5\%--35\%}. The box-plots represent the distributions of price dislocations after removing a given percentage of liqudidity from the top of the book. The box-plots are designed in such a way that the shaded area represents the inter-quartile range\footnote{The inter-quartile range refers to the 50\% of the observations between the 25\% and 75\% percentile of a given distribution.} which is separated by the median represented by a solid line. The whisks on each side cover all observations within the 5\% and 95\% percentiles of the distribution. The analysis is further segmented into the four size quantiles introduced in the previous section. The most obvious observation in all these distributions is that the smallest quartile of stocks is much more sensitive than all other quartiles. In fact, the plots manifest a pattern of decreasing sensitivity with increasing size. For instance, the simulated bid(ask) removal of 35\% of the average order book leads to a dislocation of -636(+496) bps for small stocks versus only-123(+119) bps for large cap stocks. Additionally, this example also underlines that large stocks are much more symmetric in terms of price dislocation, irrespective of whether bid or ask liquidity is removed. In contrast to this, small stocks are significantly more sentitive with respect to outflows bid liquidity throughout all simulated removals. This observation indicates that the order book for these stocks is not symmetric as it is for large stocks. More specifically, the increased sensitivity towards bid removals indicates that there is generally an overhang of sell market orders beyond (i.e.\ above) the clearing price. Such orders may be used by investors with a long position which they may want to close once the stock rallies sufficiently.
+
+    The \textit{liquidity-based algorithm} takes into consideration outflows with respect to the full order book. However, not all orders are in fact beneficial to the discovery of the ultimate clearing price. More specifically, the removal of buy(sell) orders below(above) the clearing price has no impact on the price and is therefore less relevant. In particular, this algorithm includes orders that try to take advantage of large but short price movements, for instance to buy a stock during a downward spike. In order to account only for the orders that are in fact relevant for the clearing, the \textit{execution-based algorithm} is introduced. In contrast to its previously introduced counterpart, this algorithm removes only liquidity that has in fact been executed at the end of the auction. Assuming that the closing price does not deviate substantially from the preclose midquote on most trading days, this algorithm mainly captures orders submitted during the auction, consisting of both market- and limit orders. Importantly, the execution volume is only a subset of all the market- and limit orders at the closing and highly dependent on the structure of the order book and on the outcome of the auction. Moreover, the executed volume must be equivalent on both sides of the book. Therefore, simultaneous removal of the same percentage from both bid- and ask top-of-book would not have any effect on the closing price. Moreover, there the auction will not lose its ability to clear unless 100\% of liquidity are removed from both sides using this algorithm.
+
+    \begin{figure}[!t]
+        \centering
+        \includegraphics[width=1\textwidth]{execution_removal}
+        \caption{Distribution of absolute price impact caused by liquidity removal via \textit{execution-based algorithm}. The horizontal axis represents the percentage of liquidity removed and the vertical axis represents the price deviation in basis points. The data is presented in the form of boxplots, where the shaded area represents the inter-quartile range which is divided by a dark line representing the distribution median. The whisks represent the 95\% prediction interval of the distribution. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) limit orders. The results are presented for each of the size quartiles, which are computed based on continuous trading volume and re-assigned on a daily basis.}
+        \label{fig:ExecutionBasedAlgorithm}
+    \end{figure}
+
+    The results from the removal using this algorithm are shown in \cref{fig:ExecutionBasedAlgorithm}. In contrast to the liquidity-based algorithms, the results here are much more comparable across all size quartiles. Nonetheless, large stocks are apparently most affected by removal of top-of-book liquidity. One explanation for this may lie in a higher proportion of market orders as opposed to limit orders. Market orders are used by investors who want to execute at any given price and therefore rely on the auction's efficient determination of a clearing price. With less liquid stocks, investors may be more cautious and therefore prefer using limit orders due to fear of extreme adverse price movements. In addition to this, the extent of the price dislocation under the execution-based algorighm is significantly smaller given the same percentage removal. This is due to executed orders being a subset of order in the book. More specifically, removing 25\% of execution volume entails a price dislocation of only 19.5(24.5)bps for small(large) stocks.
+
+    The discrepancy of outcomes between the liquidity-based and execution-based algorithm shows that particularly for small stocks, a comparatively large portion of liquidity is located beyond the clearing price which is only captured by the liquidity-based algorithm. However, neither of these two algorithms takes into consideration the composition of the order book in terms of different order types. This is particularly important since academic research has shown that investors use different order types based on their objectives and information. For instance, \textcite{BrownZhang1997} show in a theoretical model that market orders can reveal significant information to the wider market. In addition to this \textcite{Rosu2009,GoettlerParlourRajan2005} find that impatient investors use market orders since they value immediacy higher as opposed to getting the optimal price. This argument should generally hold for price-inelastic investors, such as index funds who are rebalancing based on a given benchmark or investors who want to unload their inventory to avoid overnight price risk~\parencite{CarteaJaimungal2015}.
+
+    For this purpose, the final algorithm considered here focuses on the role of market orders in the closing auction, given by the motivation of investors using them. The \textit{market-based algorithm} removes only market orders but leaves limit orders unaffected. The market orders can be submitted both during the closing auction as well as during the continuous trading phase\footnote{Such orders are submitted to be executed at-close. Until the beginning of the closing auction, these orders remain invisible to other investors and are only activated once the auction begins. From this point onward, they are treated like market orders submitted after the start of the auction.}. In contrast to the other two algorithms, the \textit{market-based algorithm} is not necessarily remove the same number of shares on both sides, due to the possibility of order imbalances. Such imbalances occur when there is an overhang of either buy- or sell market orders. Consequently, the simultaneous removal of a given percentage from both sides of the book is likely to lead to a dislocation of the closing price. This has not been possible under the previous two algorithms.
+
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[trim= 3mm 3mm 3mm 3mm, clip=True,width=1\textwidth]{all_market_removal_facet}
+        \caption{Distribution of absolute price impact caused by liquidity removal via \textit{market-based algorithm}. The vertical axis represents the price deviation in basis points. The data is presented in the form of boxplots, where the shaded area represents the inter-quartile range which is divided by a dark line representing the distribution median. The whisks represent the 95\% prediction interval of the distribution. Panel A(B) shows the impact of percentage liquidity removal of bid(ask) limit orders. The results are presented for each of the size quartiles, which are computed based on continuous trading volume and re-assigned on a daily basis.}
+        \label{fig:SensMkt}
+        % TODO: Redo plot that the axes are not shared (Use facet-grid instead)
+    \end{figure}
+
+    The dislocations after the removal of all market orders from the book are depicted in \cref{fig:SensMkt}. To begin with, the one-sided removal of all market orders has fairly symmetric effect. In all cases, large stocks are affected the most with a median absolute deviation of around 45bps. The smallest stocks on the other hand only deviate around 32bps when removing all bid or ask market orders. Moreover, for stocks quartile 1(2), such a removal does not cause any deviation from the original clearing price in 15\%(10\%) of observations. This indicates that market orders tend to have a smaller influence than in larger stocks. When looking at the right panel, the pattern is reversed such that large stocks are affected the least when market orders are removed, with a median of around 11bps of absolute dislocation. The the 95\% prediction intervals are also considerably smaller as opposed to the other size quantiles. Meanwhile, the smallest size quartile in particular shows the largest variance.
+
+    In summary, these results lead to the following two observations. First, large stocks react less to one-sided removal of market orders than small stocks. Second, small stocks react more to a removal of two-sided removal of market orders than small large stocks. These two observations indicate that the composition of order books at execution varies across size quartiles. The following metric is defined as market ratio $MR$ and computed for each stock $s$ trading day $d$ in order to to capture the share of market orders executed on any given side of the book:
+    \begin{equation*}
+        MR^{(side)}_{d,s} = \frac{exec\_mkt^{(side)}_{d,s}}{exec\_vol_{d,s}}
+        \qquad \forall \quad side\in \{buy, sell\}
+    \end{equation*}
+    The variable $exec\_mkt$ represents the volume executed by market orders and $exec\_vol$ stands for the executed closing volume, both denoted in currency terms. By definition, the measure is bound by $MR \in [0, 1]$. Moreover, the measure is calculated for each side of the book individually as they are independent.
+
+    In order to visualize the joint distribution of $MR^{(buy)}_{d,s}$ and $MR^{(buy)}_{d,s}$, the concept of bivariate \ac{KDE} is introduced. \Ac{KDE} is a method which is used to approximate non-parametric distributions from empirical data. As the name suggests, the distributions are flexible and are not subject to a set of underlying parameters. The methodology was first introduced by \textcite{Rosenblatt1956} and \textcite{Parzen1962}. To explain the concept of \acp{KDE} where $d$ is the number of dimensions, a kernel $K_\mathbf{H} (x)$ is a function that takes a vector $x \in \mathbb{R}^d$ as input. The kernel function returns the density of a multinomial distribution with zero mean across all dimensions and covariance matrix $\mathbf{H} \in \mathbb{R}^{d \times d}$ as parameters\footnote{The formula of the multivariate kernel is given by: \[K_\mathbf{H} (x) = (2 \pi)^{-d/2} \det \left( \mathbf{H} \right)^{-1/2} \exp \left(- \frac{x^\intercal \mathbf{H}^{-1} x}{2}  \right) \]}
+    , where $\mathbf{H}$ is a diagonal and positive-semidefinite matrix. The covariance matrix is estimated using Scott's rule $\sqrt {\mathbf{H}_{jj}} = n^{-1/(d+4)} \sigma_j$, where $\sigma_j$ is the standard deviation of the jth variable and all off-diagonal elements are zero\ \parencite{Scott1979}. In a next step, the average density can be calculated for any input value $x$ based on the proximity of all observations in the sample.
+    \begin{equation} \label{eq:KDEDefinition}
+        \hat{f}_\mathbf{H}(x) = \frac{1}{n} \sum_{i=1}^{n} K_\mathbf{H} (x-x_i)
+    \end{equation}
+    In this equation $x_i \in \mathbb{R}^d$ is a vector containing $MR^{(buy)}$ and $MR^{(sell)}$ as components. The estimation in \cref{eq:KDEDefinition} is repeated for each point of the input space ranging from 0 to 1 with 200 steps in each dimension, resulting in 40 thousand estimations.
+
+    The results of the \ac{KDE} estimation are presented in \cref{fig:MarketOrdersKDE}, for each size quantile individually. The plot very quicly shows that there are significant differences in order book composition between sizes. To begin with, small stocks in quantile 1 show the most broad distribution. From both the bid- and ask- side of the book there are days auctions when one side is almost entirely determined by market orders. However, this does not occur simultaneously. This can be partly explained that an auction cannot clear with only market orders on both sides, as the price cannot be determined. In constrast to this, it is also common that there are barely any market orders and the clearing is purely driven by limit orders from both sides. Overall, the mode of the distribution for the smallest stocks is at around 39\% market order share in both dimensions.
+    Larger stocks in size quantile 4 show a much more balanced picture. Specifically the distribution is much more contained in the center of the plot. The resulting distribution flattens out quickly for market order ratios outside of the 20\%--80\% range. This indicates that for these stocks, closing auctions are driven by both market orders and limit orders on both sides of the book. Moreover, the mode of the distribution is is at around 47\% in each dimension, indicating that investors are more comfortable using market orders in large stocks.
+
+    This observation can be explained by the risk of smaller stocks not clearing properly at the close due to lack of liquidity. Moreover, in these stocks a small amount of incoming liquidity has much greater effect on the ultimate closing price. Similar observations have also been made by \textcite{EllulShinTonks2005,Ibikunle2015} who found that call auctions of small stocks can be less reliable for those reasons. \textcite{EllulShinTonks2005} also shows that investors are less likely to participate in such small stock call auctions when they anticipate volume to be low.
+
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=0.85\textwidth]{Market_Ratios_KDE}
+        \caption{}
+        \label{fig:MarketOrdersKDE}
+    \end{figure}
+
+    \subsection{Information on Overnight Returns} \label{subsec:ClosingReturns}
+
+
+    \section{Price Discovery Contribution}
+%    So far, the analysis has mainly been focusing on the composition of the order book at close. This section will shed more light on closing returns and how they relate to the rest of the trading day separated into two parts. The first subsection is concerned with the price discovery contribution of closing returns with respect to the remainder of the trading day. The second subsection will address the predictability of overnight returns at various horizons with respect to information in the closing book.
+
+    In order to determine whether fragmentation of closing auctions has detrimental effects on price discovery, we quantified the process of price discovery throughout the closing auction. To achieve this, we first need to define several measures that are relevant for the later presentation of results.
+
+    In the first part of this section, a measure of order imbalance is required to assess whether anyone having private information about the incoming order flow would receive a signal to subsequently trade on. In academic literature, there has been some evidence that order imbalance can lead price movements. Examples of this include \textcite{ChordiaRollSubrahmanyam2008,ChordiaRollSubrahmanyam2005}. It is yet unclear, however, how order imbalances at various points during the closing auction influence the outcome. For our purposes, order imbalances ($IMBAL$) at the start of the auction are computed following \textcite{HoldenJacobsen2014,ChordiaRollSubrahmanyam2002,ChordiaSubrahmanyam2004} for each stock $s$ on day $d$, where:
+    \[ IMBAL_{d,s} = \frac{VOL^{bid}_{d,s} - VOL^{ask}_{d,s}}{VOL^{bid}_{d,s} + VOL^{ask}_{d,s}}. \]
+    Based on this formula, the result is bounded by $IMBAL \in (-1,1)$. The volumes $VOL$ are computed based on the number of order in the closing order book times the closing price \emph{at the beginning of the auction}. This way, we visualize certain patterns on the predictability of closing returns prior to the auction.
+
+    This part is concerned with price discovery, which is approximated using the \ac{WPDC} measure, used by \textcite{BarclayWarner1993}, \textcite{BarclayHendershott2003}. Generally speaking, this measure considers two trading periods, one longer and one shorter, where the latter a strict sub-period of the former. In our application in this paper, we first compute how much the closing auction contributes to the overall trading day in terms of price discovery. For this purpose, we define $ret_{d,s}$ as the logarithmic open-to-close return on day $d$ in stock $s$. Similarly, the logarithmic closing return is defined as $ret^{CL}_{d,s}$. The ratio between both we define as
+    \begin{equation*}
+        PDC^{CL}_{d,s} = \frac{ret^{CL}_{d,s}}{ret_{d,s}}
+    \end{equation*}
+    which represents the price discovery contribution of the closing return with respect to the open-to-close return. For stability reasons, days with open-to-close returns within the interval $(-\varepsilon, \varepsilon)$ are disregarded, where $\varepsilon$ is a sufficiently small number. Due to stocks experiencing correlated shocks on the same trading days, this measure is extended by a weighting term. This weighting term is defined per stock and day as the fraction between the absolute open-to-close return $|ret_{d,s}|$ and the sum of absolute returns across all 30 stocks on the same day:
+    \begin{equation}
+        \label{eq:wpdc_base}
+        WPDC^{CL}_{d,\hat{s}} = \underbrace{\frac{|ret_{d,\hat{s}}|}{\sum_{s=1}^{S} |ret_{d,s}|}}_{weighting}  \times \underbrace{PDC^{CL}_{d,\hat{s}}}_{contribution}.
+    \end{equation}
+    Following this definition, the weights must sum up to 1, while giving more weight to stocks with large open-to-close returns compared to the remaining stocks. Therefore, stocks with large open-to-close returns will obtain a higher weighting than small ones. The second component constitutes the contribution term, which in our case divides the closing return by the open-to-close return. The resulting value is positive with the closing return going into the same direction as the open-to-close return and negative otherwise. In order to aggregate the computed $WPDC$ values by day or stock, two more measures are derived in context of this analysis. First, \cref{eq:wpdc_day} takes advantage of the fact that the weighting for each day sum up to one.
+    \begin{equation}
+        \label{eq:wpdc_day}
+        WPDC^{CL}_{d} = \sum_{\hat{s}=1}^{S} \left( \frac{|ret_{d,\hat{s}}|}{\sum_{s=1}^{S} |ret_{d,s}|} \times \, PDC^{CL}_{d,\hat{s}} \right)
+    \end{equation}
+    This entails that the daily sum of $WPDC$ represents a weighted average of all price discovery contributions of individual stocks within each trading day. Second, we aggregate the price discovery contributions $PDC^{CL}_{d,s}$ on a stock basis. For this purpose, \cref{eq:wpdc_stock} effectively calculates the t-statistic given the null hypothesis of no price contribution on average $H_0: \mathbb{E}\left[  PDC^{CL}_{s} \right] = 0$. To achieve this, we define $\sigma (X) = \sqrt{ \text{Var} \left[ X \right] }$ and $D$ as the total number of days.
+    \begin{equation}
+        \label{eq:wpdc_stock}
+        TPDC^{CL}_{s} =  \frac{\mathbb{E} \left[  PDC^{CL}_{s} \right] }{ \sigma \left( PDC^{CL}_{s} \right) \; / \; \sqrt{D}}
+    \end{equation}
+    This is achieved by taking the expectation of $PDC$ for each stock $s$ across a total of $D$ days and subsequently dividing by the standard error.
+    Since we are essentially calculating the t-statistic, this measure is named $TPDC$.
+
+
+    The first part of this analysis aims to show some of the implications of order imbalance with respect to price discovery measures. \Cref{fig:Discovery} presents three scatter plots showing the relationship between different aggregations of the $WPDC$ measure and the order imbalance $IMBAL$. It attempts to visualize the distribution of price discovery and reveal potential patterns inside the order flow.
+
+    \begin{figure}[!t]
+        \centering
+        \includegraphics[width=1\textwidth]{Scatterplots_Normalized}
+        \caption{\ac{WPDC} and order imbalance. Panel A plots all stock-day observations in the sample as defined in \cref{eq:wpdc_base}. Panel B shows $WPDC^{CL}_d$ aggregated on a daily basis as defined in \cref{eq:wpdc_day}. The horizontal and vertical axes have been adjusted for each panel. Panel C represents the t-statistic of the price discovery measure $TPDC^{CL}_s$ as defined in \cref{eq:wpdc_stock}. Color and size of the circles are determined by the average trading volume throughout the sample. The shaded area represents the area of non-significance at the 5\% level for $| TPDC | < 1.96$. }
+        \label{fig:Discovery}
+    \end{figure}
+
+    Panel A represents all stock day observations of the dataset. At first sight there does not seem to be a strong pattern between both of these measures. However, most of the observations with turnover of more than CHF 400 million in the closing alone have a positive $WPDC^{CL}_{d,s}$ as defined in \cref{eq:wpdc_base}. This indicates that observations with large trading volume tend to move into the same direction as the overall return during the day and not in the opposite direction. This implies that the closing auctions for these stock-days have a positive contribution to price discovery.
+
+    Panel B shows the aggregated $WPDC^{CL}_d$ on a daily basis by accumulating the weighted average as shown in \cref{eq:wpdc_day}. In this panel, we can clearly see that the days with the largest closing turnovers (i.e.\ the quarterly future expiration dates) have clearly positive momentum within the trading day. On these days, the closing auction contributed 18.4\% (March), 24.4\% (June), 13.2\% (October) and 7.2\% (December) to the open-to-close price discovery across stocks. Most of the observations with negative WPDC are related to low aggregated turnover.
+
+    Finally, Panel C of \cref{fig:Discovery} visualizes the t-statistics of contributions by individual stocks $TPDC^{CL}_s$. Importantly, each of the circles represents one SLI stock, whereas the size and shading of the circle are ordered by average trading volume throughout the sample period. The largest dots in this panel seem to be distributed at random, without revealing a clear pattern. There are only two stocks with significantly positive price discovery contribution, that are SOON and ALC with values of 2.478 and 2.403. On the contrary side, SREN has the lowest t-statistic with $-1.733$, which is still significant at the 10\% level.
+
+
+    \clearpage
+
+
+    \section{Conclusions} \label{sec:Conclusion}
+
+    With the increasing relevance of closing auctions, it is clear that the price discovery process must be accounted for when considering additional fragmentation at the close. We have shown that closing prices can be quite sensitive with respect to outflowing liquidity. Particularly, the simulation of one-sided removal of only 25\% of the execution volume from each side of the market entails a median dislocation of 20bps for all liquidity terciles. Similarly, a removal of all market orders displaces the closing price by around 50 basis points for both bid- and ask market orders. Interestingly, the most liquid stocks seem to be the most sensitive towards an outflow of liquidity based on execution volume. In a next step, we analyzed the price discovery on both the level of the full auction as well as over the course of the auction. For approximation purposes, we implemented several distinguished measures of \acf{WPDC} in conjunction with order imbalances prior to the auction. On days with large closing volume, closing auctions tend to reinforce intraday returns and are therefore beneficial to price discovery. In particular, the three most traded closing auctions (which happen to be the future expiration dates in March, June and September) contribute between 13 and 24\% to open-to-close price discovery. Finally, we showed how the price discovery process is varying throughout the auction by extracting 30-second intervals. The evidence shows that the majority of price discovery takes place within the first two minutes of the auction. After this point, prices are still adjusting, but in a noisy way without benefit to price discovery. Moreover, the three largest constituents of the 30 \ac{SLI} stocks contribute on average 5--6\% each to the total price discovery during the auction across all stocks.
+
+    These observations indicate two features of closing auctions. First, the auction price is sensitive towards even small removals of liquidity. Second, most price discovery happens in the first two minutes of the auction. Both of these observations imply certain risks of fragmentation of closing auction liquidity across venues. For instance, if a third-party platform diverts liquidity from the closing auction on the main exchange, prices may become increasingly volatile, as the closing price is determined over a smaller set of orders. Similarly, by diverting the order flow from the beginning of the auction, an investment bank may take positions towards the end of the auction due to exclusive visibility on its order flow. All of these opportunities would jeopardize overall market quality.
+
+    Despite our findings showing certain risks of closing auction fragmentation, there is much potential for further research into this topic. We mainly see two areas that may be further explored in the future. The first is about the predictive power of closing order flow before the start of the auction. It has well been documented in academic literature, that order flow carries information about future price movements (e.g.\ in~\textcite{ChordiaRollSubrahmanyam2005,ChordiaRollSubrahmanyam2008}). This predictive power is usually only over very short time horizons in the intraday market. However, this phenomenon has not yet been adequately researched for closing auctions. An approach like this would quantify the degree to which private information about the order flow may be profitable in economic terms.
+
+    The second area deals with the question of what drives participation in closing auction primarily. It can be argued that some investors make a deliberate choice about when to enter or exit their positions, be it human- or machine-driven. Many investors nowadays make use of trading algorithms that autonomously decide when market conditions are most favourable for execution. There has been the notion that trading algorithms cluster together to trade with each other to match their executions during maximum liquidity. If it is true that market participants generally opt for the closing auction on tumultuous trading days to avoid any type of execution risk, the accuracy of closing prices becomes increasingly important for them. There is an argument to be made that if investors view those auctions as some sort of \emph{safe haven} for execution, jeopardizing it through fragmentation would be harmful overall. Conclusively, it is important to rigorously understand what drives investors' decisions about whether to enter closing auctions or trade before in order to make an argument for maximum visibility and consolidation in those auctions.
+
+    \clearpage
+
+    \printbibliography[heading=bibintoc]
+
+    \clearpage
+    \appendix
+
+
+    \section{Appendix} \label{sec:Appendix}
+
+
+    \begin{doublespacing}
+        \begin{small}
+            \begin{longtable}{llc|cc|cc|cc|cccc}
+                \toprule
+                \multicolumn{3}{c}{} & \multicolumn{2}{c}{Close volume} & \multicolumn{2}{c}{Cont. volume} & \multicolumn{2}{c}{Close Return}        & \multicolumn{4}{c}{Size quantile}    \\ \cmidrule{4-5} \cmidrule{6-7} \cmidrule{8-9} \cmidrule{10-13}
+                {}  & {}    & N   & $\mu$  & $\sigma$ & $\mu$  & $\sigma$ & $\mu$ & $\sigma$ & $Q_1$ & $Q_2$ & $Q_3$ & $Q_4$ \\
+                \midrule
+                \endfirsthead
+
+                \toprule
+                \multicolumn{3}{c}{} & \multicolumn{2}{c}{Close volume} & \multicolumn{2}{c}{Cont. volume} & \multicolumn{2}{c}{Close Return}        & \multicolumn{4}{c}{Size quantile}  \\  \cmidrule{4-5} \cmidrule{6-7} \cmidrule{8-9} \cmidrule{10-13}
+                {}  & {}    & N   & $\mu$  & $\sigma$ & $\mu$  & $\sigma$ & $\mu$ & $\sigma$ & $Q_1$ & $Q_2$ & $Q_3$ & $Q_4$ \\
+                \midrule
+                \endhead
+                \midrule
+                \multicolumn{13}{r}{{Continued on next page}} \\
+                \midrule
+                \endfoot
+
+                \bottomrule
+                \caption[]{List of all securities in the analysis. This table contains all the 69 equities analysed. All of the securities were passed through the filters introduced in \cref{sec:Data}. The table contains aggregated statistics for each security on a daily basis, including volumes and returns. The last three columns count the number of times a security falls into a size quantile across stocks within days where $Q_1$($Q_4$) represents stocks with the lowest(highest) continuous trading volume.}
+                \label{tab:Securities}
+                \endlastfoot
+                1   & ABBN  & 868 & 38.76  & 24.15    & 98.12  & 43.46    & -0.00 & 0.23     & 0     & 0     & 0     & 868   \\
+                2   & ADEN  & 863 & 15.34  & 10.71    & 32.49  & 16.79    & 0.01  & 0.32     & 0     & 0     & 225   & 638   \\
+                3   & ALC   & 551 & 25.00  & 26.60    & 55.06  & 52.01    & 0.02  & 0.34     & 0     & 0     & 13    & 538   \\
+                4   & ALLN  & 873 & 1.54   & 1.31     & 2.69   & 1.80     & 0.02  & 0.23     & 33    & 786   & 54    & 0     \\
+                5   & ALSN  & 870 & 0.54   & 0.58     & 2.00   & 1.49     & 0.04  & 0.40     & 666   & 200   & 4     & 0     \\
+                6   & AMS   & 801 & 8.17   & 5.84     & 41.82  & 29.08    & 0.01  & 0.34     & 1     & 5     & 628   & 167   \\
+                7   & ARYN  & 776 & 1.19   & 1.50     & 6.49   & 10.10    & -0.00 & 0.50     & 346   & 315   & 113   & 2     \\
+                8   & AUTN  & 851 & 0.33   & 0.24     & 2.74   & 2.48     & 0.01  & 0.34     & 780   & 70    & 1     & 0     \\
+                9   & BAER  & 862 & 14.00  & 11.55    & 27.52  & 14.18    & 0.00  & 0.37     & 0     & 0     & 273   & 589   \\
+                10  & BALN  & 868 & 7.21   & 4.54     & 13.72  & 6.62     & -0.03 & 0.40     & 0     & 2     & 815   & 51    \\
+                11  & BANB  & 868 & 0.46   & 0.76     & 2.11   & 2.24     & 0.05  & 0.44     & 689   & 177   & 2     & 0     \\
+                12  & BARN  & 873 & 7.09   & 7.34     & 11.87  & 11.02    & 0.00  & 0.26     & 0     & 4     & 814   & 55    \\
+                13  & BCHN  & 864 & 0.31   & 0.22     & 1.46   & 1.63     & 0.04  & 0.47     & 791   & 72    & 1     & 0     \\
+                14  & BCVN  & 871 & 1.85   & 5.33     & 3.46   & 2.85     & 0.04  & 0.36     & 90    & 634   & 146   & 1     \\
+                15  & BEAN  & 865 & 1.30   & 3.19     & 2.75   & 2.01     & 0.01  & 0.39     & 314   & 504   & 46    & 1     \\
+                16  & BION  & 868 & 1.37   & 5.65     & 4.94   & 2.90     & 0.02  & 0.32     & 208   & 612   & 45    & 3     \\
+                17  & BKW   & 871 & 0.87   & 1.05     & 2.77   & 1.99     & 0.02  & 0.24     & 397   & 467   & 7     & 0     \\
+                18  & BOSN  & 863 & 0.42   & 0.29     & 2.29   & 1.82     & 0.03  & 0.31     & 755   & 108   & 0     & 0     \\
+                19  & BSLN  & 854 & 0.51   & 0.37     & 2.94   & 2.49     & 0.04  & 0.37     & 628   & 221   & 5     & 0     \\
+                20  & BUCN  & 871 & 1.98   & 1.74     & 5.54   & 3.33     & 0.02  & 0.25     & 7     & 669   & 195   & 0     \\
+                21  & CEVA  & 329 & 0.57   & 1.96     & 3.56   & 11.34    & 0.03  & 0.56     & 253   & 65    & 10    & 2     \\
+                22  & CFR   & 867 & 37.74  & 19.36    & 87.56  & 45.20    & 0.01  & 0.32     & 0     & 0     & 0     & 867   \\
+                23  & CLN   & 864 & 7.61   & 4.71     & 21.68  & 18.11    & 0.01  & 0.31     & 0     & 5     & 755   & 104   \\
+                24  & CMBN  & 869 & 2.27   & 2.02     & 5.67   & 3.22     & 0.01  & 0.26     & 0     & 603   & 266   & 0     \\
+                25  & CON   & 822 & 0.36   & 0.38     & 1.48   & 1.36     & 0.03  & 0.33     & 761   & 61    & 0     & 0     \\
+                26  & COTN  & 856 & 0.43   & 0.71     & 2.64   & 2.70     & 0.06  & 0.36     & 741   & 113   & 2     & 0     \\
+                27  & CSGN  & 856 & 32.27  & 18.98    & 100.50 & 48.96    & 0.00  & 0.24     & 0     & 0     & 5     & 851   \\
+                28  & DAE   & 866 & 0.64   & 0.47     & 2.21   & 1.35     & 0.01  & 0.33     & 547   & 315   & 4     & 0     \\
+                29  & DKSH  & 862 & 1.92   & 2.53     & 4.39   & 3.09     & 0.04  & 0.37     & 14    & 675   & 172   & 1     \\
+                30  & DOKA  & 868 & 2.04   & 1.47     & 5.82   & 4.96     & 0.01  & 0.32     & 24    & 570   & 274   & 0     \\
+                31  & DUFN  & 817 & 7.19   & 5.22     & 22.30  & 15.30    & 0.03  & 0.35     & 0     & 18    & 710   & 89    \\
+                32  & EMMN  & 868 & 0.89   & 0.63     & 2.97   & 2.27     & 0.04  & 0.31     & 304   & 549   & 15    & 0     \\
+                33  & EMSN  & 872 & 5.77   & 7.45     & 10.26  & 5.65     & 0.01  & 0.26     & 0     & 5     & 860   & 7     \\
+                34  & FHZN  & 857 & 3.79   & 2.00     & 9.05   & 5.61     & 0.01  & 0.26     & 0     & 130   & 724   & 3     \\
+                35  & FI-N  & 868 & 4.45   & 3.66     & 11.22  & 6.27     & 0.03  & 0.29     & 0     & 59    & 804   & 5     \\
+                36  & FORN  & 869 & 1.04   & 0.89     & 3.73   & 3.56     & 0.00  & 0.32     & 225   & 623   & 21    & 0     \\
+                37  & GALE  & 873 & 2.36   & 2.25     & 5.67   & 3.33     & 0.02  & 0.27     & 3     & 560   & 310   & 0     \\
+                38  & GAM   & 812 & 0.99   & 1.17     & 4.12   & 4.61     & -0.03 & 0.39     & 386   & 324   & 101   & 1     \\
+                39  & GEBN  & 871 & 19.66  & 10.00    & 40.98  & 23.32    & 0.02  & 0.24     & 0     & 0     & 20    & 851   \\
+                40  & GIVN  & 873 & 23.40  & 12.63    & 52.00  & 27.02    & 0.03  & 0.24     & 0     & 0     & 3     & 870   \\
+                41  & HELN  & 861 & 3.08   & 1.65     & 7.94   & 4.42     & 0.01  & 0.23     & 1     & 246   & 614   & 0     \\
+                42  & HUBN  & 865 & 0.45   & 0.50     & 1.72   & 1.41     & 0.02  & 0.32     & 710   & 153   & 2     & 0     \\
+                43  & IDIA  & 854 & 1.77   & 1.88     & 7.45   & 5.95     & 0.02  & 0.35     & 61    & 659   & 131   & 3     \\
+                44  & IFCN  & 861 & 0.63   & 0.77     & 2.35   & 1.39     & -0.01 & 0.35     & 550   & 308   & 3     & 0     \\
+                45  & IMPN  & 840 & 0.34   & 0.28     & 2.25   & 2.16     & 0.04  & 0.32     & 740   & 99    & 1     & 0     \\
+                46  & INRN  & 852 & 0.54   & 0.86     & 2.29   & 1.77     & 0.03  & 0.37     & 669   & 180   & 3     & 0     \\
+                47  & KARN  & 863 & 0.63   & 1.20     & 1.71   & 1.09     & -0.00 & 0.36     & 625   & 233   & 5     & 0     \\
+                48  & KNIN  & 871 & 12.21  & 9.02     & 24.46  & 13.14    & 0.04  & 0.34     & 0     & 0     & 447   & 424   \\
+                49  & KOMN  & 862 & 0.51   & 0.64     & 2.66   & 2.44     & 0.06  & 0.44     & 691   & 166   & 5     & 0     \\
+                50  & LAND  & 858 & 1.68   & 1.17     & 5.67   & 4.28     & 0.05  & 0.39     & 55    & 664   & 139   & 0     \\
+                51  & LEON  & 852 & 0.33   & 0.35     & 2.11   & 2.92     & 0.01  & 0.36     & 737   & 108   & 7     & 0     \\
+                52  & LHN   & 832 & 31.41  & 15.78    & 73.24  & 33.82    & 0.01  & 0.26     & 0     & 0     & 0     & 832   \\
+                53  & LISN  & 870 & 4.43   & 3.18     & 6.89   & 4.67     & 0.07  & 0.36     & 0     & 78    & 791   & 1     \\
+                54  & LISP  & 871 & 5.69   & 3.80     & 11.21  & 6.67     & 0.02  & 0.35     & 0     & 15    & 844   & 12    \\
+                55  & LOGN  & 863 & 12.93  & 25.38    & 40.64  & 29.14    & 0.00  & 0.28     & 0     & 0     & 480   & 383   \\
+                56  & LONN  & 869 & 29.39  & 15.22    & 76.63  & 40.60    & -0.02 & 0.30     & 0     & 0     & 0     & 869   \\
+                57  & MBTN  & 753 & 0.47   & 0.97     & 5.14   & 6.43     & 0.07  & 0.81     & 615   & 130   & 8     & 0     \\
+                58  & MOBN  & 872 & 0.79   & 0.96     & 1.70   & 1.22     & 0.06  & 0.28     & 382   & 487   & 3     & 0     \\
+                59  & MOVE  & 547 & 0.33   & 1.00     & 1.15   & 6.33     & 0.00  & 0.73     & 509   & 30    & 7     & 1     \\
+                60  & NESN  & 873 & 142.38 & 107.30   & 303.80 & 149.42   & -0.01 & 0.27     & 0     & 0     & 0     & 873   \\
+                61  & NOVN  & 869 & 115.10 & 71.03    & 257.48 & 116.49   & -0.01 & 0.30     & 0     & 0     & 0     & 869   \\
+                62  & OERL  & 867 & 3.17   & 2.10     & 8.51   & 6.36     & -0.01 & 0.31     & 5     & 287   & 571   & 4     \\
+                63  & PARG  & 718 & 2.32   & 4.43     & 3.83   & 3.57     & -0.08 & 0.60     & 93    & 317   & 305   & 3     \\
+                64  & PGHN  & 867 & 16.64  & 25.75    & 37.64  & 19.96    & 0.00  & 0.45     & 0     & 0     & 125   & 742   \\
+                65  & PSPN  & 870 & 4.78   & 3.40     & 8.08   & 5.71     & 0.03  & 0.23     & 0     & 48    & 820   & 2     \\
+                66  & PWTN  & 505 & 1.27   & 1.54     & 6.40   & 12.98    & 0.02  & 0.72     & 115   & 325   & 63    & 2     \\
+                67  & RO    & 872 & 2.24   & 22.97    & 10.15  & 8.92     & 0.03  & 0.27     & 375   & 404   & 90    & 3     \\
+                68  & ROG   & 872 & 126.68 & 76.87    & 278.46 & 162.84   & -0.00 & 0.28     & 0     & 0     & 0     & 872   \\
+                69  & ROSE  & 840 & 1.59   & 3.27     & 8.25   & 11.97    & 0.07  & 0.43     & 512   & 148   & 176   & 4     \\
+                70  & SCHN  & 848 & 2.08   & 4.31     & 5.38   & 3.37     & 0.05  & 0.32     & 8     & 702   & 136   & 2     \\
+                71  & SCHP  & 871 & 9.69   & 5.31     & 24.51  & 13.22    & 0.02  & 0.29     & 0     & 0     & 666   & 205   \\
+                72  & SCMN  & 872 & 21.81  & 11.93    & 47.65  & 29.08    & 0.01  & 0.23     & 0     & 0     & 5     & 867   \\
+                73  & SFSN  & 869 & 0.94   & 0.58     & 2.82   & 1.65     & 0.02  & 0.34     & 214   & 645   & 10    & 0     \\
+                74  & SFZN  & 871 & 1.10   & 1.12     & 4.42   & 2.88     & 0.01  & 0.28     & 246   & 606   & 18    & 1     \\
+                75  & SGSN  & 872 & 16.28  & 11.57    & 33.98  & 27.06    & 0.01  & 0.29     & 0     & 0     & 103   & 769   \\
+                76  & SIGN  & 681 & 4.26   & 6.96     & 8.39   & 10.86    & 0.06  & 0.42     & 113   & 165   & 387   & 16    \\
+                77  & SIKA  & 759 & 22.00  & 14.33    & 56.48  & 29.79    & 0.01  & 0.27     & 0     & 0     & 6     & 753   \\
+                78  & SLHN  & 865 & 15.88  & 10.98    & 50.81  & 19.89    & -0.01 & 0.24     & 0     & 0     & 108   & 757   \\
+                79  & SOON  & 864 & 14.10  & 8.02     & 34.11  & 18.69    & -0.02 & 0.35     & 0     & 0     & 242   & 622   \\
+                80  & SPSN  & 873 & 7.11   & 5.13     & 10.18  & 7.43     & 0.01  & 0.29     & 0     & 2     & 829   & 42    \\
+                81  & SQN   & 849 & 0.37   & 0.38     & 2.98   & 2.25     & 0.04  & 0.34     & 752   & 97    & 0     & 0     \\
+                82  & SRAIL & 551 & 2.79   & 4.29     & 8.60   & 17.54    & 0.03  & 0.39     & 16    & 323   & 208   & 4     \\
+                83  & SRCG  & 811 & 4.40   & 6.66     & 12.47  & 21.06    & -0.00 & 0.45     & 94    & 44    & 645   & 28    \\
+                84  & SREN  & 861 & 33.01  & 24.02    & 81.78  & 44.29    & 0.01  & 0.26     & 0     & 0     & 1     & 860   \\
+                85  & STMN  & 866 & 10.75  & 5.89     & 23.62  & 14.15    & 0.00  & 0.30     & 0     & 0     & 549   & 317   \\
+                86  & SUN   & 857 & 1.76   & 1.22     & 5.32   & 4.75     & 0.01  & 0.45     & 20    & 688   & 149   & 0     \\
+                87  & SWON  & 405 & 2.16   & 4.34     & 5.75   & 8.17     & 0.03  & 0.59     & 82    & 255   & 65    & 3     \\
+                88  & SWTQ  & 867 & 0.32   & 0.25     & 1.48   & 0.89     & -0.01 & 0.42     & 831   & 36    & 0     & 0     \\
+                89  & TECN  & 863 & 3.11   & 4.30     & 4.84   & 3.97     & 0.06  & 0.32     & 9     & 491   & 355   & 8     \\
+                90  & TEMN  & 857 & 11.32  & 21.07    & 29.62  & 22.78    & 0.02  & 0.40     & 0     & 0     & 550   & 307   \\
+                91  & UBSG  & 864 & 46.33  & 25.94    & 130.69 & 56.83    & -0.01 & 0.26     & 0     & 0     & 0     & 864   \\
+                92  & UBXN  & 850 & 0.58   & 0.58     & 3.63   & 3.78     & 0.03  & 0.35     & 576   & 265   & 9     & 0     \\
+                93  & UHR   & 866 & 19.42  & 8.93     & 47.87  & 27.39    & 0.02  & 0.29     & 0     & 0     & 118   & 748   \\
+                94  & UHRN  & 867 & 1.65   & 1.87     & 5.46   & 3.67     & 0.03  & 0.29     & 67    & 682   & 118   & 0     \\
+                95  & VACN  & 868 & 4.74   & 3.30     & 14.00  & 8.00     & 0.01  & 0.36     & 0     & 38    & 819   & 11    \\
+                96  & VALN  & 864 & 0.51   & 0.32     & 2.87   & 2.23     & 0.00  & 0.28     & 632   & 232   & 0     & 0     \\
+                97  & VATN  & 871 & 0.52   & 0.47     & 1.21   & 0.74     & 0.05  & 0.32     & 678   & 192   & 1     & 0     \\
+                98  & VIFN  & 863 & 7.22   & 5.04     & 22.65  & 13.99    & 0.05  & 0.30     & 0     & 0     & 812   & 51    \\
+                99  & VONN  & 864 & 0.90   & 0.55     & 3.02   & 1.90     & 0.03  & 0.37     & 230   & 625   & 9     & 0     \\
+                100 & ZURN  & 866 & 44.51  & 28.15    & 108.86 & 60.98    & 0.01  & 0.26     & 0     & 0     & 0     & 866   \\
+            \end{longtable}
+        \end{small}
+    \end{doublespacing}
+
+\end{document}

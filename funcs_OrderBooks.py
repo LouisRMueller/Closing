@@ -3,7 +3,73 @@ from collections import deque
 
 from funcs_base import *
 
+
 @nb.njit
+def remove_orders_numba(values: np.ndarray, mode: str, side: str, perc: int = 0) -> np.ndarray:
+    """
+    This function removes a certain percentage of liquidity from the closing auction.
+    It is called for a every date-title combination individually
+    :param date: Onbook_date
+    :param symbol: Name of the stock
+    :param perc: Values in decimals, i.e. 5% is handed in as 0.05
+    :param side: ['bid','ask','all']. Which side should be included in the removal
+    :param market: True if market orders are included and False otherwise
+    :return: A dateframe with new bid-ask book based on removing adjustments.
+    """
+    empty_output = np.full((1, 3), np.nan)
+
+    if perc == 0:
+        return values
+
+    new_bids, new_asks = values[:, 1].copy(), values[:, 2].copy()
+
+    if mode == 'market':
+        if values[0, :].sum() == 0:
+            return empty_output  # Only considering limit orders for adjustments
+        else:
+            rem_bid = new_bids[0] * perc
+            rem_ask = new_asks[0] * perc
+
+    elif mode == 'liquidity':
+        rem_bid = min((np.sum(new_bids) + np.sum(new_asks)) * perc / 2, np.sum(new_bids))
+        rem_ask = min((np.sum(new_bids) + np.sum(new_asks)) * perc / 2, np.sum(new_asks))
+    elif mode == 'execution':
+        close_volume = calculate_uncross(values)['trade_vol']
+        rem_bid = close_volume * perc
+        rem_ask = close_volume * perc
+
+    else:
+        return empty_output
+
+    if side in ['bid', 'both']:
+        b = len(new_bids) - 1
+        while rem_bid > 0:
+            if new_bids[0] != 0:
+                local_vol = new_bids[0]
+                new_bids[0] = local_vol - min(local_vol, rem_bid)
+                rem_bid -= min(rem_bid, local_vol)
+            else:
+                local_vol = new_bids[b]
+                new_bids[b] = local_vol - min(local_vol, rem_bid)
+                rem_bid -= min(rem_bid, local_vol)
+                b -= 1
+
+    if side in ['ask', 'both']:
+        a = 1
+        while rem_ask > 0:
+            if new_asks[0] != 0:
+                local_vol = new_asks[0]
+                new_asks[0] = local_vol - min(local_vol, rem_ask)
+                rem_ask -= min(rem_ask, local_vol)
+            else:
+                local_vol = new_asks[a]
+                new_asks[a] = local_vol - min(local_vol, rem_ask)
+                rem_ask -= min(rem_ask, local_vol)
+                a += 1
+
+    return np.column_stack((values[:, 0], new_bids, new_asks))
+
+
 def remove_orders(frame: pd.DataFrame, mode: str, side: str, perc: int = 0) -> dict:
     """
     This function removes a certain percentage of liquidity from the closing auction.
@@ -70,16 +136,21 @@ def remove_orders(frame: pd.DataFrame, mode: str, side: str, perc: int = 0) -> d
     ret_df = pd.DataFrame([asks, bids], index=['end_close_vol_ask', 'end_close_vol_bid'], columns=frame.index).T
     return dict(asks=ret_df['end_close_vol_ask'], bids=ret_df['end_close_vol_bid'])
 
-def calculate_uncross(bids: pd.Series, asks: pd.Series, exportFull: bool = None) -> dict:
+
+@nb.njit
+def calculate_uncross(values: np.ndarray) -> dict:
     """
     Function calculates the theoretical uncross price of a closing order book.
+    Values is an array consisting of three columns (price, bids, asks)
     :return: dict() with price/trade_vol/cum_bids/cum_asks/total_bids/total_asks
     """
-    output = dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan, total_bids=np.nan, total_asks=np.nan)
-    base_df = pd.DataFrame({'bids': bids, 'asks': asks})
-    df, mark_buy, mark_sell = extract_market_orders(base_df)
-    prices = df.index.to_numpy()
-    limit_orders = df.to_numpy()
+    # output = dict(price=np.nan, trade_vol=np.nan, cum_bids=np.nan, cum_asks=np.nan, total_bids=np.nan, total_asks=np.nan)
+    output = {'price': np.nan, 'trade_vol': np.nan, 'cum_bids': np.nan, 'cum_asks': np.nan, 'total_bids': np.nan, 'total_asks': np.nan}
+
+    mark_buy = values[0, 1]
+    mark_sell = values[0, 2]
+    prices = values[1:, 0]
+    limit_orders = values[1:, -2:]
 
     if np.min(np.sum(limit_orders[:, -2:], axis=0)) == 0:
         return output
@@ -107,66 +178,68 @@ def calculate_uncross(bids: pd.Series, asks: pd.Series, exportFull: bool = None)
         if min(cumul[optimum, 0], cumul[optimum, 1]) == 0:
             output = output
         else:
-            output = dict(price=price, trade_vol=trade_vol, cum_bids=cumul[optimum, 0], cum_asks=cumul[optimum, 1],
-                          total_bids=sum_bids, total_asks=sum_asks)
+            output = {'price': price, 'trade_vol': trade_vol, 'cum_bids': cumul[optimum, 0], 'cum_asks': cumul[optimum, 1], 'total_bids': sum_bids,
+                      'total_asks': sum_asks}
+            # output = dict(price=price, trade_vol=trade_vol, cum_bids=cumul[optimum, 0], cum_asks=cumul[optimum, 1],
+            #               total_bids=sum_bids, total_asks=sum_asks)
         return output
 
-def calculate_preclose_midquote(bids: pd.Series, asks: pd.Series) -> dict:
-        """
-        This helper function calculates the hypothetical last midquote before closing auctions start.
-        This method takes only inputs from the self._remove_liq method.
-        """
-        base_df = pd.DataFrame({'bids': bids, 'asks': asks})
-        try:
-            base_df.drop(index=[0], inplace=True)
-        except KeyError:
-            pass
 
-        n_lim = base_df.shape[0]
-        limit_bids, limit_asks = deque(base_df['bids'], n_lim), deque(base_df['asks'], n_lim)
-        neg_asks = limit_asks.copy()
-        neg_asks.appendleft(0)
-
-        cum_bids = np.cumsum(limit_bids)
-        cum_asks = sum(limit_asks) - np.cumsum(neg_asks)
-
-        total = cum_bids + cum_asks
-
-        i_top_bid = np.argmax(total)
-        i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
-        maxbid, minask = base_df['bids'].index[i_top_bid], base_df['asks'].index[i_top_ask]
-
-        if i_top_bid > i_top_ask:
-            raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
-
-        else:
-            output = dict(abs_spread=round(minask - maxbid, 4), midquote=round((maxbid + minask) / 2, 4),
-                          rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
-            return output
-
-
-def extract_market_orders(imp_df: pd.DataFrame) -> tuple:
-    """
-    Removes market orders from an order book snapshot.
-    :param imp_df: Pandas DataFrame
-    :return: Pandas DataFrame without the market orders
-    """
-    try:
-        mark_buy = imp_df.loc[0, 'bids']
-    except KeyError:
-        imp_df.loc[0, :] = 0
-        mark_buy = imp_df.loc[0, 'bids']
-
-    try:
-        mark_sell = imp_df.loc[0, 'asks']
-    except KeyError:
-        imp_df.loc[0, :] = 0
-        mark_sell = imp_df.loc[0, 'asks']
-
-    df = imp_df.drop(0, axis=0).sort_index()
-
-    return df, mark_buy, mark_sell
-
+# def calculate_preclose_midquote(bids: pd.Series, asks: pd.Series) -> dict:
+#     """
+#     This helper function calculates the hypothetical last midquote before closing auctions start.
+#     This method takes only inputs from the self._remove_liq method.
+#     """
+#     base_df = pd.DataFrame({'bids': bids, 'asks': asks})
+#     try:
+#         base_df.drop(index=[0], inplace=True)
+#     except KeyError:
+#         pass
+#
+#     n_lim = base_df.shape[0]
+#     limit_bids, limit_asks = deque(base_df['bids'], n_lim), deque(base_df['asks'], n_lim)
+#     neg_asks = limit_asks.copy()
+#     neg_asks.appendleft(0)
+#
+#     cum_bids = np.cumsum(limit_bids)
+#     cum_asks = sum(limit_asks) - np.cumsum(neg_asks)
+#
+#     total = cum_bids + cum_asks
+#
+#     i_top_bid = np.argmax(total)
+#     i_top_ask = len(total) - np.argmax(np.flip(total)) - 1
+#     maxbid, minask = base_df['bids'].index[i_top_bid], base_df['asks'].index[i_top_ask]
+#
+#     if i_top_bid > i_top_ask:
+#         raise ValueError("i_top_bid not smaller than i_top_ask (spread overlap)")
+#
+#     else:
+#         output = dict(abs_spread=round(minask - maxbid, 4), midquote=round((maxbid + minask) / 2, 4),
+#                       rel_spread=round((minask - maxbid) / ((maxbid + minask) / 2) * 10 ** 4, 4))
+#         return output
+#
+#
+# def DEPR_extract_market_orders(imp_df: pd.DataFrame) -> tuple:
+#     """
+#     Removes market orders from an order book snapshot.
+#     :param imp_df: Pandas DataFrame
+#     :return: Pandas DataFrame without the market orders
+#     """
+#     try:
+#         mark_buy = imp_df.loc[0, 'bids']
+#     except KeyError:
+#         imp_df.loc[0, :] = 0
+#         mark_buy = imp_df.loc[0, 'bids']
+#
+#     try:
+#         mark_sell = imp_df.loc[0, 'asks']
+#     except KeyError:
+#         imp_df.loc[0, :] = 0
+#         mark_sell = imp_df.loc[0, 'asks']
+#
+#     df = imp_df.drop(0, axis=0).sort_index()
+#
+#     return df, mark_buy, mark_sell
 
 # @nb.njit
 # def process_uncrossing_numba(group_indices: nb.typed.List, data: np.ndarray, removals: np.ndarray = None) -> tuple:
